@@ -228,7 +228,7 @@ const LANES=5;
 const LANE_TOP=Math.round(GH*0.47), LANE_BOT=GH-6;   // 254 ~ 534
 const LANE_H=(LANE_BOT-LANE_TOP)/LANES;              // 每条路 56px
 function laneY(i){return LANE_TOP+LANE_H*(i+0.5);}   // 第 i 条路的脚底 y
-function laneOf(y){return Math.max(0,Math.min(LANES-1,Math.round((y-LANE_TOP)/LANE_H-0.5)));}
+function laneOf(y){return Math.max(0,Math.min(LANES-1,Math.round((y-LANE_TOP)/LANE_H-0.5-1e-9)));}  // 正中间偏向上面那条路，手感对称
 const BAND_TOP=LANE_TOP, BAND_BOT=LANE_BOT;          // 纵深插值范围
 const XMIN=90, XMAX=GW*0.52;       // 主角左右范围（左半屏安全区）
 /* 守护红旗：僵尸走到最左边就拔掉一面旗＝扣一颗心 */
@@ -1085,6 +1085,7 @@ let winT=0;           // 打败 BOSS 后已经过了几秒（累加）
 let fwT=0;            // 下一发烟花倒计时
 let winPanelOn=false; // 结算面板是否已浮现
 let freezeT=0;        // 定格瞬间的时间：主角姿势停在这一帧
+let loopN=1;          // 第几轮世界：每打败一个BOSS并进下一块战场 +1，新战场难度略微提升
 /* 三关节奏：每关约 2 分钟，一关比一关难（更多、更快、同屏更挤）；第 3 关打完出大 BOSS */
 const STAGES=[
     {quota:20,v:48,gap:2.4,cap:6,p2:0.25,p3:0},     // 第 1 关：一局更短、出怪更勤，偶尔 2 路同来
@@ -1116,13 +1117,14 @@ function sceneIdx(){const i=BG_ORDER.indexOf(curBG);return i<0?0:i;}
 function stCfg(){
   const b=STAGES[Math.min(G.stage,STAGES.length)-1];
   const s=SCENES[sceneIdx()]||SCENES[0];
+  const lv=Math.max(1,Math.min(10,loopN));      // 每进一块新战场只加一点点
   return {
-    quota:b.quota+s.quotaAdd,
-    v:b.v*s.vmul,
-    gap:b.gap*s.gmul,
-    cap:b.cap+s.capAdd,
-    p2:Math.min(0.60,b.p2+s.p2Add),
-    p3:Math.min(0.35,b.p3+s.p3Add)
+    quota:b.quota+s.quotaAdd+(lv-1),
+    v:b.v*s.vmul*(1+(lv-1)*0.06),
+    gap:(b.gap*s.gmul)/(1+(lv-1)*0.04),
+    cap:b.cap+s.capAdd+Math.floor((lv-1)/2),
+    p2:Math.min(0.60,b.p2+s.p2Add+(lv-1)*0.01),
+    p3:Math.min(0.35,b.p3+s.p3Add+(lv-1)*0.005)
   };
 }
 function depthS(y,base,span){
@@ -1172,15 +1174,16 @@ function spawnWave(){
 }
 function spawnBoss(){
   const cfg=BOSSCFG[sceneIdx()]||BOSSCFG[0];   // 本场景的 BOSS 强度／能力
-  const hp=cfg.hp;
+  const lv=Math.max(1,Math.min(10,loopN));     // BOSS 也随新战场轮次略微加血、加速（封顶 10，和 stCfg 一致）
+  const hp=Math.min(99,Math.round(cfg.hp*(1+(lv-1)*0.05)));
   const lane=1+Math.floor(Math.random()*(LANES-2));
   const y=laneY(lane);
-  for(const z of G.zs){                       // 清场，专心打 BOSS
-    if(!z.boss&&!z.die){z.die=0.3;z.dieT=0;puffFX(G.ps,z.x,z.y-z.s*0.5,z.s/52);}
+  for(const z of G.zs){                       // 场上普通僵尸转身撤退，不硬清
+    if(!z.boss&&!z.die){z.leave=true;z.ph=0;}   // 只标记转身撤退，不当场冒烟（烟留到走出屏幕后再冒）
   }
   G.ebs.length=0;
   G.zs.push({x:GW+150,y,lane,s:depthS(y,138,40),ph:0,boss:true,hp,hpMax:hp,
-    v:34,die:0,dieT:0,tY:y,swT:2.0,sq:0,
+    v:34,die:0,dieT:0,tY:y,swT:2.0,sq:0,lv,
     cfg,phase:1,fireT:1.6,tele:0,teleLanes:[],minionT:cfg.minionT});   // fireT＝几秒后开火，tele＝预警剩余
   G.bossOut=true;
   updateHUD();
@@ -1197,7 +1200,7 @@ function bossTargetLanes(count){
 }
 /* BOSS 开火：在选定的路上各生成一颗向左飞的子弹（按路飞，切路就能躲） */
 function bossFire(z){
-  const bspd=z.cfg.bspd*(z.phase===2?1.12:1);
+  const bspd=z.cfg.bspd*(z.phase===2?1.12:1)*(1+Math.min(0.35,(z.lv||1)-1)*0.03);
   for(const ln of z.teleLanes){
     G.ebs.push({x:z.x-z.s*0.30,y:laneY(ln)-8,lane:ln,vx:-bspd,rot:0});
   }
@@ -1206,7 +1209,7 @@ function bossFire(z){
 }
 /* BOSS：走到场中就站住，随机换路；定期预警后发射子弹；半血狂暴；沙漠还会召唤小怪 */
 function stepBoss(z,dt){
-  z.x=Math.max(z.x,GW*0.58);                   // 不会走出屏幕
+  z.x=Math.max(z.x,GW*0.68);                   // 靠右站位，贴脸时子弹也有反应时间
   /* E：血量过半 → 狂暴（射得更快、路数更多） */
   if(z.phase===1&&z.hp<=z.hpMax/2){
     z.phase=2;z.fireT=Math.min(z.fireT,0.8);
@@ -1382,6 +1385,8 @@ function startPlay(){
   banner('第 '+G.stage+' 关');
   startBgm();
 }
+function startRun(){loopN=1;resetGame();startPlay();}   // 从主菜单开始＝回到第 1 轮
+function restartRun(){resetGame();startPlay();}         // 同一战场重试，难度不变
 function toMenu(){
   mode='menu';stopBgm();
   hideWinPanel();
@@ -1416,7 +1421,7 @@ function update(dt){
   if(h.cd<=0){
     h.cd=0.55;h.fire=1;
     const s=heroS();
-    G.bls.push({x:h.x+s*0.40,y:laneY(h.lane)-s*0.56,lane:h.lane,rot:0});
+    G.bls.push({x:h.x+s*0.40,y:h.y-s*0.56,lane:laneOf(h.y),rot:0});
     sfx('shoot');
   }
 
@@ -1426,7 +1431,7 @@ function update(dt){
     if(b.x>GW+40){G.bls.splice(i,1);continue;}
     let hit=false;
     for(const z of G.zs){
-      if(z.die||z.lane!==b.lane)continue;      // 只打同一条路上的
+      if(z.die||z.leave||z.lane!==b.lane)continue;      // 只打同一条路上的
       if(b.x>z.x-z.s*0.55&&b.x<z.x+z.s*0.26){
         hitZ(z,b.x,b.y);hit=true;break;
       }
@@ -1438,12 +1443,18 @@ function update(dt){
   for(let i=G.zs.length-1;i>=0;i--){
     const z=G.zs[i];
     if(z.die){z.dieT+=dt;if(z.dieT>=z.die)G.zs.splice(i,1);continue;}
+    if(z.leave){                                // BOSS 登场：普通僵尸转身撤退
+      z.x+=260*dt;z.ph+=dt*4.6;
+      /* 整只走出右边缘后消散：烟必须生成在画面内（x≤GW），否则玩家看不见 */
+      if(z.x-z.s*0.5>GW){z.die=0.25;z.dieT=0;puffFX(G.ps,GW-18,z.y-z.s*0.5,z.s/52);}
+      continue;
+    }
     z.x-=z.v*dt;z.ph+=dt*(z.boss?3.2:4.6);
     if(z.sq>0)z.sq=Math.max(0,z.sq-dt);         // 果冻抖动衰减
     if(z.boss)stepBoss(z,dt);                   // BOSS：站到场中＋随机换路
     else if(z.x-z.s*0.40<BASE_X){               // 走到最左边＝拔掉这条路的红旗！
       pullFlag(z.lane);                          // 旗倒下 → 星星落回来变成新旗
-      hurt(true);
+      if(h.inv<=0)hurt(true);                   // 同一帧多只拔旗也只掉一颗心
       z.die=0.28;z.dieT=0;
       puffFX(G.ps,BASE_X+14,z.y-z.s*0.5,z.s/52);
       if(mode!=='play')return;                  // 已经 gameOver
@@ -1509,6 +1520,7 @@ function drawZombie(z){
     const wob=Math.sin(p*Math.PI*2)*0.22*(1-p);
     ctx.scale(1+wob,1-wob);
   }
+  if(z.leave)ctx.scale(-1,1);                   // 撤退中：水平镜像＝真的转身朝右走，而不是倒着滑
   drawZombieV(ctx,0,0,z.s,z.boss?(BOSS_SK[curBG]||BOSS_SK.forest):ZK,T,z.ph);
   ctx.restore();
 }
@@ -1745,19 +1757,20 @@ function syncSound(){
 }
 
 /* ---------- 按钮 ---------- */
-$('btnStart').onclick=()=>{sfx('click');resetGame();startPlay();};
+$('btnStart').onclick=()=>{sfx('click');startRun();};
 $('btnWinHome').onclick=()=>{sfx('click');toMenu();};
-$('btnWinNext').onclick=()=>{                        // 进下一关＝去藏宝图的下一块战场
+$('btnWinNext').onclick=()=>{                        // 打败BOSS＝去藏宝图下一块战场，新一轮略难点
   sfx('click');
+  loopN=Math.min(10,loopN+1);
   pickBG=BG_ORDER[(BG_ORDER.indexOf(curBG)+1)%BG_ORDER.length];
   LS.set('moday_bgcur',pickBG);
   resetGame();startPlay();
 };
-$('btnAgain').onclick=()=>{sfx('click');resetGame();startPlay();};
+$('btnAgain').onclick=()=>{sfx('click');restartRun();};
 $('btnHome').onclick=()=>{sfx('click');toMenu();};
 $('btnHome2').onclick=()=>{sfx('click');toMenu();};
 $('btnResume').onclick=()=>{sfx('click');mode='play';show(null);startBgm();};
-$('btnRestart').onclick=()=>{sfx('click');resetGame();startPlay();};
+$('btnRestart').onclick=()=>{sfx('click');restartRun();};
 $('btnPause').onclick=()=>{if(mode!=='play')return;sfx('click');mode='pause';stopBgm();show('scrPause');};
 $('btnSound').onclick=$('btnSound2').onclick=()=>{
   SND_ON=!SND_ON;LS.set('moday_snd',SND_ON?'1':'0');
