@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>《我的末日》第7步 · 选游戏声音</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:#0e1626;font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;
+  touch-action:manipulation;overscroll-behavior:none}
+body{padding:12px 16px 24px;color:#fff;min-height:100vh}
+header{text-align:center;margin-bottom:10px}
+h1{margin:0;font-size:clamp(19px,3.2vw,32px);letter-spacing:1px;
+   background:linear-gradient(90deg,#aed581,#ffd54f,#4fc3f7);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{margin:6px 0 0;font-size:clamp(14px,2vw,20px);color:#a9c0e8}
+.sub b{color:#ffd54f}
+.speakAll{margin-top:8px;border:0;background:#ffca28;color:#4a3200;font-size:clamp(14px,1.9vw,19px);
+  font-weight:800;padding:9px 22px;border-radius:999px;cursor:pointer;box-shadow:0 4px 0 #c79100}
+.speakAll:active{transform:translateY(3px);box-shadow:0 1px 0 #c79100}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;max-width:1500px;margin:0 auto;align-items:start}
+@media (max-width:980px){.cards{grid-template-columns:1fr}}
+.card{background:#fff;color:#22303f;border-radius:22px;padding:11px 12px 13px;
+  border:5px solid transparent;box-shadow:0 8px 26px rgba(0,0,0,.45);display:flex;flex-direction:column}
+.card.sel{border-color:#ffca28}
+.tag{display:inline-block;align-self:flex-start;font-size:13px;font-weight:800;color:#fff;
+  padding:3px 12px;border-radius:999px;margin-bottom:5px}
+.name{font-size:clamp(18px,2.4vw,26px);font-weight:900;margin:0 0 3px;line-height:1.25}
+.desc{font-size:clamp(13px,1.7vw,17px);line-height:1.55;margin:0 0 9px;color:#3d4d5e}
+.desc b{color:#e65100}
+.snds{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:8px}
+.snd{background:#f4f7fb;border:3px solid #dde5ee;border-radius:16px;cursor:pointer;font-family:inherit;
+  padding:8px 2px 7px;display:flex;flex-direction:column;align-items:center;gap:2px;color:#2d3d4d;
+  min-height:clamp(62px,7vw,78px);justify-content:center;transition:transform .08s}
+.snd i{font-style:normal;font-size:clamp(21px,2.7vw,29px);line-height:1}
+.snd span{font-size:clamp(12px,1.5vw,15px);font-weight:800}
+.snd:active{transform:scale(.95)}
+.snd.on{background:#fff8dc;border-color:#ffca28}
+.row{display:flex;gap:7px;margin-bottom:8px}
+.mini{flex:1;border:0;border-radius:999px;cursor:pointer;font-family:inherit;font-weight:800;
+  font-size:clamp(12px,1.5vw,15px);padding:10px 6px;background:#eef2f7;color:#42566b}
+.mini:active{transform:translateY(2px)}
+.mini.busy{background:#ffe0b2;color:#8a4b00}
+.bgm.on{background:#dcedc8;color:#33691e}
+.meta{display:flex;align-items:center;gap:6px;font-size:12px;color:#7b8a99;margin-bottom:9px;flex-wrap:wrap}
+.pill{background:#eef2f7;border-radius:999px;padding:3px 9px;font-weight:700;color:#546e7a}
+.pill.mov{background:#fff3cd;color:#8a6100}
+.pick{border:0;width:100%;height:clamp(56px,6.8vw,74px);border-radius:999px;font-size:clamp(19px,2.5vw,26px);
+  font-weight:900;color:#fff;cursor:pointer;font-family:inherit;letter-spacing:1px;margin-top:auto}
+.pick:active{transform:translateY(4px)}
+.c1 .tag{background:#7e57c2}.c1 .pick{background:#7e57c2;box-shadow:0 6px 0 #4527a0}
+.c1 .pick:active{box-shadow:0 2px 0 #4527a0}
+.c2 .tag{background:#26a69a}.c2 .pick{background:#26a69a;box-shadow:0 6px 0 #00695c}
+.c2 .pick:active{box-shadow:0 2px 0 #00695c}
+.c3 .tag{background:#ef6c00}.c3 .pick{background:#ef6c00;box-shadow:0 6px 0 #b34700}
+.c3 .pick:active{box-shadow:0 2px 0 #b34700}
+.foot{max-width:1500px;margin:12px auto 0;text-align:center;color:#6f86ad;font-size:13px;line-height:1.7}
+.foot b{color:#ffd54f}
+.ov{position:fixed;inset:0;background:rgba(6,12,24,.93);display:flex;align-items:center;justify-content:center;
+  z-index:50;padding:20px;text-align:center}
+.ov.hide{display:none}
+.ovbox{max-width:640px}
+.bigok{font-size:clamp(64px,14vw,120px);line-height:1;animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
+@keyframes pop{from{transform:scale(.2);opacity:0}to{transform:scale(1);opacity:1}}
+.ovtitle{font-size:clamp(26px,5vw,46px);font-weight:900;margin:8px 0 4px;color:#ffd54f}
+.ovsub{font-size:clamp(16px,2.6vw,24px);color:#cfe0ff;margin-bottom:22px}
+.ovbtns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.ovbtns button{border:0;font-family:inherit;font-weight:900;font-size:clamp(17px,2.4vw,23px);
+  padding:16px 30px;border-radius:999px;cursor:pointer}
+#ovOk{background:#43a047;color:#fff;box-shadow:0 6px 0 #2c6b2f}
+#ovOk:active{transform:translateY(4px);box-shadow:0 2px 0 #2c6b2f}
+#ovNo{background:transparent;color:#9fb4d8;border:3px solid #44587e}
+.dad{margin-top:20px;font-size:13px;color:#6f86ad}
+.dad b{color:#ffd54f;font-size:16px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>《我的末日》第 7 步 · 游戏里发出什么声音？</h1>
+  <div class="sub">三套声音<b>都能真的听到</b>！点一下小按钮就响 🔊<br>
+    先听 <b>发射</b> 和 <b>打中</b>，再点 <b>▶ 全部听一遍</b>，喜欢哪套就选哪套！</div>
+  <button class="speakAll" id="btnSpeakAll">🔊 点我，念给我听</button>
+</header>
+
+<div class="cards">
+
+  <div class="card c1" data-k="retro">
+    <span class="tag">1 号</span>
+    <div class="name">🎮 滴滴电子音</div>
+    <p class="desc">像<b>老式游戏机</b>：哔哔、滴滴！<br>声音<b>又亮又有精神</b>，打僵尸特别带劲。</p>
+    <div class="snds"></div>
+    <div class="row">
+      <button class="mini all">▶ 全部听一遍</button>
+      <button class="mini bgm">🎵 背景音乐 关</button>
+    </div>
+    <div class="meta"><span class="pill mov">🔊 真声音</span><span class="pill">6 个音效</span><span class="pill">很响亮</span><span class="pill">游戏机味</span></div>
+    <button class="pick">就要这个！</button>
+  </div>
+
+  <div class="card c2" data-k="soft">
+    <span class="tag">2 号</span>
+    <div class="name">🫧 软软泡泡音</div>
+    <p class="desc">像<b>吹泡泡</b>：啵、咻～<br>声音<b>软软的、不吵</b>，听久了耳朵也很舒服。</p>
+    <div class="snds"></div>
+    <div class="row">
+      <button class="mini all">▶ 全部听一遍</button>
+      <button class="mini bgm">🎵 背景音乐 关</button>
+    </div>
+    <div class="meta"><span class="pill mov">🔊 真声音</span><span class="pill">6 个音效</span><span class="pill">很温柔</span><span class="pill">不刺耳</span></div>
+    <button class="pick">就要这个！</button>
+  </div>
+
+  <div class="card c3" data-k="drum">
+    <span class="tag">3 号</span>
+    <div class="name">🥁 咚咚卡通音</div>
+    <p class="desc">像<b>小鼓和卡通片</b>：咚！啪！<br>声音<b>很有力气</b>，僵尸被打中会很好笑。</p>
+    <div class="snds"></div>
+    <div class="row">
+      <button class="mini all">▶ 全部听一遍</button>
+      <button class="mini bgm">🎵 背景音乐 关</button>
+    </div>
+    <div class="meta"><span class="pill mov">🔊 真声音</span><span class="pill">6 个音效</span><span class="pill">有鼓声</span><span class="pill">很搞笑</span></div>
+    <button class="pick">就要这个！</button>
+  </div>
+
+</div>
+
+<div class="foot">
+  给爸爸：本页三套音效<b>全部由 Web Audio API 实时合成</b>（oscillator + 噪声 buffer + 包络），<b>不加载任何音频文件、不联网</b>，双击 HTML 即可出声（首次点击即解锁 AudioContext）。每张卡片 6 个试听按钮 = 游戏实际会用到的 6 个音效：<b>发射 / 打中 / 掉心 / 胜利 / 结束 / 按钮</b>；「▶ 全部听一遍」按顺序自动播放并高亮；「🎵 背景音乐」是同一套风格的 8 音循环（全局只允许一套在响，可关）。音量都控制在 0.2 以下、attack ≥ 10ms，避免爆音和惊吓。<br>
+  已锁定 = 主角 <b>2 号 迷彩小战士</b>（moday_hero = camo）、僵尸 <b>1 号 经典绿僵尸</b>（moday_zombie = classic）、武器 <b>3 号 星星飞镖</b>（moday_weapon = star）、特效 <b>1 号 噗！一团烟</b>（moday_fx = puff）、背景 <b>3 号 会发光的森林</b>（moday_bg = forest，爸爸备注：<b>打过几关出现大 boss 后换背景</b>，正式游戏里做）。本页选<b>音效</b>，结果写入 moday_sfx。<br>
+  玩法已锁定 = <b>B 改良版</b>（手指拖动小人 + 自动向前连发，拖动范围默认左半屏）。这是最后一个选择项，选完就<b>合成正式单文件游戏</b>（含胖胖的伙伴角色 + 关卡/大 boss 换背景）。<br>
+  小朋友点完后，这里会显示他的选择 —— 当前记录：<b id="dadChoice">还没有</b>
+</div>
+
+<div class="ov hide" id="ov">
+  <div class="ovbox">
+    <div class="bigok" id="ovEmo">🎮</div>
+    <div class="ovtitle">你喜欢 <span id="ovName">滴滴电子音</span>！</div>
+    <div class="ovsub" id="ovSub">像老式游戏机，又亮又有精神</div>
+    <div class="ovbtns">
+      <button id="ovOk">✔ 就用这套声音！</button>
+      <button id="ovNo">我再想想</button>
+    </div>
+    <div class="dad">爸爸看这里 · 已记录选择 = <b id="ovCode">retro</b>（存在本机浏览器里）</div>
+  </div>
+</div>
+
+<script>
+/* ---------- Web Audio 合成引擎（无任何音频文件） ---------- */
+let AC=null;
+function ac(){
+  if(!AC){
+    const C=window.AudioContext||window.webkitAudioContext;
+    if(!C)return null;
+    try{AC=new C();}catch(e){return null;}
+  }
+  if(AC.state==='suspended'){try{AC.resume();}catch(e){}}
+  return AC;
+}
+/* 单音：f 起始频率, f2 结束频率(滑音), dur 秒, type 波形, vol 音量, delay 延迟, atk 起音 */
+function tone(o){
+  const a=ac();if(!a)return;
+  const dur=o.dur||0.2,t0=a.currentTime+(o.delay||0),v=o.vol==null?0.2:o.vol,atk=o.atk==null?0.012:o.atk;
+  const osc=a.createOscillator(),g=a.createGain();
+  osc.type=o.type||'square';
+  osc.frequency.setValueAtTime(Math.max(20,o.f),t0);
+  if(o.f2)osc.frequency.exponentialRampToValueAtTime(Math.max(20,o.f2),t0+dur);
+  g.gain.setValueAtTime(0.0001,t0);
+  g.gain.exponentialRampToValueAtTime(Math.max(0.002,v),t0+atk);
+  g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+  osc.connect(g);g.connect(a.destination);
+  osc.start(t0);osc.stop(t0+dur+0.06);
+}
+/* 噪声：dur 秒, vol 音量, f/q/ftype 滤波, delay 延迟 */
+function noise(o){
+  const a=ac();if(!a)return;
+  const dur=o.dur||0.2,t0=a.currentTime+(o.delay||0);
+  const n=Math.max(1,Math.floor(a.sampleRate*dur));
+  const buf=a.createBuffer(1,n,a.sampleRate),d=buf.getChannelData(0);
+  for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*(1-i/n);
+  const src=a.createBufferSource();src.buffer=buf;
+  const g=a.createGain();
+  g.gain.setValueAtTime(o.vol==null?0.18:o.vol,t0);
+  g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+  let node=src;
+  if(o.f){
+    const flt=a.createBiquadFilter();
+    flt.type=o.ftype||'lowpass';flt.frequency.value=o.f;if(o.q)flt.Q.value=o.q;
+    src.connect(flt);node=flt;
+  }
+  node.connect(g);g.connect(a.destination);
+  src.start(t0);src.stop(t0+dur+0.06);
+}
+
+/* ---------- 三套音效包 ---------- */
+const SFX={
+  /* 1 号 滴滴电子音：方波、短促、明亮 */
+  retro:{
+    shoot(){tone({f:880,f2:1420,dur:0.09,type:'square',vol:0.15});
+            tone({f:1600,f2:2150,dur:0.06,type:'square',vol:0.08,delay:0.07});},
+    hit(){noise({dur:0.11,vol:0.13,f:1500});
+          tone({f:470,f2:120,dur:0.14,type:'square',vol:0.15});},
+    hurt(){tone({f:340,f2:110,dur:0.34,type:'square',vol:0.18});
+           tone({f:230,f2:70,dur:0.30,type:'square',vol:0.12,delay:0.05});},
+    win(){[523,659,784,1047].forEach((f,i)=>tone({f,dur:i===3?0.34:0.12,type:'square',vol:0.15,delay:i*0.13}));},
+    over(){[392,330,262,196].forEach((f,i)=>tone({f,dur:i===3?0.50:0.18,type:'square',vol:0.16,delay:i*0.20}));},
+    click(){tone({f:1250,f2:1550,dur:0.05,type:'square',vol:0.12});}
+  },
+  /* 2 号 软软泡泡音：正弦/三角、圆润、带滑音泡泡 */
+  soft:{
+    shoot(){tone({f:560,f2:940,dur:0.15,type:'sine',vol:0.19,atk:0.02});},
+    hit(){tone({f:380,f2:880,dur:0.13,type:'sine',vol:0.19,atk:0.008});
+          tone({f:1180,f2:1500,dur:0.09,type:'sine',vol:0.07,delay:0.05});},
+    hurt(){tone({f:420,f2:190,dur:0.40,type:'triangle',vol:0.19,atk:0.03});},
+    win(){[523,659,784,1047].forEach((f,i)=>tone({f,dur:i===3?0.40:0.17,type:'sine',vol:0.17,atk:0.02,delay:i*0.15}));},
+    over(){[392,349,330,262].forEach((f,i)=>tone({f,dur:0.32,type:'triangle',vol:0.16,atk:0.04,delay:i*0.22}));},
+    click(){tone({f:820,f2:1000,dur:0.07,type:'sine',vol:0.13,atk:0.008});}
+  },
+  /* 3 号 咚咚卡通音：鼓膜正弦下滑 + 噪声拍打 */
+  drum:{
+    shoot(){noise({dur:0.07,vol:0.14,f:2600,ftype:'highpass'});
+            tone({f:220,f2:120,dur:0.10,type:'triangle',vol:0.18});},
+    hit(){tone({f:190,f2:60,dur:0.22,type:'sine',vol:0.26,atk:0.006});
+          noise({dur:0.10,vol:0.15,f:900});},
+    hurt(){tone({f:240,f2:70,dur:0.46,type:'sine',vol:0.26,atk:0.008});
+           noise({dur:0.16,vol:0.12,f:600,delay:0.02});},
+    win(){[196,247,294,392].forEach((f,i)=>{
+            tone({f,f2:f*0.7,dur:0.20,type:'sine',vol:0.24,atk:0.006,delay:i*0.14});
+            noise({dur:0.05,vol:0.07,f:4000,ftype:'highpass',delay:i*0.14});});},
+    over(){[180,150,120,90].forEach((f,i)=>tone({f,f2:f*0.6,dur:0.26,type:'sine',vol:0.24,atk:0.008,delay:i*0.22}));},
+    click(){noise({dur:0.04,vol:0.12,f:3200,ftype:'highpass'});
+            tone({f:300,f2:200,dur:0.06,type:'triangle',vol:0.12});}
+  }
+};
+
+/* 背景音乐：同风格 8 音循环（0 = 休止） */
+const MELO={
+  retro:{type:'square',vol:0.075,gap:270,notes:[523,0,659,784,0,659,523,392]},
+  soft:{type:'sine',vol:0.09,gap:340,notes:[392,494,587,494,440,523,659,523]},
+  drum:{type:'triangle',vol:0.11,gap:300,notes:[196,0,262,0,196,0,294,262]}
+};
+
+/* 6 个试听按钮（key, emoji, 名字） */
+const SND=[['shoot','🔫','发射'],['hit','💥','打中'],['hurt','💔','掉心'],
+           ['win','🎉','胜利'],['over','😵','结束'],['click','👆','按钮']];
+
+const PACKS={
+  retro:{label:'滴滴电子音',sub:'像老式游戏机，哔哔滴滴，又亮又有精神',emo:'🎮'},
+  soft:{label:'软软泡泡音',sub:'像吹泡泡，啵～咻～，软软的一点也不吵',emo:'🫧'},
+  drum:{label:'咚咚卡通音',sub:'像小鼓和卡通片，咚！啪！很有力气很好笑',emo:'🥁'}
+};
+const KIDS={
+  retro:'一号，滴滴电子音！就像老式游戏机，哔哔、滴滴，声音又亮又有精神，打僵尸特别带劲！',
+  soft:'二号，软软泡泡音！就像吹泡泡，啵、咻～软软的、不吵，听久了耳朵也很舒服！',
+  drum:'三号，咚咚卡通音！就像小鼓和卡通片，咚！啪！很有力气，僵尸被打中会很好笑！'
+};
+
+/* ---------- 播放逻辑 ---------- */
+const timers={};
+function stopSeq(k){if(timers[k]){clearTimeout(timers[k]);timers[k]=null;}}
+function play(k,key,btn){
+  try{SFX[k][key]();}catch(e){}
+  if(btn){btn.classList.add('on');setTimeout(()=>btn.classList.remove('on'),170);}
+}
+function playAll(k,btn){
+  stopSeq(k);
+  const card=btn.closest('.card'),bs=[...card.querySelectorAll('.snd')];
+  btn.classList.add('busy');btn.textContent='🎧 正在放…';
+  let i=0;
+  const step=()=>{
+    bs.forEach(b=>b.classList.remove('on'));
+    if(i>=SND.length){
+      btn.classList.remove('busy');btn.textContent='▶ 全部听一遍';timers[k]=null;return;
+    }
+    bs[i].classList.add('on');
+    play(k,SND[i][0],null);
+    i++;
+    timers[k]=setTimeout(step,i===SND.length?760:600);
+  };
+  step();
+}
+let bgmKey=null,bgmTimer=null;
+function stopBgm(){
+  if(bgmTimer){clearTimeout(bgmTimer);bgmTimer=null;}
+  bgmKey=null;
+  document.querySelectorAll('.bgm').forEach(b=>{b.classList.remove('on');b.textContent='🎵 背景音乐 关';});
+}
+function startBgm(k){
+  const m=MELO[k];let i=0;bgmKey=k;
+  const step=()=>{
+    const f=m.notes[i%m.notes.length];
+    if(f){
+      try{
+        tone({f,dur:m.gap/1000*1.6,type:m.type,vol:m.vol,atk:0.03});
+        if(k!=='soft')noise({dur:0.04,vol:0.025,f:5200,ftype:'highpass'});
+      }catch(e){}
+    }
+    i++;
+    bgmTimer=setTimeout(step,m.gap);
+  };
+  step();
+}
+
+/* ---------- 生成按钮 + 绑定 ---------- */
+const ov=document.getElementById('ov');
+const cards=[...document.querySelectorAll('.card')];
+cards.forEach(card=>{
+  const k=card.dataset.k;
+  const box=card.querySelector('.snds');
+  SND.forEach(([key,emo,label])=>{
+    const b=document.createElement('button');
+    b.className='snd';b.dataset.s=key;
+    const i=document.createElement('i');i.textContent=emo;
+    const s=document.createElement('span');s.textContent=label;
+    b.appendChild(i);b.appendChild(s);
+    b.addEventListener('click',e=>{e.stopPropagation();play(k,key,b);});
+    box.appendChild(b);
+  });
+  card.querySelector('.all').addEventListener('click',e=>{e.stopPropagation();playAll(k,e.currentTarget);});
+  card.querySelector('.bgm').addEventListener('click',e=>{
+    e.stopPropagation();
+    const b=e.currentTarget;
+    if(bgmKey===k){stopBgm();return;}
+    stopBgm();
+    startBgm(k);
+    b.classList.add('on');b.textContent='🎵 背景音乐 开';
+  });
+  card.querySelector('.pick').addEventListener('click',e=>{
+    e.stopPropagation();
+    cards.forEach(c=>c.classList.remove('sel'));card.classList.add('sel');
+    cards.forEach(c=>stopSeq(c.dataset.k));
+    stopBgm();
+    document.getElementById('ovEmo').textContent=PACKS[k].emo;
+    document.getElementById('ovName').textContent=PACKS[k].label;
+    document.getElementById('ovSub').textContent=PACKS[k].sub;
+    document.getElementById('ovCode').textContent=k;
+    document.getElementById('dadChoice').textContent=PACKS[k].label+' — '+PACKS[k].sub;
+    try{localStorage.setItem('moday_sfx',k);}catch(err){}
+    ov.classList.remove('hide');
+    speak('好耶！你喜欢'+PACKS[k].label+'！爸爸，就按这个做！');
+  });
+});
+
+/* ---------- 语音 ---------- */
+function speak(text){
+  if(!('speechSynthesis' in window))return;
+  try{
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang='zh-CN';u.rate=0.92;u.pitch=1.15;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+document.getElementById('btnSpeakAll').addEventListener('click',function(){
+  if(!('speechSynthesis' in window)){alert('这个浏览器不支持朗读，请爸爸/妈妈念给小朋友听~');return;}
+  speechSynthesis.cancel();
+  ['小朋友，现在我们来选游戏的声音！三套声音都能真的听到哦，点一下小按钮就会响。',
+   KIDS.retro,KIDS.soft,KIDS.drum,
+   '你先听一听发射和打中的声音，然后告诉爸爸，你最喜欢哪一套？点那个大大的按钮！']
+    .forEach(t=>{const u=new SpeechSynthesisUtterance(t);u.lang='zh-CN';u.rate=0.9;u.pitch=1.15;speechSynthesis.speak(u);});
+});
+document.getElementById('ovNo').addEventListener('click',()=>{
+  ov.classList.add('hide');
+  speak('没关系，再听一听，慢慢选。');
+});
+document.getElementById('ovOk').addEventListener('click',()=>{
+  speak('好耶！全部选完啦！');
+  document.getElementById('ovEmo').textContent='🚀';
+  document.getElementById('ovSub').textContent='爸爸：七项全部选完，可以合成正式游戏了！';
+});
+try{
+  const saved=localStorage.getItem('moday_sfx');
+  if(saved&&PACKS[saved])document.getElementById('dadChoice').textContent=PACKS[saved].label+' — '+PACKS[saved].sub+'（上次记录）';
+}catch(err){}
+
+document.addEventListener('gesturestart',e=>e.preventDefault());
+document.addEventListener('dblclick',e=>e.preventDefault());
+</script>
+</body>
+</html>

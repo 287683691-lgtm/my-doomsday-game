@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>《我的末日》第9步 · 僵尸怎么才能扣掉一颗心</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:#0e1626;font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;
+  touch-action:manipulation;overscroll-behavior:none}
+body{padding:12px 16px 24px;color:#fff;min-height:100vh}
+header{text-align:center;margin-bottom:10px}
+h1{margin:0;font-size:clamp(19px,3.2vw,32px);letter-spacing:1px;
+   background:linear-gradient(90deg,#aed581,#ffd54f,#4fc3f7);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{margin:6px 0 0;font-size:clamp(14px,2vw,20px);color:#a9c0e8;line-height:1.6}
+.sub b{color:#ffd54f}
+.speakAll{margin-top:8px;border:0;background:#ffca28;color:#4a3200;font-size:clamp(14px,1.9vw,19px);
+  font-weight:800;padding:9px 22px;border-radius:999px;cursor:pointer;box-shadow:0 4px 0 #c79100}
+.speakAll:active{transform:translateY(3px);box-shadow:0 1px 0 #c79100}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;max-width:1720px;margin:0 auto}
+@media (max-width:1180px){.cards{grid-template-columns:1fr;max-width:760px}}
+.card{background:#fff;color:#22303f;border-radius:22px;padding:11px 12px 13px;
+  border:5px solid transparent;box-shadow:0 8px 26px rgba(0,0,0,.45);display:flex;flex-direction:column;cursor:pointer}
+.card.sel{border-color:#ffca28}
+.card canvas{width:100%;aspect-ratio:16/9;border-radius:14px;display:block;background:#08120e;touch-action:none}
+.tag{display:inline-block;align-self:flex-start;font-size:13px;font-weight:800;color:#fff;
+  padding:3px 12px;border-radius:999px;margin:7px 0 5px}
+.name{font-size:clamp(18px,2.4vw,26px);font-weight:900;margin:0 0 3px;line-height:1.25}
+.desc{font-size:clamp(13px,1.7vw,17px);line-height:1.55;margin:0 0 7px;color:#3d4d5e;flex:1}
+.desc b{color:#e65100}
+.meta{display:flex;align-items:center;gap:6px;font-size:12px;color:#7b8a99;margin-bottom:6px;flex-wrap:wrap}
+.pill{background:#eef2f7;border-radius:999px;padding:3px 9px;font-weight:700;color:#546e7a}
+.pill.mov{background:#fff3cd;color:#8a6100}
+.pill.risk{background:#ffe3e0;color:#b3352c}
+.pill.good{background:#e2f6e5;color:#2e7d32}
+.hint{font-size:12.5px;color:#7b8a99;font-weight:700;margin-bottom:9px}
+.pick{border:0;width:100%;height:clamp(56px,6.8vw,74px);border-radius:999px;font-size:clamp(19px,2.5vw,26px);
+  font-weight:900;color:#fff;cursor:pointer;font-family:inherit;letter-spacing:1px}
+.pick:active{transform:translateY(4px)}
+.c1 .tag{background:#26a69a}.c1 .pick{background:#26a69a;box-shadow:0 6px 0 #00695c}
+.c1 .pick:active{box-shadow:0 2px 0 #00695c}
+.c2 .tag{background:#fb8c00}.c2 .pick{background:#fb8c00;box-shadow:0 6px 0 #c25e00}
+.c2 .pick:active{box-shadow:0 2px 0 #c25e00}
+.c3 .tag{background:#5c6bc0}.c3 .pick{background:#5c6bc0;box-shadow:0 6px 0 #303f9f}
+.c3 .pick:active{box-shadow:0 2px 0 #303f9f}
+.foot{max-width:1720px;margin:14px auto 0;color:#8fa5c9;font-size:13px;line-height:1.85;
+  background:rgba(255,255,255,.045);border-radius:16px;padding:12px 16px}
+.foot h3{margin:0 0 6px;color:#ffd54f;font-size:15px}
+.foot b{color:#dce8ff}
+.foot table{width:100%;border-collapse:collapse;margin-top:6px}
+.foot td,.foot th{border-bottom:1px solid rgba(255,255,255,.09);padding:5px 7px;text-align:left;vertical-align:top}
+.foot th{color:#9fb4d8;font-weight:800}
+.ov{position:fixed;inset:0;background:rgba(6,12,24,.93);display:flex;align-items:center;justify-content:center;
+  z-index:50;padding:20px;text-align:center}
+.ov.hide{display:none}
+.ovbox{max-width:660px}
+.bigok{font-size:clamp(64px,14vw,120px);line-height:1;animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
+@keyframes pop{from{transform:scale(.2);opacity:0}to{transform:scale(1);opacity:1}}
+.ovtitle{font-size:clamp(26px,5vw,46px);font-weight:900;margin:8px 0 4px;color:#ffd54f}
+.ovsub{font-size:clamp(16px,2.6vw,24px);color:#cfe0ff;margin-bottom:22px;line-height:1.5}
+.ovbtns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.ovbtns button{border:0;font-family:inherit;font-weight:900;font-size:clamp(17px,2.4vw,23px);
+  padding:16px 30px;border-radius:999px;cursor:pointer}
+#ovOk{background:#43a047;color:#fff;box-shadow:0 6px 0 #2c6b2f}
+#ovOk:active{transform:translateY(4px);box-shadow:0 2px 0 #2c6b2f}
+#ovNo{background:transparent;color:#9fb4d8;border:3px solid #44587e}
+.dad{margin-top:20px;font-size:13px;color:#6f86ad}
+.dad b{color:#ffd54f;font-size:16px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>《我的末日》第 9 步 · 僵尸怎么样才能扣掉一颗心？</h1>
+  <div class="sub">现在只有<b>僵尸碰到小人身上</b>才扣心，小人守在一条路上就一直安全 —— <b>太简单啦</b>！😤<br>
+    下面三个画面<b>都能玩</b>，用手指（或鼠标）<b>拖一拖小人</b>，看看哪种最紧张最好玩！</div>
+  <button class="speakAll" id="btnSpeakAll">🔊 点我，念给我听</button>
+</header>
+
+<div class="cards">
+
+  <div class="card c1" data-k="a">
+    <canvas id="cv1"></canvas>
+    <span class="tag">1 号 · 最像植物大战僵尸</span>
+    <p class="name">🏕 走进老家就扣心</p>
+    <p class="desc">左边是我们的<b>营地老家</b>：小帐篷、木栅栏、红旗。僵尸<b>不管走哪一条路</b>，只要跑到最左边<b>进了老家</b>，就扣一颗心，老家还会闪红光！所以<b>五条路都要看着</b>，不能只守一条。</p>
+    <div class="meta"><span class="pill good">五条路都有危险</span><span class="pill">一眼就懂</span><span class="pill mov">要来回跑</span></div>
+    <div class="hint">👆 拖一拖：故意让一条路的僵尸走进老家，看看扣不扣心</div>
+    <button class="pick">就选 1 号</button>
+  </div>
+
+  <div class="card c2" data-k="b">
+    <canvas id="cv2"></canvas>
+    <span class="tag">2 号 · 有救援玩法</span>
+    <p class="name">🧱 僵尸咬城墙</p>
+    <p class="desc">左边有一道<b>大石头城墙</b>。僵尸走到墙边会<b>停下来啊呜啊呜咬</b>，每咬一口就扣一颗心，墙上还会<b>裂开缝</b>。你要赶紧<b>跑过去把它打掉</b>，救救城墙！</p>
+    <div class="meta"><span class="pill good">能救援，最刺激</span><span class="pill">墙会裂开</span><span class="pill risk">堵住的路要自己清</span></div>
+    <div class="hint">👆 拖一拖：等僵尸开始咬墙，再跑过去打死它</div>
+    <button class="pick">就选 2 号</button>
+  </div>
+
+  <div class="card c3" data-k="c">
+    <canvas id="cv3"></canvas>
+    <span class="tag">3 号 · 改动最小</span>
+    <p class="name">⭕ 守护光圈</p>
+    <p class="desc">小人身边有一个<b>发光的圈圈</b>，那是他的守护范围。<b>自己这条路 + 上下各一条路</b>的僵尸，只要碰到圈圈就扣一颗心，还会被<b>弹回去、晕一会儿</b>（趁它晕赶紧换路补一刀！同一只僵尸只扣一次心，不会反复扣）。老家不用画，全靠小人自己跑动保护。</p>
+    <div class="meta"><span class="pill">不用画老家</span><span class="pill good">僵尸会被弹开</span><span class="pill risk">最边两条路还是安全</span><span class="pill risk">只护住 3 条路</span></div>
+    <div class="hint">👆 拖一拖：把小人拖到僵尸多的地方，看圈圈碰到就扣心</div>
+    <button class="pick">就选 3 号</button>
+  </div>
+
+</div>
+
+<div class="foot">
+  <h3>👨‍👦 给爸爸看的取舍（不用念给小朋友）</h3>
+  <b>问题根源（确认你的判断是对的）</b>：现在只有 <code>hurt()</code> 一条扣心路径，条件是「僵尸和主角<b>同一条路</b> + 身体重叠」。而子弹又是<b>同路自动连发</b>，所以只要主角钉在一条路上，那条路的僵尸几乎必被提前打死，另外四条路的僵尸<b>走过去也不会发生任何事</b>（走到屏幕外直接 splice）——等于四条路完全无威胁。难度自然崩了。<br>
+  三个方案都是给「另外四条路」加上代价，区别在于代价挂在<b>哪里</b>。
+  <table>
+    <tr><th>方案</th><th>改什么（正式游戏里）</th><th>难度效果</th><th>风险 / 代价</th></tr>
+    <tr><td><b>1 号 进老家扣心</b><br>🏕 推荐</td>
+        <td>① 新增 <code>BASE_X</code>（逻辑坐标约 x=90，正好是现在主角的 XMIN，主角往后站一点即可）；② <code>update()</code> 里加一条判定：<code>z.x - z.s*0.4 &lt; BASE_X</code> → <code>hurt()</code> + 僵尸消失 + 老家闪红 + 💥；③ 新增 <code>drawBase()</code>：木栅栏 + 5 个小帐篷 + 红旗，画在实体层<b>之前</b>（在路带左端，不挡怪）；④ 主角 XMIN 抬到 base 右侧。<b>命中、触摸、关卡时长、BOSS 全不用动。</b></td>
+        <td>最彻底：5 条路<b>全部</b>有代价，且代价直观（家被进了）。小朋友必须换路，自动连发不再万能。</td>
+        <td>极低。唯一要注意的是「我没被碰到怎么也掉心」——用<b>老家闪红 + 💥 + 屏幕红边 + 语音「老家被进啦」</b>解释清楚。<br>美术工作量：一个 base 绘制函数（约 40 行）。</td></tr>
+    <tr><td><b>2 号 咬城墙</b><br>🧱</td>
+        <td>在 1 号基础上再加：僵尸到墙<b>不消失</b>，进入 <code>z.eat=true</code> 状态，<code>z.bt</code> 计时每 2.2s 调一次 <code>hurt()</code>；墙有 <code>crack</code> 裂痕等级（按累计被咬次数画裂纹）；被咬时屏幕提示「快去救」。</td>
+        <td>最有玩法深度：形成「<b>漏怪 → 墙被咬 → 必须赶去清场</b>」的正反馈循环，最像植物大战僵尸。且比 1 号<b>宽容</b>（不是一次性扣完，有时间救援）。</td>
+        <td>中。要注意：① 咬墙的僵尸会<b>堵住那条路</b>，如果同路又来新怪，可能叠在一起 → 需要「咬墙时不再和主角身体碰撞」或让主角子弹能穿过打到它；② 墙本身要不要血量/会不会破（破了直接 gameOver？）需要再定；③ 三关节奏要重测。</td></tr>
+    <tr><td><b>3 号 守护光圈</b><br>⭕</td>
+        <td>最省事：不画 base，只在主角身上加半径约 1.4 条路高的光圈；<code>update()</code> 里改成「<b>相邻路</b>的僵尸与主角圆心距离 &lt; R + 僵尸半径」→ <code>hurt()</code> + 僵尸击退 74px + 眩晕 1.1s + 打 <code>z.zap</code> 标记。<b>删掉原来的同路判定</b>。<br>⚠️ <code>zap</code> 标记是<b>必须的</b>：不加的话僵尸被弹开后会再走回来，同一只反复扣心（实测挂机 60 秒扣 7 次，比 1 号还狠，看起来像 bug）。</td>
+        <td>只解决<b>一半</b>：半径 1.4 条路高，纵向<b>正好罩住 3 条路</b>（自己 + 上下各一条；小人贴最上/最下路时只罩得住 2 条），<b>最上、最下两条路依然完全安全</b>（僵尸大摇大摆走过去没事）。而且威胁变成「主角自己别乱跑」，和「守家」的情绪相反。</td>
+        <td>低，但性价比最低：改了判定却没让 5 条路都有威胁；小朋友可能会觉得「我明明躲开了，怎么还掉心」（击退+眩晕能缓解一部分）。</td></tr>
+  </table>
+  <b>我的建议</b>：选 <b>1 号</b>（改动最小、彻底解决「守一条路无敌」，而且「守护老家」跟《我的末日》这个主题最搭）。<br>
+  如果小朋友喜欢 2 号的「救援」感觉，可以<b>1 号 + 2 号合体</b>：老家门口先有一道沙袋墙，僵尸先咬沙袋（每口扣 1 心、可救援），咬穿 3 口才算进老家（进老家扣 1 心并消失）——层次更清楚，也不会一次崩盘。<br>
+  <b>配套的难度调节</b>（选定后我一起调，先不用小朋友决定）：加了守家压力后，第 1 关出怪间隔会从 1.5s 放宽到约 1.9s、僵尸速度 -10%，保证还是「两分钟能过、但要动手」；第 2、3 关再逐步收紧。
+</div>
+
+<div class="ov hide" id="ov">
+  <div class="ovbox">
+    <div class="bigok" id="ovEmo">🏕</div>
+    <div class="ovtitle" id="ovName">走进老家就扣心</div>
+    <div class="ovsub" id="ovSub">扣心方式</div>
+    <div class="ovbtns">
+      <button id="ovOk">✔ 就这个！</button>
+      <button id="ovNo">再看看</button>
+    </div>
+    <div class="dad">爸爸：把这句话告诉 AI —— <b id="dadChoice">还没选</b></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   三种「怎么扣心」的可玩 demo（纯演示，非正式游戏代码）
+   画布逻辑尺寸 480×270 = 正式游戏 960×540 的一半
+   人物 / 僵尸 / 特效画法与已选定的一致，一行没改
+   ============================================================ */
+const W=480,H=270;
+const E=[127,155,183,211,239,267];   // 五条路的边界（=正式游戏 1 号方案的排布）
+const HZ=118;                         // 地平线
+const laneY=i=>(E[i]+E[i+1])/2;
+function laneOf(y){for(let i=0;i<5;i++)if(y<E[i+1])return i;return 4;}
+function scaleAt(y){
+  const k=Math.max(0,Math.min(1,(y-E[0])/(E[5]-E[0])));
+  return 42+9*k;
+}
+function initCanvas(id){
+  const cv=document.getElementById(id);
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);
+  const c=cv.getContext('2d');
+  c.setTransform(dpr,0,0,dpr,0,0);
+  return {cv,c};
+}
+
+/* ---------- 公用小零件（沿用已选定的森林 + 人物 + 特效） ---------- */
+function moon(c,x,y,r){
+  c.save();c.shadowColor='#fff9c4';c.shadowBlur=16;c.fillStyle='#fff9c4';
+  c.beginPath();c.arc(x,y,r,0,7);c.fill();
+  c.shadowBlur=0;c.fillStyle='rgba(214,208,170,.5)';
+  c.beginPath();c.arc(x-r*0.28,y-r*0.2,r*0.22,0,7);c.fill();
+  c.beginPath();c.arc(x+r*0.34,y+r*0.28,r*0.16,0,7);c.fill();c.restore();
+}
+function skyForest(c,topY,t){
+  const g=c.createLinearGradient(0,0,0,topY);
+  g.addColorStop(0,'#03120e');g.addColorStop(.5,'#0a2c23');g.addColorStop(1,'#175644');
+  c.fillStyle=g;c.fillRect(0,0,W,topY);
+  for(let i=0;i<24;i++){
+    const x=(i*67+18)%W, y=(i*41)%Math.max(10,topY*0.55);
+    c.globalAlpha=.15+.55*Math.abs(Math.sin(t*1.1+i));
+    c.fillStyle='#e0f2f1';c.fillRect(x,y,1.4,1.4);
+  }
+  c.globalAlpha=1;
+}
+function pines(c,base,col,scale,step){
+  c.fillStyle=col;let i=0;
+  for(let x=-20;x<W+24;x+=step,i++){
+    const h=(32+((i*37)%22))*scale, w=h*0.56;
+    c.fillRect(x-w*0.07,base-h*0.30,w*0.14,h*0.32);
+    c.beginPath();c.moveTo(x,base-h);c.lineTo(x+w/2,base-h*0.34);c.lineTo(x-w/2,base-h*0.34);c.closePath();c.fill();
+    c.beginPath();c.moveTo(x,base-h*0.80);c.lineTo(x+w*0.64,base);c.lineTo(x-w*0.64,base);c.closePath();c.fill();
+  }
+}
+function fogBands(c,t,baseY){
+  c.save();c.fillStyle='#dff5ef';
+  for(let i=0;i<3;i++){
+    const y=baseY-i*12, span=W+260, x=((t*(9+i*5))+i*150)%span-130;
+    c.globalAlpha=.10-i*.022;
+    c.beginPath();c.ellipse(x,y,105,9,0,0,7);c.fill();
+    c.beginPath();c.ellipse(x-span,y,105,9,0,0,7);c.fill();
+  }
+  c.restore();
+}
+function fireflies(c,t,y0,y1,n){
+  for(let i=0;i<n;i++){
+    const bx=(i*71+23)%W, by=y0+((i*47)%Math.max(8,y1-y0));
+    const x=bx+Math.sin(t*.7+i*1.7)*11, y=by+Math.cos(t*.55+i*2.1)*7;
+    const a=.25+.75*Math.abs(Math.sin(t*2.1+i));
+    c.save();c.globalAlpha=a;c.shadowColor='#fff59d';c.shadowBlur=8;
+    c.fillStyle='#ffee58';c.beginPath();c.arc(x,y,1.7,0,7);c.fill();c.restore();
+  }
+}
+function shroom(c,x,y,s,glow){
+  c.save();
+  c.fillStyle='#e8e2d0';c.fillRect(x-1*s,y-4*s,2*s,4*s);
+  c.shadowColor='#4dd0e1';c.shadowBlur=9*glow;
+  c.fillStyle='#26c6da';c.beginPath();c.ellipse(x,y-4*s,4.2*s,2.8*s,0,Math.PI,0);c.fill();
+  c.shadowBlur=0;c.fillStyle='#b2ebf2';
+  c.fillRect(x-2*s,y-5.4*s,1.2*s,1.2*s);c.fillRect(x+0.8*s,y-4.8*s,1*s,1*s);
+  c.restore();
+}
+function tufts(c,col,y0,y1,n){
+  c.fillStyle=col;
+  for(let i=0;i<n;i++){
+    const x=(i*53+11)%W, y=y0+((i*71)%Math.max(6,y1-y0));
+    c.fillRect(x,y,1.2,3);c.fillRect(x+1.6,y+0.8,1.2,2.4);c.fillRect(x-1.4,y+1,1.2,2.2);
+  }
+}
+function star(c,x,y,r,rot,col){
+  c.save();c.translate(x,y);c.rotate(rot);c.fillStyle=col;c.beginPath();
+  for(let i=0;i<10;i++){
+    const a=Math.PI/5*i-Math.PI/2, d=i%2?r*0.45:r;
+    c.lineTo(Math.cos(a)*d,Math.sin(a)*d);
+  }
+  c.closePath();c.fill();c.restore();
+}
+/* ---------- 迷彩小战士（小朋友选定的 2 号，侧面） ---------- */
+function soldier(c,x,y,s,t,fire){
+  const u=s/46, step=Math.sin(t*7), lift=Math.max(0,step)*2.2*u;
+  c.save();c.translate(x,y);
+  c.fillStyle='#2f2f24';
+  c.fillRect(-6.4*u,-2.6*u-lift,5.6*u,2.6*u);
+  c.fillRect(1.0*u,-2.6*u,5.6*u,2.6*u);
+  c.fillStyle='#5b6b45';
+  c.fillRect(-5.4*u,-12*u-lift,4.4*u,10*u);
+  c.fillRect(1.4*u,-12*u,4.4*u,10*u);
+  c.fillStyle='#6d7f52';c.fillRect(-6.4*u,-27*u,12.8*u,15.4*u);
+  c.fillStyle='#4a5a33';c.fillRect(-4.4*u,-25*u,3.2*u,3.2*u);c.fillRect(1.2*u,-21*u,4*u,3*u);
+  c.fillStyle='#8a6f47';c.fillRect(-6.4*u,-19*u,3*u,2.2*u);c.fillRect(3.4*u,-26*u,3*u,2.2*u);
+  c.fillStyle='#26261c';c.fillRect(-6.4*u,-14.4*u,12.8*u,2.2*u);
+  c.fillStyle='#c0a060';c.fillRect(-1.6*u,-14.4*u,3.2*u,2.2*u);
+  c.fillStyle='#ffe0b2';c.fillRect(-4.2*u,-33*u,8.4*u,6.4*u);
+  c.fillStyle='#3b2a20';c.fillRect(-4.2*u,-33*u,8.4*u,1.2*u);
+  c.fillStyle='#2b1d16';c.fillRect(1.2*u,-30.6*u,1.5*u,1.8*u);
+  c.fillStyle='#6d7f52';c.fillRect(-5.4*u,-38.6*u,10.8*u,6*u);
+  c.fillStyle='#4a5a36';c.fillRect(-6.6*u,-33.6*u,14*u,1.8*u);
+  c.fillStyle='#e53935';
+  c.beginPath();
+  const sx=0,sy=-35.6*u,sr=2.3*u;
+  for(let i=0;i<10;i++){const a=Math.PI/5*i-Math.PI/2,d=i%2?sr*0.42:sr;c.lineTo(sx+Math.cos(a)*d,sy+Math.sin(a)*d);}
+  c.closePath();c.fill();
+  const rec=fire>0?-1.6*u:0;
+  c.fillStyle='#6d7f52';c.fillRect(2.4*u,(-26+rec)*u,5*u,4*u);
+  c.fillStyle='#ffe0b2';c.fillRect(6.4*u,(-25.4+rec)*u,3*u,3*u);
+  c.fillStyle='#37474f';c.fillRect(6.0*u,(-25.6+rec)*u,11*u,2.4*u);
+  c.fillStyle='#ffd54f';c.fillRect(16*u,(-25.9+rec)*u,2.6*u,3*u);
+  c.restore();
+}
+/* ---------- 经典绿僵尸（小朋友选定的 1 号：长舌头会晃） ---------- */
+function zombieArt(c,x,y,s,t,ph,boss){
+  const u=s/46, sw=Math.sin(ph*4.6)*1.6*u, arm=Math.sin(ph*4.6)*2.4*u;
+  c.save();c.translate(x+sw*0.3,y);
+  c.fillStyle='#3d5c34';
+  c.fillRect(-5.6*u,-11*u,4.4*u,11*u);c.fillRect(1.2*u,-11*u,4.4*u,11*u);
+  c.fillStyle='#2f2f24';c.fillRect(-6.4*u,-2.4*u,5.6*u,2.4*u);c.fillRect(0.8*u,-2.4*u,5.6*u,2.4*u);
+  c.fillStyle=boss?'#4a7a3a':'#5d8a4a';c.fillRect(-6.6*u,-26*u,13.2*u,15*u);
+  c.fillStyle='rgba(0,0,0,.22)';
+  c.fillRect(-6.6*u,-19*u,5*u,3*u);c.fillRect(1*u,-24*u,4*u,3.4*u);
+  c.fillStyle='#7aa85e';
+  c.fillRect(-11.4*u,(-25+arm*0.3)*u,5*u,3.6*u);
+  c.fillRect(6.4*u,(-25-arm*0.3)*u,5*u,3.6*u);
+  c.fillStyle='#8fc46a';c.fillRect(-12.6*u,-24*u,2*u,2*u);c.fillRect(10.6*u,-24*u,2*u,2*u);
+  c.fillStyle='#8fc46a';c.fillRect(-4.6*u,-33*u,9.2*u,7*u);
+  c.fillStyle='#2b3a22';c.fillRect(-4.6*u,-33*u,9.2*u,1.4*u);
+  c.fillStyle='#1b2417';
+  c.fillRect(-3*u,-30.6*u,2*u,2.2*u);c.fillRect(1*u,-30.6*u,2*u,2.2*u);
+  c.fillStyle='#e53935';
+  c.fillRect(-2.6*u,-27.4*u,1.6*u,1.6*u);c.fillRect(1.2*u,-27.4*u,1.6*u,1.6*u);
+  c.fillStyle='#ef9a9a';
+  const tg=Math.sin(t*3.4+ph)*1.6*u;
+  c.fillRect(-0.9*u+tg*0.4,-26.6*u,1.8*u,4.6*u+Math.abs(tg));
+  if(boss){
+    c.fillStyle='#c62828';c.fillRect(-8*u,-37.4*u,16*u,2.6*u);
+    c.fillStyle='#2b2b2b';c.fillRect(-8*u,-37.4*u,16*u*(0.35+0.3*Math.abs(Math.sin(t*2))),2.6*u);
+  }
+  c.restore();
+}
+/* ---------- 噗！一团烟（小朋友选定的 1 号特效） ---------- */
+function puffDraw(c,p){
+  const k=p.age/0.45; if(k>=1)return;
+  const a=1-k;
+  c.save();c.globalAlpha=a*.9;c.fillStyle='#eceff1';
+  for(let i=0;i<6;i++){
+    const ang=i*1.047+p.age*2.4, d=p.r*(0.4+k*2.6);
+    c.beginPath();c.arc(p.x+Math.cos(ang)*d,p.y+Math.sin(ang)*d*0.72,p.r*(0.5+0.5*k),0,7);c.fill();
+  }
+  c.restore();
+  c.save();c.globalAlpha=a;c.fillStyle='#fff';c.textAlign='center';
+  c.font='900 '+Math.round(9+p.r*0.9)+'px "PingFang SC",sans-serif';
+  c.fillText('噗！',p.x,p.y-p.r-3-k*6);c.restore();
+}
+
+/* ---------- 森林背景（=正式游戏现在的样子：路很淡，森林透出来） ---------- */
+function bgForest(c,t,hl){
+  skyForest(c,HZ,t);
+  moon(c,W*0.20,HZ*0.30,10);
+  pines(c,HZ-6,'#0a2b23',0.72,40);
+  pines(c,HZ+5,'#051914',1,56);
+  fogBands(c,t,HZ+2);
+  const g=c.createLinearGradient(0,HZ,0,H);
+  g.addColorStop(0,'#1d5138');g.addColorStop(.35,'#16402d');g.addColorStop(1,'#0c2519');
+  c.fillStyle=g;c.fillRect(0,HZ,W,H-HZ);
+  tufts(c,'rgba(120,220,165,.28)',HZ+4,H,54);
+  shroom(c,236,HZ+26,1.4,.55+.45*Math.abs(Math.sin(t*2)));
+  shroom(c,398,HZ+70,1.6,.55+.45*Math.abs(Math.sin(t*2+2)));
+  shroom(c,300,H-16,1.9,.55+.45*Math.abs(Math.sin(t*2+1)));
+  /* 路：很淡的光带 + 主角那条稍微亮一点 */
+  for(let i=0;i<5;i+=2){c.fillStyle='rgba(150,255,200,.06)';c.fillRect(0,E[i],W,E[i+1]-E[i]);}
+  c.save();c.strokeStyle='rgba(170,255,210,.26)';
+  for(let i=0;i<=5;i++){
+    const y=E[i];c.lineWidth=(i===0||i===5)?1.6:1;
+    c.setLineDash(i>0&&i<5?[9,8]:[]);
+    c.beginPath();c.moveTo(0,y);c.lineTo(W,y);c.stroke();
+  }
+  c.restore();
+  const hzg=c.createLinearGradient(0,E[0]-14,0,E[0]+50);
+  hzg.addColorStop(0,'rgba(190,235,215,.16)');hzg.addColorStop(1,'rgba(190,235,215,0)');
+  c.fillStyle=hzg;c.fillRect(0,E[0]-14,W,64);
+  c.fillStyle='rgba(120,255,190,.13)';c.fillRect(0,E[hl],W,E[hl+1]-E[hl]);
+}
+
+/* ---------- 1 号 / 3 号：营地老家（帐篷 + 木栅栏 + 红旗） ---------- */
+function tent(c,x,y,s){
+  c.fillStyle='#c0563a';
+  c.beginPath();c.moveTo(x,y-s*1.55);c.lineTo(x+s,y);c.lineTo(x-s,y);c.closePath();c.fill();
+  c.fillStyle='#8e3b26';
+  c.beginPath();c.moveTo(x,y-s*1.55);c.lineTo(x+s*0.34,y);c.lineTo(x-s*0.34,y);c.closePath();c.fill();
+  c.fillStyle='#ffd54f';c.fillRect(x-0.6,y-s*1.55-2.6,1.2,2.8);
+}
+function campArt(c,t,flash){
+  const y0=E[0]-10,y1=E[5]+4;
+  const g=c.createLinearGradient(0,0,46,0);
+  g.addColorStop(0,'rgba(26,19,12,.82)');g.addColorStop(1,'rgba(26,19,12,0)');
+  c.fillStyle=g;c.fillRect(0,y0,46,y1-y0);
+  /* 木栅栏 */
+  c.fillStyle='#4a3520';
+  for(let y=y0+2;y<y1;y+=7)c.fillRect(33,y,4.4,5.6);
+  c.fillStyle='#5d432a';c.fillRect(31,y0+1,2.6,y1-y0-2);
+  c.fillStyle='rgba(255,236,190,.14)';c.fillRect(33,y0+1,1.2,y1-y0-2);
+  /* 每条路一个小帐篷 */
+  for(let i=0;i<5;i++)tent(c,15,laneY(i)+3,5.4+i*0.7);
+  /* 红旗 */
+  c.fillStyle='#c9b48a';c.fillRect(6,y0-14,1.6,26);
+  c.fillStyle='#e53935';
+  c.beginPath();c.moveTo(7.6,y0-13);
+  c.lineTo(19+Math.sin(t*3.2)*2.2,y0-9);
+  c.lineTo(7.6,y0-5);c.closePath();c.fill();
+  /* 小篝火 */
+  const fy=(E[2]+E[3])/2+2, fl=0.7+0.3*Math.sin(t*9);
+  c.save();c.shadowColor='#ff9800';c.shadowBlur=14*fl;
+  c.fillStyle='#ff7043';c.beginPath();c.ellipse(26,fy,3.2,4.6*fl,0,0,7);c.fill();
+  c.fillStyle='#ffd54f';c.beginPath();c.ellipse(26,fy+1,1.7,2.6*fl,0,0,7);c.fill();c.restore();
+  c.fillStyle='#4e342e';c.fillRect(22,fy+3.6,8,1.8);
+  if(flash>0){
+    c.fillStyle='rgba(255,60,40,'+(flash*0.5).toFixed(3)+')';
+    c.fillRect(0,y0,46,y1-y0);
+  }
+}
+/* ---------- 2 号：石头城墙（会被咬出裂缝） ---------- */
+function wallArt(c,t,crack,flash){
+  const y0=E[0]-12,y1=E[5]+4;
+  c.fillStyle='rgba(20,16,26,.5)';c.fillRect(20,y0,10,y1-y0);
+  c.fillStyle='#5b6070';c.fillRect(26,y0,18,y1-y0);
+  c.fillStyle='rgba(255,255,255,.10)';c.fillRect(26,y0,3,y1-y0);
+  c.fillStyle='rgba(0,0,0,.26)';
+  for(let y=y0;y<y1;y+=7){
+    c.fillRect(26,y,18,1);
+    const off=(Math.round((y-y0)/7)%2)?5:0;
+    for(let x=26+off;x<44;x+=10)c.fillRect(x,y,1,7);
+  }
+  c.fillStyle='#767c8c';
+  for(let x=26;x<44;x+=6)c.fillRect(x,y0-5,4,5);
+  const n=Math.round(crack*5);
+  c.strokeStyle='rgba(18,14,12,'+(0.3+crack*0.55).toFixed(2)+')';c.lineWidth=1.2;
+  for(let i=0;i<n;i++){
+    const cy=y0+14+i*24;
+    c.beginPath();c.moveTo(29,cy);c.lineTo(35,cy+6);c.lineTo(30,cy+12);c.lineTo(37,cy+17);c.stroke();
+  }
+  if(flash>0){
+    c.fillStyle='rgba(255,70,50,'+(flash*0.45).toFixed(3)+')';
+    c.fillRect(26,y0-5,18,y1-y0+5);
+  }
+}
+/* ---------- 3 号：守护光圈 ---------- */
+function aura(c,x,y,r,t){
+  const p=0.5+0.5*Math.sin(t*3.1);
+  c.save();
+  const g=c.createRadialGradient(x,y,r*0.25,x,y,r);
+  g.addColorStop(0,'rgba(120,220,255,0)');
+  g.addColorStop(.72,'rgba(120,220,255,.07)');
+  g.addColorStop(1,'rgba(120,220,255,.20)');
+  c.fillStyle=g;c.beginPath();c.arc(x,y,r,0,7);c.fill();
+  c.strokeStyle='rgba(140,225,255,'+(0.5+0.3*p).toFixed(2)+')';c.lineWidth=2.2;
+  c.shadowColor='#4fc3f7';c.shadowBlur=10;
+  c.beginPath();c.arc(x,y,r+p*1.8,0,7);c.stroke();
+  c.restore();
+}
+/* ---------- 头顶提示 ---------- */
+function hud(c,hearts,score,msg,msgTxt){
+  c.save();c.font='900 13px "PingFang SC",sans-serif';c.textAlign='left';
+  let s='';for(let i=0;i<3;i++)s+=i<hearts?'❤️':'🖤';
+  c.fillText(s,8,17);
+  c.fillStyle='#ffd54f';c.textAlign='right';c.fillText('⭐ '+score,W-8,17);
+  if(msg>0&&msgTxt){
+    c.globalAlpha=Math.min(1,msg*2.2);c.textAlign='center';
+    c.fillStyle='#ff8a65';c.font='900 15px "PingFang SC",sans-serif';
+    c.fillText(msgTxt,W/2,42);
+  }
+  c.restore();
+}
+
+/* ============================================================
+   三种扣心方式共用的 demo 引擎
+   mode: 'base' = 进老家扣心 | 'wall' = 咬城墙 | 'aura' = 守护光圈
+   ============================================================ */
+function makeGuard(mode){
+  const BASE=mode==='wall'?44:40;    // 老家 / 城墙的右边缘
+  const AURA_R=40;                   // 守护光圈半径：正好罩住自己这条路 + 上下各一条
+  const HXMIN=50,HXMAX=250;          // 小人能站的最左 / 最右
+  const o={mode,t:0,fire:0,fc:0.4,sp:0.5,score:0,hearts:3,zs:[],bls:[],ps:[],booms:[],
+           shake:0,dead:0,flash:0,bites:0,msg:0,msgTxt:''};
+  const hero={x:78,lane:2,tx:78,y:laneY(2),ty:laneY(2),inv:0};
+  o.hero=hero;
+  o.reset=function(){
+    o.zs.length=0;o.bls.length=0;o.ps.length=0;o.booms.length=0;
+    o.score=0;o.hearts=3;o.dead=0;o.sp=0.5;o.bites=0;o.flash=0;o.msg=0;o.msgTxt='';
+    hero.x=hero.tx=78;hero.lane=2;hero.y=hero.ty=laneY(2);hero.inv=0;
+  };
+  o.point=function(gx,gy){
+    hero.tx=Math.max(HXMIN,Math.min(HXMAX,gx));
+    hero.lane=laneOf(gy);hero.ty=laneY(hero.lane);
+  };
+  function hurt(txt){
+    o.hearts--;hero.inv=1.3;o.shake=1;o.flash=1;o.msg=1.4;o.msgTxt=txt;
+    if(o.hearts<=0){o.hearts=0;o.dead=1.2;}
+  }
+  o.update=function(dt){
+    o.t+=dt;o.fire=Math.max(0,o.fire-dt);
+    o.shake=Math.max(0,o.shake-dt*2.6);
+    o.flash=Math.max(0,o.flash-dt*2.2);
+    o.msg=Math.max(0,o.msg-dt);
+    const hs=scaleAt(hero.y);
+    hero.inv=Math.max(0,hero.inv-dt);
+    hero.x+=(hero.tx-hero.x)*Math.min(1,dt*9);
+    hero.y+=(hero.ty-hero.y)*Math.min(1,dt*11);
+    if(o.dead>0){o.dead-=dt;if(o.dead<=0)o.reset();return;}
+    /* 自动连发（只打同一条路） */
+    o.fc-=dt;
+    if(o.fc<=0){
+      o.fc=0.5;o.fire=0.14;
+      o.bls.push({lane:hero.lane,x:hero.x+16,y:hero.y-hs*0.56,rot:0});
+    }
+    /* 出怪：五条路随机，压力比正式版稍大，好让小朋友立刻看出差别。
+       三个 demo 用同一节奏，这样比出来的难易差别才是机制本身的差别 */
+    o.sp-=dt;
+    if(o.sp<=0&&o.zs.length<7){
+      o.sp=1.05+Math.random()*0.5;
+      const l=Math.floor(Math.random()*5), y=laneY(l);
+      o.zs.push({lane:l,x:W+22,y:y,s:scaleAt(y),v:20+Math.random()*9,
+                 ph:Math.random()*6,hp:1,die:0,eat:false,bt:0,stun:0,zap:0});
+    }
+    /* 子弹 */
+    for(let i=o.bls.length-1;i>=0;i--){
+      const b=o.bls[i];b.x+=190*dt;b.rot+=dt*9;
+      if(b.x>W+20){o.bls.splice(i,1);continue;}
+      let hit=false;
+      for(const z of o.zs){
+        if(z.lane===b.lane&&z.die<=0&&Math.abs(z.x-b.x)<z.s*0.28+4){
+          z.hp--;hit=true;if(z.hp<=0){z.die=0.28;o.score++;}break;
+        }
+      }
+      if(hit)o.bls.splice(i,1);
+    }
+    /* 僵尸 */
+    const hcx=hero.x, hcy=hero.y-hs*0.55;
+    for(let i=o.zs.length-1;i>=0;i--){
+      const z=o.zs[i];
+      if(z.die>0){
+        z.die-=dt;
+        if(z.die<=0){
+          o.ps.push({x:z.x,y:z.y-z.s*0.5,r:z.s/5,age:0});
+          o.zs.splice(i,1);
+        }
+        continue;
+      }
+      z.stun=Math.max(0,z.stun-dt);
+      if(z.eat){                                  // 2 号：贴着墙咬
+        z.bt-=dt;z.ph+=dt*0.5;
+        if(z.bt<=0){
+          z.bt=2.2;o.bites++;
+          hurt('在咬城墙！快去打死它！');
+          o.booms.push({x:36,y:z.y-z.s*0.5,age:0});
+        }
+        continue;
+      }
+      if(z.stun<=0){z.x-=z.v*dt;}
+      z.ph+=dt;
+      if(mode==='aura'){
+        /* 3 号：相邻路的僵尸进光圈就扣心 + 弹开 + 眩晕。
+           zap 标记保证「同一只僵尸只扣一次心」，否则它被弹开后又走回来会反复扣心 */
+        const dx=z.x-hcx, dy=(z.y-z.s*0.55)-hcy;
+        if(hero.inv<=0&&!z.zap&&Math.sqrt(dx*dx+dy*dy)<AURA_R+z.s*0.24){
+          hurt('碰到光圈啦！');
+          z.zap=1;z.x+=74;z.stun=1.1;
+        }
+      }else{
+        /* 主角身体碰撞（三种都保留，只是不再是唯一扣心方式） */
+        if(hero.inv<=0&&z.lane===hero.lane&&z.x>hero.x-hs*0.5&&z.x-z.s*0.40<hero.x+hs*0.14){
+          hurt('被碰到啦！');z.die=0.28;continue;
+        }
+        /* 1 号 / 2 号：走到最左边 */
+        if(z.x-z.s*0.40<BASE){
+          if(mode==='base'){
+            hurt('进老家啦！');
+            o.booms.push({x:BASE-4,y:z.y-z.s*0.5,age:0});
+            z.die=0.28;
+          }else{
+            z.eat=true;z.bt=0.7;o.msg=1.6;o.msgTxt='僵尸开始咬墙了！';
+          }
+        }
+      }
+      if(z.x<-30)o.zs.splice(i,1);
+    }
+    for(let i=o.ps.length-1;i>=0;i--){o.ps[i].age+=dt;if(o.ps[i].age>0.45)o.ps.splice(i,1);}
+    for(let i=o.booms.length-1;i>=0;i--){o.booms[i].age+=dt;if(o.booms[i].age>0.6)o.booms.splice(i,1);}
+  };
+  o.draw=function(c){
+    c.clearRect(0,0,W,H);
+    c.save();
+    if(o.shake>0)c.translate((Math.random()-.5)*5*o.shake,(Math.random()-.5)*5*o.shake);
+    bgForest(c,o.t,hero.lane);
+    /* 老家 / 城墙 画在实体后面；3 号不画老家 */
+    if(mode==='base')campArt(c,o.t,o.flash);
+    else if(mode==='wall')wallArt(c,o.t,Math.min(1,o.bites/6),o.flash);
+    if(mode==='aura'){
+      const hs=scaleAt(hero.y);
+      aura(c,hero.x,hero.y-hs*0.55,AURA_R,o.t);
+    }
+    /* 实体按远近排序 */
+    const list=[];
+    for(const z of o.zs)list.push([z.y,()=>{
+      c.save();
+      c.fillStyle='rgba(0,0,0,.22)';
+      c.beginPath();c.ellipse(z.x,z.y,z.s*0.26,z.s*0.08,0,0,7);c.fill();
+      if(z.die>0){
+        c.globalAlpha=Math.max(0,z.die/0.28)*0.7;
+        c.translate(0,(1-z.die/0.28)*-3);
+      }
+      if(z.stun>0){c.translate(0,Math.sin(o.t*40)*0.8);}
+      zombieArt(c,z.x,z.y,z.s,o.t,z.ph,false);
+      c.restore();
+      if(z.eat){                                   // 咬墙的「啊呜」
+        c.save();c.textAlign='center';
+        c.font='900 11px "PingFang SC",sans-serif';c.fillStyle='#fff176';
+        c.fillText('啊呜！',z.x,z.y-z.s-4+Math.sin(o.t*7)*1.6);c.restore();
+      }
+      if(z.stun>0){
+        c.save();c.textAlign='center';c.font='900 10px "PingFang SC",sans-serif';
+        c.fillStyle='#b3e5fc';c.fillText('💫',z.x,z.y-z.s-3);c.restore();
+      }
+    }]);
+    list.push([hero.y,()=>{
+      if(o.dead>0)return;
+      if(hero.inv>0&&Math.floor(o.t*14)%2===1)return;
+      const hs=scaleAt(hero.y);
+      c.save();c.fillStyle='rgba(0,0,0,.24)';
+      c.beginPath();c.ellipse(hero.x,hero.y,hs*0.26,hs*0.09,0,0,7);c.fill();c.restore();
+      soldier(c,hero.x,hero.y,hs,o.t,o.fire);
+    }]);
+    list.sort((a,b)=>a[0]-b[0]);
+    for(const it of list)it[1]();
+    /* 子弹：星星飞镖 */
+    for(const b of o.bls){
+      c.save();c.globalAlpha=.35;star(c,b.x-6,b.y,3.4,b.rot,'#fff176');c.restore();
+      star(c,b.x,b.y,4.6,b.rot,'#ffd54f');
+    }
+    for(const p of o.ps)puffDraw(c,p);
+    for(const b of o.booms){                        // 老家被进 / 墙被咬：💥
+      const k=b.age/0.6;
+      c.save();c.globalAlpha=1-k;c.textAlign='center';
+      c.font=Math.round(14+k*12)+'px "PingFang SC",sans-serif';
+      c.fillText('💥',b.x,b.y-k*8);c.restore();
+    }
+    fireflies(c,o.t,16,H-8,16);                     // 萤火虫在最前面飞
+    /* 掉心时屏幕四周闪红 */
+    if(o.flash>0){
+      const vg=c.createRadialGradient(W/2,H/2,H*0.34,W/2,H/2,H*0.86);
+      vg.addColorStop(0,'rgba(255,40,30,0)');
+      vg.addColorStop(1,'rgba(255,40,30,'+(o.flash*0.55).toFixed(3)+')');
+      c.fillStyle=vg;c.fillRect(0,0,W,H);
+    }
+    c.restore();
+    hud(c,o.hearts,o.score,o.msg,o.msgTxt);
+    /* 底部玩法说明 */
+    c.save();c.textAlign='center';c.fillStyle='rgba(255,255,255,.6)';
+    c.font='800 10px "PingFang SC",sans-serif';
+    const tip=mode==='base'?'🏕 别让任何一条路的僵尸走进左边的老家！'
+             :mode==='wall'?'🧱 僵尸咬墙就掉心 —— 快跑过去打死它！'
+             :'⭕ 自己路和上下各一条的僵尸碰到光圈就掉心！';
+    c.fillText(tip,W/2,H-6);c.restore();
+    if(o.dead>0){
+      c.save();c.fillStyle='rgba(6,12,24,.55)';c.fillRect(0,0,W,H);
+      c.fillStyle='#ffd54f';c.textAlign='center';c.font='900 26px "PingFang SC",sans-serif';
+      c.fillText('哎呀！重新开始～',W/2,H/2);c.restore();
+    }
+  };
+  return o;
+}
+
+/* ============================================================
+   装配：三个 demo + 拖动 + 语音 + 选择
+   ============================================================ */
+const INFO={
+  a:{emo:'🏕',name:'1 号 走进老家就扣心',
+     sub:'左边是营地老家，僵尸不管走哪条路，进了老家就扣一颗心',
+     tell:'「扣心方式选 1 号：僵尸走进老家（营地）就扣一颗心，像植物大战僵尸」',
+     say:'一号，守护老家。左边是我们的营地，有小帐篷、木栅栏和红旗。僵尸不管走哪一条路，只要跑到最左边进了老家，就扣一颗心，老家还会闪红光！所以五条路都要看着哦。'},
+  b:{emo:'🧱',name:'2 号 僵尸咬城墙',
+     sub:'僵尸走到墙边停下来咬，每咬一口扣一颗心，你要跑过去救',
+     tell:'「扣心方式选 2 号：城墙被咬，每咬一口扣一颗心，可以跑过去救援」',
+     say:'二号，咬城墙。左边有一道大大的石头墙，僵尸走到墙边会停下来，啊呜啊呜咬墙，每咬一口就扣一颗心，墙上还会裂开缝。你要赶紧跑过去把它打掉，救救城墙！'},
+  c:{emo:'⭕',name:'3 号 守护光圈',
+     sub:'小人身边有发光圈，自己这条路和上下各一条的僵尸碰到圈就扣一颗心并被弹开',
+     tell:'「扣心方式选 3 号：主角守护光圈，相邻三条路的僵尸进圈就扣一颗心并弹开」',
+     say:'三号，守护光圈。小人身边有一个发光的圈圈，那是他的守护范围。自己这条路，还有上面一条、下面一条，僵尸碰到圈圈就扣一颗心，还会被弹回去，晕一会儿。趁它晕的时候，赶紧换路把它打掉！'}
+};
+
+function speak(text){
+  try{
+    if(!('speechSynthesis' in window))return;
+    window.speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang='zh-CN';u.rate=0.92;u.pitch=1.15;
+    window.speechSynthesis.speak(u);
+  }catch(e){}
+}
+function say(text){
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang='zh-CN';u.rate=0.92;u.pitch=1.15;
+  window.speechSynthesis.speak(u);
+}
+
+const demos=[];
+function mount(id,make,card){
+  const {cv,c}=initCanvas(id);
+  const o=make();
+  demos.push({cv,c,o});
+  let pid=null;
+  const toG=e=>{const r=cv.getBoundingClientRect();
+    return {x:(e.clientX-r.left)/r.width*W,y:(e.clientY-r.top)/r.height*H};};
+  cv.addEventListener('pointerdown',e=>{
+    e.preventDefault();pid=e.pointerId;
+    try{cv.setPointerCapture(pid);}catch(err){}
+    const g=toG(e);o.point(g.x,g.y);select(card,false);
+  });
+  cv.addEventListener('pointermove',e=>{
+    if(pid!==e.pointerId)return;
+    e.preventDefault();
+    const g=toG(e);o.point(g.x,g.y);
+  });
+  /* 电脑上鼠标不按住也能控制，方便爸爸先试 */
+  cv.addEventListener('pointermove',e=>{
+    if(pid!==null||e.pointerType!=='mouse')return;
+    const g=toG(e);o.point(g.x,g.y);
+  });
+  const up=e=>{if(pid===e.pointerId)pid=null;};
+  cv.addEventListener('pointerup',up);
+  cv.addEventListener('pointercancel',up);
+  cv.addEventListener('click',e=>e.stopPropagation());
+}
+
+const cards=[...document.querySelectorAll('.card')];
+const ov=document.getElementById('ov');
+let pending=null;
+
+function select(card,doSpeak){
+  cards.forEach(x=>x.classList.toggle('sel',x===card));
+  if(doSpeak)speak(INFO[card.dataset.k].say);
+}
+
+cards.forEach(card=>{
+  const k=card.dataset.k;
+  card.addEventListener('click',()=>select(card,true));
+  card.querySelector('.pick').addEventListener('click',e=>{
+    e.stopPropagation();
+    pending=k;
+    document.getElementById('ovEmo').textContent=INFO[k].emo;
+    document.getElementById('ovName').textContent=INFO[k].name;
+    document.getElementById('ovSub').textContent=INFO[k].sub;
+    document.getElementById('dadChoice').textContent=INFO[k].tell;
+    ov.classList.remove('hide');
+    speak('确认一下，你要'+INFO[k].name+'吗？');
+  });
+});
+document.getElementById('ovOk').addEventListener('click',()=>{
+  try{localStorage.setItem('moday_guard',pending);}catch(e){}
+  select(cards.find(x=>x.dataset.k===pending),false);
+  ov.classList.add('hide');
+  speak('好！记住啦，'+INFO[pending].name+'！');
+});
+document.getElementById('ovNo').addEventListener('click',()=>{
+  ov.classList.add('hide');
+  pending=null;
+});
+document.getElementById('btnSpeakAll').addEventListener('click',()=>{
+  try{
+    if(!('speechSynthesis' in window))return;
+    window.speechSynthesis.cancel();
+    say('现在只有僵尸碰到小人才掉心，小人守在一条路上就一直安全，太简单啦！下面三个画面都能玩，用手指拖一拖小人，选一个最紧张最好玩的！');
+    say(INFO.a.say);say(INFO.b.say);say(INFO.c.say);
+  }catch(e){}
+});
+
+/* 装配三张画布 */
+mount('cv1',()=>makeGuard('base'),cards[0]);
+mount('cv2',()=>makeGuard('wall'),cards[1]);
+mount('cv3',()=>makeGuard('aura'),cards[2]);
+
+/* 之前选过的话，先把那张卡片亮起来 */
+try{
+  const saved=localStorage.getItem('moday_guard');
+  if(saved&&INFO[saved]){
+    const card=cards.find(x=>x.dataset.k===saved);
+    if(card)card.classList.add('sel');
+  }
+}catch(e){}
+
+let last=0;
+function loop(now){
+  const t=now/1000;
+  let dt=last?t-last:0.016;
+  last=t;
+  if(dt>0.05)dt=0.05;
+  for(const d of demos){d.o.update(dt);d.o.draw(d.c);}
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+/* 平板上禁掉双指缩放 / 双击放大 */
+document.addEventListener('gesturestart',e=>e.preventDefault());
+document.addEventListener('dblclick',e=>e.preventDefault());
+let lastTouch=0;
+document.addEventListener('touchend',e=>{
+  const now=Date.now();
+  if(now-lastTouch<=320)e.preventDefault();
+  lastTouch=now;
+},{passive:false});
+</script>
+</body>
+</html>

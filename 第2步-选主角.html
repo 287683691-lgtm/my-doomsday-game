@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>《我的末日》第2步 · 选解放军小战士</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:#0e1626;font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;
+  touch-action:manipulation;overscroll-behavior:none}
+body{padding:14px 16px 26px;color:#fff;min-height:100vh}
+header{text-align:center;margin-bottom:12px}
+h1{margin:0;font-size:clamp(20px,3.4vw,34px);letter-spacing:1px;
+   background:linear-gradient(90deg,#ffd54f,#ff8a65,#ba68c8);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{margin:6px 0 0;font-size:clamp(14px,2vw,20px);color:#a9c0e8}
+.speakAll{margin-top:9px;border:0;background:#ffca28;color:#4a3200;font-size:clamp(14px,1.9vw,19px);
+  font-weight:800;padding:10px 22px;border-radius:999px;cursor:pointer;box-shadow:0 4px 0 #c79100}
+.speakAll:active{transform:translateY(3px);box-shadow:0 1px 0 #c79100}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:1500px;margin:0 auto}
+@media (max-width:980px){.cards{grid-template-columns:1fr}}
+.card{background:#fff;color:#22303f;border-radius:22px;padding:12px 13px 14px;
+  border:5px solid transparent;box-shadow:0 8px 26px rgba(0,0,0,.45);display:flex;flex-direction:column;cursor:pointer}
+.card.sel{border-color:#ffca28}
+.card canvas{width:100%;aspect-ratio:400/260;border-radius:14px;display:block;background:#111a2e;touch-action:none}
+.tag{display:inline-block;align-self:flex-start;font-size:13px;font-weight:800;color:#fff;
+  padding:3px 12px;border-radius:999px;margin-bottom:6px}
+.name{font-size:clamp(19px,2.5vw,27px);font-weight:900;margin:0 0 4px;line-height:1.25}
+.desc{font-size:clamp(14px,1.75vw,18px);line-height:1.62;margin:0 0 9px;color:#3d4d5e;flex:1}
+.desc b{color:#e65100}
+.meta{display:flex;align-items:center;gap:8px;font-size:13px;color:#7b8a99;margin-bottom:9px;flex-wrap:wrap}
+.pill{background:#eef2f7;border-radius:999px;padding:3px 10px;font-weight:700;color:#546e7a}
+.pick{border:0;width:100%;height:clamp(58px,7vw,76px);border-radius:999px;font-size:clamp(19px,2.5vw,26px);
+  font-weight:900;color:#fff;cursor:pointer;font-family:inherit;letter-spacing:1px}
+.pick:active{transform:translateY(4px)}
+.c1 .tag{background:#558b2f}.c1 .pick{background:#558b2f;box-shadow:0 6px 0 #33691e}
+.c1 .pick:active{box-shadow:0 2px 0 #33691e}
+.c2 .tag{background:#8d6e63}.c2 .pick{background:#8d6e63;box-shadow:0 6px 0 #5d4037}
+.c2 .pick:active{box-shadow:0 2px 0 #5d4037}
+.c3 .tag{background:#c62828}.c3 .pick{background:#c62828;box-shadow:0 6px 0 #8e1f1c}
+.c3 .pick:active{box-shadow:0 2px 0 #8e1f1c}
+.foot{max-width:1500px;margin:14px auto 0;text-align:center;color:#6f86ad;font-size:13px;line-height:1.7}
+.foot b{color:#ffd54f}
+.ov{position:fixed;inset:0;background:rgba(6,12,24,.93);display:flex;align-items:center;justify-content:center;
+  z-index:50;padding:20px;text-align:center}
+.ov.hide{display:none}
+.ovbox{max-width:640px}
+.bigok{font-size:clamp(64px,14vw,120px);line-height:1;animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
+@keyframes pop{from{transform:scale(.2);opacity:0}to{transform:scale(1);opacity:1}}
+.ovtitle{font-size:clamp(26px,5vw,46px);font-weight:900;margin:8px 0 4px;color:#ffd54f}
+.ovsub{font-size:clamp(16px,2.6vw,24px);color:#cfe0ff;margin-bottom:22px}
+.ovbtns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.ovbtns button{border:0;font-family:inherit;font-weight:900;font-size:clamp(17px,2.4vw,23px);
+  padding:16px 30px;border-radius:999px;cursor:pointer}
+#ovOk{background:#43a047;color:#fff;box-shadow:0 6px 0 #2c6b2f}
+#ovOk:active{transform:translateY(4px);box-shadow:0 2px 0 #2c6b2f}
+#ovNo{background:transparent;color:#9fb4d8;border:3px solid #44587e}
+.dad{margin-top:20px;font-size:13px;color:#6f86ad}
+.dad b{color:#ffd54f;font-size:16px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>《我的末日》第 2 步 · 选你的解放军小战士</h1>
+  <div class="sub">三个瘦瘦的小战士都在动哦！帽子中间都有一颗红五角星 ⭐ 看看你最喜欢哪一套衣服 👇</div>
+  <button class="speakAll" id="btnSpeakAll">🔊 点我，念给我听</button>
+</header>
+
+<div class="cards">
+
+  <div class="card c1" data-k="green">
+    <span class="tag">1 号</span>
+    <div class="name">🎖️ 经典军绿小战士</div>
+    <canvas id="cv1"></canvas>
+    <p class="desc">穿<b>军绿色的军装</b>，帽子上有一颗<b>红五角星</b>。<br>
+      领子上有<b>红领章</b>，腰上扎着皮带，<br>
+      像解放军叔叔一样神气！</p>
+    <div class="meta"><span class="pill">军绿色</span><span class="pill">红五角星帽</span><span class="pill">红领章</span></div>
+    <button class="pick">我要当这个！</button>
+  </div>
+
+  <div class="card c2" data-k="camo">
+    <span class="tag">2 号</span>
+    <div class="name">🌿 迷彩小战士</div>
+    <canvas id="cv2"></canvas>
+    <p class="desc">衣服是<b>一块一块的迷彩</b>，像藏在草丛里。<br>
+      迷彩帽上也有<b>红五角星</b>，<br>
+      像丛林里的特种兵，酷酷的！</p>
+    <div class="meta"><span class="pill">迷彩块块</span><span class="pill">红五角星帽</span><span class="pill">特种兵风</span></div>
+    <button class="pick">我要当这个！</button>
+  </div>
+
+  <div class="card c3" data-k="guard">
+    <span class="tag">3 号</span>
+    <div class="name">💂 仪仗队小战士</div>
+    <canvas id="cv3"></canvas>
+    <p class="desc">穿<b>深绿色的礼服</b>，有<b>金色扣子</b>和白色腰带。<br>
+      戴白手套，裤子还有红条纹，<br>
+      像天安门升旗的叔叔，超级帅！</p>
+    <div class="meta"><span class="pill">深绿礼服</span><span class="pill">金扣子</span><span class="pill">白腰带白手套</span></div>
+    <button class="pick">我要当这个！</button>
+  </div>
+
+</div>
+
+<div class="foot">
+  给爸爸：主角已定为<b>瘦瘦的解放军小战士</b>（解放军帽 + 帽中红五角星），本页选 3 套军装变体。<br>
+  玩法已锁定 = <b>B 改良版</b>（手指拖动小人 + 自动向前连发，拖动范围默认左半屏）。<br>
+  之后游戏的角色选择界面会再加一个<b>胖胖的伙伴角色</b>（下一步再做），本页只定瘦瘦主角的军装。<br>
+  小朋友点完后，这里会显示他的选择 —— 当前记录：<b id="dadChoice">还没有</b>
+</div>
+
+<div class="ov hide" id="ov">
+  <div class="ovbox">
+    <div class="bigok">🎉</div>
+    <div class="ovtitle">你要当 <span id="ovName">经典军绿小战士</span>！</div>
+    <div class="ovsub" id="ovSub">军绿色军装 + 红五角星帽</div>
+    <div class="ovbtns">
+      <button id="ovOk">✔ 就这样，开始做！</button>
+      <button id="ovNo">我再想想</button>
+    </div>
+    <div class="dad">爸爸看这里 · 已记录选择 = <b id="ovCode">green</b>（存在本机浏览器里）</div>
+  </div>
+</div>
+
+<script>
+const W=400,H=260;
+
+/* ---------- 通用 ---------- */
+function rrect(ctx,x,y,w,h,r){
+  r=Math.min(r,w/2,h/2);
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+function star(ctx,x,y,r,c){
+  ctx.save();ctx.translate(x,y);ctx.fillStyle=c;ctx.beginPath();
+  for(let i=0;i<10;i++){
+    const a=-Math.PI/2+i*Math.PI/5, rr=i%2?r*0.45:r;
+    ctx.lineTo(Math.cos(a)*rr,Math.sin(a)*rr);
+  }
+  ctx.closePath();ctx.fill();ctx.restore();
+}
+function burst(a,x,y,colors,n,sp){
+  for(let i=0;i<n;i++){
+    const an=Math.random()*Math.PI*2,v=(sp||100)*(0.35+Math.random());
+    a.push({x,y,vx:Math.cos(an)*v,vy:Math.sin(an)*v-40,life:0.55+Math.random()*0.35,t:0,
+            c:colors[i%colors.length],r:2+Math.random()*3.5});
+  }
+}
+function updParts(a,dt){
+  for(let i=a.length-1;i>=0;i--){const p=a[i];p.t+=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=300*dt;if(p.t>=p.life)a.splice(i,1);}
+}
+function drawParts(ctx,a){
+  for(const p of a){ctx.globalAlpha=Math.max(0,1-p.t/p.life);ctx.fillStyle=p.c;ctx.fillRect(p.x-p.r/2,p.y-p.r/2,p.r,p.r);}
+  ctx.globalAlpha=1;
+}
+function bgGrad(ctx,c1,c2){
+  const g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,c1);g.addColorStop(1,c2);
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+}
+function drawMoon(ctx,x,y,r){
+  ctx.save();ctx.globalAlpha=.85;ctx.fillStyle='#fff9c4';
+  ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fill();
+  ctx.globalAlpha=.18;ctx.beginPath();ctx.arc(x,y,r*2.1,0,7);ctx.fill();
+  ctx.restore();
+}
+function drawBuildings(ctx,t,base,color){
+  ctx.fillStyle=color;
+  const seed=[26,58,18,74,40,12,66,30,52,20,44,14];
+  let x=-10;
+  for(let i=0;x<W+20;i++){
+    const w=26+((i*37)%28),h=seed[i%seed.length]+18;
+    ctx.fillRect(x,base-h,w,h);
+    ctx.fillStyle='rgba(255,235,59,.5)';
+    for(let r=0;r<Math.floor(h/14);r++)
+      for(let c=0;c<Math.floor(w/12);c++)
+        if(((i*7+r*3+c*5+Math.floor(t*0.6))%5)===0) ctx.fillRect(x+4+c*12,base-h+6+r*14,5,6);
+    ctx.fillStyle=color;
+    x+=w+7;
+  }
+}
+/* 方块僵尸：面朝左 */
+function drawZombie(ctx,x,y,s,o){
+  o=o||{};
+  const c1=o.c1||'#8bc34a',c2=o.c2||'#689f38',ph=o.phase||0;
+  const k=s/44,wob=Math.sin(ph)*2;
+  ctx.save();ctx.translate(x,y+wob*0.4);ctx.rotate(wob*0.018);ctx.scale(k,k);
+  ctx.fillStyle=c2;
+  rrect(ctx,-12,13+Math.sin(ph)*3.5,10,13,3);ctx.fill();
+  rrect(ctx,2,13-Math.sin(ph)*3.5,10,13,3);ctx.fill();
+  ctx.fillStyle=c1;
+  rrect(ctx,-30,-4+Math.sin(ph)*1.5,22,8,4);ctx.fill();
+  rrect(ctx,-30,4-Math.sin(ph)*1.5,20,8,4);ctx.fill();
+  rrect(ctx,-14,-7,28,22,4);ctx.fill();
+  ctx.fillStyle='rgba(0,0,0,.12)';rrect(ctx,-14,4,28,11,4);ctx.fill();
+  ctx.fillStyle=c2;rrect(ctx,-13,-31,26,25,5);ctx.fill();
+  ctx.fillStyle='rgba(0,0,0,.15)';rrect(ctx,-13,-31,7,25,4);ctx.fill();
+  ctx.fillStyle='#fff';
+  ctx.beginPath();ctx.arc(-6,-20,4.6,0,7);ctx.arc(5,-21,3.6,0,7);ctx.fill();
+  ctx.fillStyle='#e53935';
+  ctx.beginPath();ctx.arc(-7,-20,2.3,0,7);ctx.arc(4,-21,1.9,0,7);ctx.fill();
+  ctx.fillStyle='#33461f';ctx.fillRect(-8,-11,15,4);
+  ctx.fillStyle='#e8f5c8';
+  for(let i=0;i<4;i++)ctx.fillRect(-7+i*4,-11,2,3);
+  ctx.restore();
+}
+
+/* ---------- 三套解放军小战士军装（瘦瘦体型） ---------- */
+const SKINS={
+  green:{
+    label:'经典军绿小战士', sub:'军绿色军装 + 红五角星帽',
+    body:'#4e6b34', bodyDark:'#3b5226', leg:'#40582b', boot:'#26261c', tone:'#ffe0b2',
+    gun:'#37474f', glow:'#fff176',
+    hatC:'#4e6b34', hatB:'#324a20', starC:'#e53935',
+    collar:'#d32f2f', belt:'#26261c', buckle:'#ffd54f'
+  },
+  camo:{
+    label:'迷彩小战士', sub:'方块迷彩服 + 红五角星帽',
+    body:'#6d7f52', bodyDark:'#55663f', leg:'#5b6b45', boot:'#2f2f24', tone:'#ffe0b2',
+    gun:'#4e4a3f', glow:'#aed581',
+    hatC:'#6d7f52', hatB:'#4a5a36', starC:'#e53935',
+    camo:['#4a5a33','#8a6f47','#33402a'], belt:'#26261c', buckle:'#c0a060'
+  },
+  guard:{
+    label:'仪仗队小战士', sub:'深绿礼服 + 金扣子 + 白腰带',
+    body:'#1b5e20', bodyDark:'#12421a', leg:'#164a1c', boot:'#101010', tone:'#ffe0b2',
+    gun:'#37474f', glow:'#ffd54f',
+    hatC:'#1b5e20', hatB:'#0d3311', starC:'#e53935', starRing:'#ffd54f',
+    buttons:true, pipe:'#e53935', belt:'#ffffff', buckle:'#ffd54f', glove:'#ffffff'
+  }
+};
+
+/* 画瘦瘦的解放军小战士：(x,y)=脚底中心，s=整体高度，t=时间，fire=0~1 开火闪光 */
+function drawSoldier(ctx,x,y,s,sk,t,fire){
+  const u=s/84, ph=t*7;
+  const blink=(Math.sin(t*1.6+1)>0.985);
+  const liftL=Math.max(0,Math.sin(ph))*3*u, liftR=Math.max(0,-Math.sin(ph))*3*u;
+  ctx.save();ctx.translate(x,y);
+  /* 地面影子 */
+  ctx.fillStyle='rgba(0,0,0,.22)';
+  ctx.beginPath();ctx.ellipse(0,1,15*u,3.4*u,0,0,7);ctx.fill();
+  /* 腿（瘦）+ 鞋 */
+  ctx.fillStyle=sk.leg;
+  rrect(ctx,-9*u,-24*u,7*u,20*u-liftL,2.5*u);ctx.fill();
+  rrect(ctx,2*u,-24*u,7*u,20*u-liftR,2.5*u);ctx.fill();
+  if(sk.pipe){ctx.fillStyle=sk.pipe;ctx.fillRect(-6.4*u,-22*u,1.6*u,16*u-liftL);ctx.fillRect(4.6*u,-22*u,1.6*u,16*u-liftR);}
+  ctx.fillStyle=sk.boot;
+  rrect(ctx,-10*u,-5*u-liftL,9*u,5*u,2*u);ctx.fill();
+  rrect(ctx,1*u,-5*u-liftR,9*u,5*u,2*u);ctx.fill();
+  /* 身体（瘦） */
+  ctx.fillStyle=sk.body;
+  rrect(ctx,-10*u,-54*u,20*u,31*u,4*u);ctx.fill();
+  ctx.fillStyle=sk.bodyDark;
+  rrect(ctx,-10*u,-32*u,20*u,9*u,3*u);ctx.fill();
+  if(sk.camo){
+    const cs=sk.camo;
+    ctx.fillStyle=cs[0];rrect(ctx,-8*u,-50*u,7*u,5*u,1.5*u);ctx.fill();
+    ctx.fillStyle=cs[1];rrect(ctx,1*u,-45*u,6*u,4*u,1.5*u);ctx.fill();
+    ctx.fillStyle=cs[2];rrect(ctx,-6*u,-40*u,5*u,4*u,1.5*u);ctx.fill();
+    ctx.fillStyle=cs[1];rrect(ctx,3*u,-52*u,4*u,4*u,1.5*u);ctx.fill();
+  }
+  if(sk.pipe){ctx.fillStyle=sk.pipe;ctx.fillRect(-10*u,-54*u,1.6*u,31*u);ctx.fillRect(8.4*u,-54*u,1.6*u,31*u);}
+  if(sk.collar){ctx.fillStyle=sk.collar;rrect(ctx,-9*u,-54*u,4.5*u,5.5*u,1.5*u);ctx.fill();rrect(ctx,4.5*u,-54*u,4.5*u,5.5*u,1.5*u);ctx.fill();}
+  if(sk.buttons){ctx.fillStyle='#ffd54f';
+    for(let i=0;i<3;i++){ctx.beginPath();ctx.arc(0,-47*u+i*6*u,1.7*u,0,7);ctx.fill();}}
+  /* 皮带 + 扣 */
+  ctx.fillStyle=sk.belt;ctx.fillRect(-10*u,-30*u,20*u,4*u);
+  ctx.fillStyle=sk.buckle;ctx.fillRect(-2.6*u,-30.6*u,5.2*u,5.2*u);
+  /* 后手臂 */
+  ctx.fillStyle=sk.body;
+  rrect(ctx,-13.5*u,-52*u,4.5*u,14*u,2.2*u);ctx.fill();
+  /* 前手臂 + 手 + 枪 */
+  rrect(ctx,5*u,-50*u,11*u,5*u,2.2*u);ctx.fill();
+  ctx.fillStyle=sk.glove||sk.tone;
+  rrect(ctx,14*u,-51*u,5.5*u,6.5*u,2.2*u);ctx.fill();
+  ctx.fillStyle=sk.gun;
+  rrect(ctx,12*u,-49.5*u,23*u,4.5*u,2*u);ctx.fill();
+  ctx.fillRect(15*u,-45.5*u,3.5*u,6*u);
+  if(fire>0){
+    ctx.save();ctx.globalAlpha=Math.min(1,fire);
+    ctx.shadowColor=sk.glow;ctx.shadowBlur=12*u;
+    ctx.fillStyle=sk.glow;
+    ctx.beginPath();ctx.arc(36.5*u,-47.2*u,3.4*u*fire+1.2*u,0,7);ctx.fill();
+    ctx.restore();
+  }
+  /* 头 */
+  ctx.fillStyle=sk.tone;
+  rrect(ctx,-10*u,-74*u,20*u,20*u,5*u);ctx.fill();
+  ctx.fillStyle='#2b2b2b';
+  if(blink){ctx.fillRect(-5.5*u,-66.5*u,4*u,1.4*u);ctx.fillRect(2*u,-66.5*u,4*u,1.4*u);}
+  else{ctx.beginPath();ctx.arc(-3.5*u,-66*u,1.9*u,0,7);ctx.arc(4*u,-66*u,1.9*u,0,7);ctx.fill();}
+  ctx.fillStyle='#a1503c';ctx.fillRect(-1*u,-60.5*u,5*u,1.8*u);
+  ctx.fillStyle='rgba(244,143,117,.55)';
+  ctx.beginPath();ctx.arc(-7*u,-61*u,2*u,0,7);ctx.arc(7.5*u,-61*u,2*u,0,7);ctx.fill();
+  /* 解放军帽：帽墙 + 帽顶 + 帽檐 + 中间红五角星 */
+  ctx.fillStyle=sk.hatB;
+  rrect(ctx,-11*u,-79*u,22*u,5.5*u,2*u);ctx.fill();
+  ctx.fillStyle=sk.hatC;
+  rrect(ctx,-12*u,-85*u,24*u,7.5*u,3*u);ctx.fill();
+  if(sk.camo){
+    ctx.fillStyle=sk.camo[0];rrect(ctx,-10*u,-84*u,6*u,3.5*u,1.2*u);ctx.fill();
+    ctx.fillStyle=sk.camo[1];rrect(ctx,3*u,-83.5*u,6*u,3.5*u,1.2*u);ctx.fill();
+  }
+  ctx.fillStyle=sk.hatB;
+  rrect(ctx,-13*u,-74.6*u,26*u,3*u,1.5*u);ctx.fill();
+  if(sk.starRing)star(ctx,0,-80.6*u,5*u,sk.starRing);
+  star(ctx,0,-80.6*u,sk.starRing?3.8*u:4.4*u,sk.starC);
+  ctx.restore();
+}
+
+/* ---------- 每张卡的演示场景 ---------- */
+function makeScene(key){
+  const sk=SKINS[key];
+  return {
+    sk,t:0,nz:1.0,nb:0.5,fire:0,hop:0,hopT:3,
+    z:[],b:[],p:[],score:0,
+    update(dt){
+      this.t+=dt;this.fire=Math.max(0,this.fire-dt*4);
+      this.hopT-=dt;
+      if(this.hopT<=0){this.hop=1;this.hopT=3.5+Math.random()*2;}
+      this.hop=Math.max(0,this.hop-dt*1.6);
+      this.nz-=dt;
+      if(this.nz<=0){
+        this.z.push({x:W+26,y:150+(Math.random()*30-15),v:26+Math.random()*12,s:44,hp:1,ph:Math.random()*6});
+        this.nz=1.15+Math.random()*0.8;
+      }
+      this.nb-=dt;
+      if(this.nb<=0){
+        this.b.push({x:142,y:150});
+        this.fire=1;this.nb=0.5;
+      }
+      for(let i=this.b.length-1;i>=0;i--){
+        const bl=this.b[i];bl.x+=380*dt;
+        if(bl.x>W+20){this.b.splice(i,1);continue;}
+        for(let j=this.z.length-1;j>=0;j--){
+          const z=this.z[j];
+          if(Math.abs(z.x-bl.x)<z.s*0.55&&Math.abs(z.y-bl.y)<z.s*0.6){
+            this.b.splice(i,1);
+            burst(this.p,z.x,z.y,['#8bc34a','#ffeb3b','#ffffff'],15,120);
+            this.z.splice(j,1);this.score++;
+            break;
+          }
+        }
+      }
+      for(let j=this.z.length-1;j>=0;j--){
+        const z=this.z[j];z.x-=z.v*dt;z.ph+=dt*6;
+        if(z.x<150){
+          this.z.splice(j,1);
+          burst(this.p,150,150,['#ff5252','#ffffff'],10,90);
+        }
+      }
+      updParts(this.p,dt);
+    },
+    draw(ctx){
+      bgGrad(ctx,'#141f38','#2b4371');
+      drawMoon(ctx,344,42,16);
+      drawBuildings(ctx,this.t,206,'rgba(9,15,30,.75)');
+      ctx.fillStyle='rgba(255,255,255,.12)';ctx.fillRect(0,203,W,57);
+      ctx.fillStyle='rgba(255,255,255,.06)';
+      for(let i=0;i<8;i++)ctx.fillRect(20+i*50,203,26,57);
+      for(const z of this.z)drawZombie(ctx,z.x,z.y,z.s,{phase:z.ph});
+      const hopY=-Math.sin(this.hop*Math.PI)*16;
+      drawSoldier(ctx,105,200+hopY,88,this.sk,this.t,this.fire);
+      for(const bl of this.b){
+        ctx.save();ctx.shadowColor=this.sk.glow;ctx.shadowBlur=10;
+        ctx.fillStyle=this.sk.glow;rrect(ctx,bl.x-9,bl.y-4,18,8,4);ctx.fill();
+        ctx.restore();
+      }
+      drawParts(ctx,this.p);
+      ctx.save();ctx.font='bold 17px sans-serif';ctx.textAlign='right';ctx.textBaseline='middle';
+      ctx.fillStyle='#fff';ctx.fillText('打跑 '+this.score+' 个僵尸',W-14,22);ctx.restore();
+    }
+  };
+}
+
+function initCanvas(id){
+  const cv=document.getElementById(id);
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  cv.width=W*dpr;cv.height=H*dpr;
+  const ctx=cv.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  return ctx;
+}
+const demos=[
+  {o:makeScene('green'),ctx:initCanvas('cv1')},
+  {o:makeScene('camo'),ctx:initCanvas('cv2')},
+  {o:makeScene('guard'),ctx:initCanvas('cv3')}
+];
+let last=performance.now();
+function loop(now){
+  let dt=(now-last)/1000;last=now;
+  if(dt>0.05)dt=0.05;
+  for(const d of demos){d.o.update(dt);d.o.draw(d.ctx);}
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+/* ---------- 语音 ---------- */
+const KIDS={
+  green:'一号，经典军绿小战士！他穿军绿色的军装，帽子上有一颗红红的五角星，领子上还有红领章，像解放军叔叔一样神气！',
+  camo:'二号，迷彩小战士！他的衣服是一块一块的迷彩，像藏在草丛里，迷彩帽上也有一颗红五角星，像特种兵一样酷！',
+  guard:'三号，仪仗队小战士！他穿深绿色的礼服，有金色的扣子和白色的腰带，还戴白手套，像天安门升旗的叔叔，超级帅！'
+};
+function speak(text){
+  if(!('speechSynthesis' in window))return;
+  try{
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang='zh-CN';u.rate=0.92;u.pitch=1.15;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+document.getElementById('btnSpeakAll').addEventListener('click',function(){
+  if(!('speechSynthesis' in window)){alert('这个浏览器不支持朗读，请爸爸/妈妈念给小朋友听~');return;}
+  speechSynthesis.cancel();
+  ['小朋友，这三个解放军小战士，都是瘦瘦的，帽子上都有红五角星！你想当哪一个呀？我一个个念给你听。',KIDS.green,KIDS.camo,KIDS.guard,'你最喜欢哪一个？点一下那个大大的按钮！']
+    .forEach(t=>{const u=new SpeechSynthesisUtterance(t);u.lang='zh-CN';u.rate=0.9;u.pitch=1.15;speechSynthesis.speak(u);});
+});
+
+/* ---------- 选择 ---------- */
+const ov=document.getElementById('ov');
+const cards=[...document.querySelectorAll('.card')];
+cards.forEach(card=>{
+  const k=card.dataset.k;
+  card.addEventListener('click',e=>{
+    if(e.target.classList.contains('pick'))return;
+    cards.forEach(c=>c.classList.remove('sel'));card.classList.add('sel');
+    speak(KIDS[k]);
+  });
+  card.querySelector('.pick').addEventListener('click',e=>{
+    e.stopPropagation();
+    cards.forEach(c=>c.classList.remove('sel'));card.classList.add('sel');
+    document.getElementById('ovName').textContent=SKINS[k].label;
+    document.getElementById('ovSub').textContent=SKINS[k].sub;
+    document.getElementById('ovCode').textContent=k;
+    document.getElementById('dadChoice').textContent=SKINS[k].label+' — '+SKINS[k].sub;
+    try{localStorage.setItem('moday_hero',k);}catch(err){}
+    ov.classList.remove('hide');
+    speak('太棒了！你要当'+SKINS[k].label+'！爸爸，就按这个做！');
+  });
+});
+document.getElementById('ovNo').addEventListener('click',()=>{
+  ov.classList.add('hide');
+  speak('没关系，再看看，慢慢选。');
+});
+document.getElementById('ovOk').addEventListener('click',()=>{
+  speak('好耶！我们继续！');
+  document.querySelector('.bigok').textContent='🚀';
+  document.getElementById('ovSub').textContent='爸爸：把这个选择告诉 AI，开始下一步！';
+});
+try{
+  const saved=localStorage.getItem('moday_hero');
+  if(saved&&SKINS[saved])document.getElementById('dadChoice').textContent=SKINS[saved].label+' — '+SKINS[saved].sub+'（上次记录）';
+}catch(err){}
+
+document.addEventListener('gesturestart',e=>e.preventDefault());
+document.addEventListener('dblclick',e=>e.preventDefault());
+let lastTouch=0;
+document.addEventListener('touchend',e=>{
+  const now=Date.now();
+  if(now-lastTouch<=320)e.preventDefault();
+  lastTouch=now;
+},{passive:false});
+</script>
+</body>
+</html>

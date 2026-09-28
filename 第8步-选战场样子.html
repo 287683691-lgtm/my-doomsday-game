@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>《我的末日》第8步 · 战场长什么样子</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:#0e1626;font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;
+  touch-action:manipulation;overscroll-behavior:none}
+body{padding:12px 16px 24px;color:#fff;min-height:100vh}
+header{text-align:center;margin-bottom:10px}
+h1{margin:0;font-size:clamp(19px,3.2vw,32px);letter-spacing:1px;
+   background:linear-gradient(90deg,#aed581,#ffd54f,#4fc3f7);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{margin:6px 0 0;font-size:clamp(14px,2vw,20px);color:#a9c0e8;line-height:1.6}
+.sub b{color:#ffd54f}
+.speakAll{margin-top:8px;border:0;background:#ffca28;color:#4a3200;font-size:clamp(14px,1.9vw,19px);
+  font-weight:800;padding:9px 22px;border-radius:999px;cursor:pointer;box-shadow:0 4px 0 #c79100}
+.speakAll:active{transform:translateY(3px);box-shadow:0 1px 0 #c79100}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;max-width:1720px;margin:0 auto}
+@media (max-width:1180px){.cards{grid-template-columns:1fr;max-width:760px}}
+.card{background:#fff;color:#22303f;border-radius:22px;padding:11px 12px 13px;
+  border:5px solid transparent;box-shadow:0 8px 26px rgba(0,0,0,.45);display:flex;flex-direction:column;cursor:pointer}
+.card.sel{border-color:#ffca28}
+.card canvas{width:100%;aspect-ratio:16/9;border-radius:14px;display:block;background:#08120e;touch-action:none}
+.tag{display:inline-block;align-self:flex-start;font-size:13px;font-weight:800;color:#fff;
+  padding:3px 12px;border-radius:999px;margin:7px 0 5px}
+.name{font-size:clamp(18px,2.4vw,26px);font-weight:900;margin:0 0 3px;line-height:1.25}
+.desc{font-size:clamp(13px,1.7vw,17px);line-height:1.55;margin:0 0 7px;color:#3d4d5e;flex:1}
+.desc b{color:#e65100}
+.meta{display:flex;align-items:center;gap:6px;font-size:12px;color:#7b8a99;margin-bottom:6px;flex-wrap:wrap}
+.pill{background:#eef2f7;border-radius:999px;padding:3px 9px;font-weight:700;color:#546e7a}
+.pill.mov{background:#fff3cd;color:#8a6100}
+.pill.risk{background:#ffe3e0;color:#b3352c}
+.hint{font-size:12.5px;color:#7b8a99;font-weight:700;margin-bottom:9px}
+.pick{border:0;width:100%;height:clamp(56px,6.8vw,74px);border-radius:999px;font-size:clamp(19px,2.5vw,26px);
+  font-weight:900;color:#fff;cursor:pointer;font-family:inherit;letter-spacing:1px}
+.pick:active{transform:translateY(4px)}
+.c1 .tag{background:#26a69a}.c1 .pick{background:#26a69a;box-shadow:0 6px 0 #00695c}
+.c1 .pick:active{box-shadow:0 2px 0 #00695c}
+.c2 .tag{background:#fb8c00}.c2 .pick{background:#fb8c00;box-shadow:0 6px 0 #c25e00}
+.c2 .pick:active{box-shadow:0 2px 0 #c25e00}
+.c3 .tag{background:#5c6bc0}.c3 .pick{background:#5c6bc0;box-shadow:0 6px 0 #303f9f}
+.c3 .pick:active{box-shadow:0 2px 0 #303f9f}
+.foot{max-width:1720px;margin:14px auto 0;color:#8fa5c9;font-size:13px;line-height:1.85;
+  background:rgba(255,255,255,.045);border-radius:16px;padding:12px 16px}
+.foot h3{margin:0 0 6px;color:#ffd54f;font-size:15px}
+.foot b{color:#dce8ff}
+.foot table{width:100%;border-collapse:collapse;margin-top:6px}
+.foot td,.foot th{border-bottom:1px solid rgba(255,255,255,.09);padding:5px 7px;text-align:left;vertical-align:top}
+.foot th{color:#9fb4d8;font-weight:800}
+.ov{position:fixed;inset:0;background:rgba(6,12,24,.93);display:flex;align-items:center;justify-content:center;
+  z-index:50;padding:20px;text-align:center}
+.ov.hide{display:none}
+.ovbox{max-width:660px}
+.bigok{font-size:clamp(64px,14vw,120px);line-height:1;animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
+@keyframes pop{from{transform:scale(.2);opacity:0}to{transform:scale(1);opacity:1}}
+.ovtitle{font-size:clamp(26px,5vw,46px);font-weight:900;margin:8px 0 4px;color:#ffd54f}
+.ovsub{font-size:clamp(16px,2.6vw,24px);color:#cfe0ff;margin-bottom:22px;line-height:1.5}
+.ovbtns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.ovbtns button{border:0;font-family:inherit;font-weight:900;font-size:clamp(17px,2.4vw,23px);
+  padding:16px 30px;border-radius:999px;cursor:pointer}
+#ovOk{background:#43a047;color:#fff;box-shadow:0 6px 0 #2c6b2f}
+#ovOk:active{transform:translateY(4px);box-shadow:0 2px 0 #2c6b2f}
+#ovNo{background:transparent;color:#9fb4d8;border:3px solid #44587e}
+.dad{margin-top:20px;font-size:13px;color:#6f86ad}
+.dad b{color:#ffd54f;font-size:16px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>《我的末日》第 8 步 · 战场长什么样子？</h1>
+  <div class="sub">现在这五条路把<b>会发光的森林</b>挡住啦，只剩天上一个月亮 😢<br>
+    下面三个画面<b>都会动</b>，还能<b>用手指（或鼠标）拖一拖</b>，试试哪个好玩！</div>
+  <button class="speakAll" id="btnSpeakAll">🔊 点我，念给我听</button>
+</header>
+
+<div class="cards">
+
+  <div class="card c1" data-k="a">
+    <canvas id="cv1"></canvas>
+    <span class="tag">1 号 · 小改动</span>
+    <p class="name">🌫 让路变透明</p>
+    <p class="desc">路变成<b>淡淡的光带</b>，下面的草地、发光小蘑菇、树根都能透出来；萤火虫和树叶改到<b>最前面</b>飞，会飘过小人身边。玩法<b>一模一样</b>，小人还是上下换路。</p>
+    <div class="meta"><span class="pill">最安全</span><span class="pill">玩法完全不变</span><span class="pill mov">森林露出一半</span></div>
+    <div class="hint">👆 拖一拖：小人上下 + 左右都会跟着走</div>
+    <button class="pick">就选 1 号</button>
+  </div>
+
+  <div class="card c2" data-k="b">
+    <canvas id="cv2"></canvas>
+    <span class="tag">2 号 · 大改动</span>
+    <p class="name">🌲 走进森林深处（远近）</p>
+    <p class="desc">僵尸从<b>很远很远</b>的地方出现，一开始小小的，越走越<b>大</b>、越走越近！小人站在最下面，<b>左右</b>拖着换路。上面的月亮、松树、雾、萤火虫<b>完全看得见</b>！</p>
+    <div class="meta"><span class="pill">最壮观</span><span class="pill mov">手指不挡住怪</span><span class="pill risk">要重写很多，需重测</span></div>
+    <div class="hint">👆 拖一拖：小人只会左右走，怪从远处扑过来</div>
+    <button class="pick">就选 2 号</button>
+  </div>
+
+  <div class="card c3" data-k="c">
+    <canvas id="cv3"></canvas>
+    <span class="tag">3 号 · 中改动</span>
+    <p class="name">🛤 五条林间小路</p>
+    <p class="desc">还是横着打，但路变成<b>五条泥土小路</b>：越靠下越宽越大，像真的走进森林。路中间长着草、蘑菇和小松树，僵尸从远处的小路走过来，<b>越走越胖</b>。</p>
+    <div class="meta"><span class="pill">好看又安全</span><span class="pill">玩法不变</span><span class="pill mov">有远近感觉</span></div>
+    <div class="hint">👆 拖一拖：和现在一样，但路会变大变小</div>
+    <button class="pick">就选 3 号</button>
+  </div>
+
+</div>
+
+<div class="foot">
+  <h3>👨‍👦 给爸爸看的取舍（不用念给小朋友）</h3>
+  <b>问题根源</b>：背景画布地平线在屏幕 y=462，而路带遮罩从 y=254 起、浓度 0.80→0.93，把松树/蘑菇/萤火虫全盖住了 —— 不是路太多，是<b>背景构图没给路让位 + 遮罩太浓</b>。
+  <table>
+    <tr><th>方案</th><th>改什么</th><th>风险</th></tr>
+    <tr><td><b>1 号 轻量透光</b></td><td>只改美术：遮罩降到 .18→.34；背景重构图（地平线抬到上 1/3，地面画成草地+蘑菇+树根）；萤火虫/落叶移到前景层。<b>逻辑、几何、判定、触摸一行都不动</b>。</td><td>极低。已过测试全部保留。缺点：纵深仍是"平面横条"。</td></tr>
+    <tr><td><b>2 号 纵深透视</b></td><td>重写几何：消失点+5 条梯形路，僵尸按深度 t 出怪/缩放/排序，子弹向屏幕里飞，主角改成<b>左右</b>移动，BOSS 从地平线走近。<b>额外好处：手指在下方左右拖，不再挡住僵尸来的方向</b>。</td><td>高。命中判定、关卡时长、单点触摸、BOSS 站位全部要重新验证。</td></tr>
+    <tr><td><b>3 号 林间小路</b></td><td>laneY/laneOf 从等距公式改成<b>边界数组</b>（上窄下宽），僵尸与主角缩放跟着路宽走；路画成泥土小径，分隔带长草/蘑菇/小树；背景同样重构图 + 前景萤火虫。<b>判定仍是"按路索引"，逻辑几乎不变</b>。</td><td>低-中。只动几何表和美术，命中/触摸逻辑不变，需重测关卡时长。</td></tr>
+  </table>
+  <b>我的建议</b>：想省事又要好看 → 3 号；想让小朋友"哇"一声、并且顺手解决手指挡怪 → 2 号；只想马上不丑 → 1 号。也可以<b>2 号 + 3 号</b>组合（纵深透视 + 泥土小路美术）。
+</div>
+
+<div class="ov hide" id="ov">
+  <div class="ovbox">
+    <div class="bigok" id="ovEmo">🌲</div>
+    <div class="ovtitle" id="ovName">会发光的森林</div>
+    <div class="ovsub" id="ovSub">战场样子</div>
+    <div class="ovbtns">
+      <button id="ovOk">✔ 就这个！</button>
+      <button id="ovNo">再看看</button>
+    </div>
+    <div class="dad">爸爸：把这句话告诉 AI —— <b id="dadChoice">还没选</b></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   三个战场方案的可交互动画对比（纯演示，非正式游戏代码）
+   画布逻辑尺寸 480×270 = 正式游戏 960×540 的一半
+   ============================================================ */
+const W=480,H=270;
+function initCanvas(id){
+  const cv=document.getElementById(id);
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);
+  const c=cv.getContext('2d');
+  c.setTransform(dpr,0,0,dpr,0,0);
+  return {cv,c};
+}
+
+/* ---------- 公用小零件 ---------- */
+function moon(c,x,y,r){
+  c.save();c.shadowColor='#fff9c4';c.shadowBlur=16;c.fillStyle='#fff9c4';
+  c.beginPath();c.arc(x,y,r,0,7);c.fill();
+  c.shadowBlur=0;c.fillStyle='rgba(214,208,170,.5)';
+  c.beginPath();c.arc(x-r*0.28,y-r*0.2,r*0.22,0,7);c.fill();
+  c.beginPath();c.arc(x+r*0.34,y+r*0.28,r*0.16,0,7);c.fill();c.restore();
+}
+function skyForest(c,topY,t){
+  const g=c.createLinearGradient(0,0,0,topY);
+  g.addColorStop(0,'#03120e');g.addColorStop(.5,'#0a2c23');g.addColorStop(1,'#175644');
+  c.fillStyle=g;c.fillRect(0,0,W,topY);
+  for(let i=0;i<24;i++){
+    const x=(i*67+18)%W, y=(i*41)%Math.max(10,topY*0.55);
+    c.globalAlpha=.15+.55*Math.abs(Math.sin(t*1.1+i));
+    c.fillStyle='#e0f2f1';c.fillRect(x,y,1.4,1.4);
+  }
+  c.globalAlpha=1;
+}
+function pines(c,base,col,scale,step){
+  c.fillStyle=col;let i=0;
+  for(let x=-20;x<W+24;x+=step,i++){
+    const h=(32+((i*37)%22))*scale, w=h*0.56;
+    c.fillRect(x-w*0.07,base-h*0.30,w*0.14,h*0.32);
+    c.beginPath();c.moveTo(x,base-h);c.lineTo(x+w/2,base-h*0.34);c.lineTo(x-w/2,base-h*0.34);c.closePath();c.fill();
+    c.beginPath();c.moveTo(x,base-h*0.80);c.lineTo(x+w*0.64,base);c.lineTo(x-w*0.64,base);c.closePath();c.fill();
+  }
+}
+function fogBands(c,t,baseY){
+  c.save();c.fillStyle='#dff5ef';
+  for(let i=0;i<3;i++){
+    const y=baseY-i*12, span=W+260, x=((t*(9+i*5))+i*150)%span-130;
+    c.globalAlpha=.10-i*.022;
+    c.beginPath();c.ellipse(x,y,105,9,0,0,7);c.fill();
+    c.beginPath();c.ellipse(x-span,y,105,9,0,0,7);c.fill();
+  }
+  c.restore();
+}
+function fireflies(c,t,y0,y1,n){
+  for(let i=0;i<n;i++){
+    const bx=(i*71+23)%W, by=y0+((i*47)%Math.max(8,y1-y0));
+    const x=bx+Math.sin(t*.7+i*1.7)*11, y=by+Math.cos(t*.55+i*2.1)*7;
+    const a=.25+.75*Math.abs(Math.sin(t*2.1+i));
+    c.save();c.globalAlpha=a;c.shadowColor='#fff59d';c.shadowBlur=8;
+    c.fillStyle='#ffee58';c.beginPath();c.arc(x,y,1.7,0,7);c.fill();c.restore();
+  }
+}
+function shroom(c,x,y,s,glow){
+  c.save();
+  c.fillStyle='#e8e2d0';c.fillRect(x-1*s,y-4*s,2*s,4*s);
+  c.shadowColor='#4dd0e1';c.shadowBlur=9*glow;
+  c.fillStyle='#26c6da';c.beginPath();c.ellipse(x,y-4*s,4.2*s,2.8*s,0,Math.PI,0);c.fill();
+  c.shadowBlur=0;c.fillStyle='#b2ebf2';
+  c.fillRect(x-2*s,y-5.4*s,1.2*s,1.2*s);c.fillRect(x+0.8*s,y-4.8*s,1*s,1*s);
+  c.restore();
+}
+function bush(c,x,y,s,col){
+  c.fillStyle=col;
+  c.beginPath();c.arc(x,y-s*0.5,s*0.62,0,7);c.fill();
+  c.beginPath();c.arc(x-s*0.55,y-s*0.22,s*0.44,0,7);c.fill();
+  c.beginPath();c.arc(x+s*0.55,y-s*0.24,s*0.46,0,7);c.fill();
+}
+function star(c,x,y,r,rot,col){
+  c.save();c.translate(x,y);c.rotate(rot);c.fillStyle=col;c.beginPath();
+  for(let i=0;i<10;i++){
+    const a=Math.PI/5*i-Math.PI/2, d=i%2?r*0.45:r;
+    c.lineTo(Math.cos(a)*d,Math.sin(a)*d);
+  }
+  c.closePath();c.fill();c.restore();
+}
+
+/* ---------- 迷彩小战士（侧面，1 号 / 3 号用） ---------- */
+function soldier(c,x,y,s,t,fire){
+  const u=s/46, step=Math.sin(t*7), lift=Math.max(0,step)*2.2*u;
+  c.save();c.translate(x,y);
+  c.fillStyle='#2f2f24';
+  c.fillRect(-6.4*u,-2.6*u-lift,5.6*u,2.6*u);
+  c.fillRect(1.0*u,-2.6*u,5.6*u,2.6*u);
+  c.fillStyle='#5b6b45';
+  c.fillRect(-5.4*u,-12*u-lift,4.4*u,10*u);
+  c.fillRect(1.4*u,-12*u,4.4*u,10*u);
+  c.fillStyle='#6d7f52';c.fillRect(-6.4*u,-27*u,12.8*u,15.4*u);
+  c.fillStyle='#4a5a33';c.fillRect(-4.4*u,-25*u,3.2*u,3.2*u);c.fillRect(1.2*u,-21*u,4*u,3*u);
+  c.fillStyle='#8a6f47';c.fillRect(-6.4*u,-19*u,3*u,2.2*u);c.fillRect(3.4*u,-26*u,3*u,2.2*u);
+  c.fillStyle='#26261c';c.fillRect(-6.4*u,-14.4*u,12.8*u,2.2*u);
+  c.fillStyle='#c0a060';c.fillRect(-1.6*u,-14.4*u,3.2*u,2.2*u);
+  c.fillStyle='#ffe0b2';c.fillRect(-4.2*u,-33*u,8.4*u,6.4*u);
+  c.fillStyle='#3b2a20';c.fillRect(-4.2*u,-33*u,8.4*u,1.2*u);
+  c.fillStyle='#2b1d16';c.fillRect(1.2*u,-30.6*u,1.5*u,1.8*u);
+  c.fillStyle='#6d7f52';c.fillRect(-5.4*u,-38.6*u,10.8*u,6*u);
+  c.fillStyle='#4a5a36';c.fillRect(-6.6*u,-33.6*u,14*u,1.8*u);
+  c.fillStyle='#e53935';
+  c.beginPath();
+  const sx=0,sy=-35.6*u,sr=2.3*u;
+  for(let i=0;i<10;i++){const a=Math.PI/5*i-Math.PI/2,d=i%2?sr*0.42:sr;c.lineTo(sx+Math.cos(a)*d,sy+Math.sin(a)*d);}
+  c.closePath();c.fill();
+  const rec=fire>0?-1.6*u:0;
+  c.fillStyle='#6d7f52';c.fillRect(2.4*u,(-26+rec)*u,5*u,4*u);
+  c.fillStyle='#ffe0b2';c.fillRect(6.4*u,(-25.4+rec)*u,3*u,3*u);
+  c.fillStyle='#37474f';c.fillRect(6.0*u,(-25.6+rec)*u,11*u,2.4*u);
+  c.fillStyle='#ffd54f';c.fillRect(16*u,(-25.9+rec)*u,2.6*u,3*u);
+  c.restore();
+}
+/* ---------- 迷彩小战士（背面，2 号用：星星在背包上） ---------- */
+function soldierBack(c,x,y,s,t){
+  const u=s/46, step=Math.sin(t*7), lift=Math.max(0,step)*2*u;
+  c.save();c.translate(x,y);
+  c.fillStyle='#2f2f24';
+  c.fillRect(-6.2*u,-2.6*u-lift,5.4*u,2.6*u);c.fillRect(0.8*u,-2.6*u,5.4*u,2.6*u);
+  c.fillStyle='#5b6b45';
+  c.fillRect(-5.4*u,-12*u-lift,4.4*u,10*u);c.fillRect(1.2*u,-12*u,4.4*u,10*u);
+  c.fillStyle='#6d7f52';c.fillRect(-6.6*u,-27*u,13.2*u,15.4*u);
+  c.fillStyle='#4a5a33';c.fillRect(-5*u,-25*u,3.4*u,3.4*u);c.fillRect(1.6*u,-20*u,4*u,3*u);
+  c.fillStyle='#8a6f47';c.fillRect(-6.6*u,-18*u,3*u,2.4*u);c.fillRect(3.6*u,-26*u,3*u,2.4*u);
+  c.fillStyle='#4e5d3a';c.fillRect(-5.2*u,-25.6*u,10.4*u,9.6*u);      // 背包
+  c.fillStyle='#3d4a2c';c.fillRect(-5.2*u,-21.4*u,10.4*u,1.4*u);
+  c.fillStyle='#e53935';                                               // 背包上的五角星
+  const sy=-20.6*u,sr=2.5*u;
+  c.beginPath();
+  for(let i=0;i<10;i++){const a=Math.PI/5*i-Math.PI/2,d=i%2?sr*0.42:sr;c.lineTo(Math.cos(a)*d,sy+Math.sin(a)*d);}
+  c.closePath();c.fill();
+  c.fillStyle='#ffe0b2';c.fillRect(-5.4*u,-30*u,2.4*u,4*u);c.fillRect(3*u,-30*u,2.4*u,4*u);
+  c.fillStyle='#6d7f52';c.fillRect(-5.6*u,-35.6*u,11.2*u,6*u);
+  c.fillStyle='#4a5a36';c.fillRect(-6.4*u,-30.4*u,12.8*u,1.8*u);
+  c.fillStyle='#37474f';c.fillRect(-2*u,-33*u,4*u,7*u);                 // 向前指的发射器
+  c.fillStyle='#ffd54f';c.fillRect(-1.4*u,-34.4*u,2.8*u,2*u);
+  c.restore();
+}
+/* ---------- 绿僵尸 ---------- */
+function zombieArt(c,x,y,s,t,ph,boss){
+  const u=s/46, sw=Math.sin(ph*4.6)*1.6*u, arm=Math.sin(ph*4.6)*2.4*u;
+  c.save();c.translate(x+sw*0.3,y);
+  c.fillStyle='#3d5c34';
+  c.fillRect(-5.6*u,-11*u,4.4*u,11*u);c.fillRect(1.2*u,-11*u,4.4*u,11*u);
+  c.fillStyle='#2f2f24';c.fillRect(-6.4*u,-2.4*u,5.6*u,2.4*u);c.fillRect(0.8*u,-2.4*u,5.6*u,2.4*u);
+  c.fillStyle=boss?'#4a7a3a':'#5d8a4a';c.fillRect(-6.6*u,-26*u,13.2*u,15*u);
+  c.fillStyle='rgba(0,0,0,.22)';
+  c.fillRect(-6.6*u,-19*u,5*u,3*u);c.fillRect(1*u,-24*u,4*u,3.4*u);
+  c.fillStyle='#7aa85e';
+  c.fillRect(-11.4*u,(-25+arm*0.3)*u,5*u,3.6*u);                        // 前伸手臂
+  c.fillRect(6.4*u,(-25-arm*0.3)*u,5*u,3.6*u);
+  c.fillStyle='#8fc46a';c.fillRect(-12.6*u,-24*u,2*u,2*u);c.fillRect(10.6*u,-24*u,2*u,2*u);
+  c.fillStyle='#8fc46a';c.fillRect(-4.6*u,-33*u,9.2*u,7*u);
+  c.fillStyle='#2b3a22';c.fillRect(-4.6*u,-33*u,9.2*u,1.4*u);
+  c.fillStyle='#1b2417';
+  c.fillRect(-3*u,-30.6*u,2*u,2.2*u);c.fillRect(1*u,-30.6*u,2*u,2.2*u);
+  c.fillStyle='#e53935';
+  c.fillRect(-2.6*u,-27.4*u,1.6*u,1.6*u);c.fillRect(1.2*u,-27.4*u,1.6*u,1.6*u);
+  c.fillStyle='#ef9a9a';                                                 // 长舌头，会晃
+  const tg=Math.sin(t*3.4+ph)*1.6*u;
+  c.fillRect(-0.9*u+tg*0.4,-26.6*u,1.8*u,4.6*u+Math.abs(tg));
+  if(boss){
+    c.fillStyle='#c62828';c.fillRect(-8*u,-37.4*u,16*u,2.6*u);
+    c.fillStyle='#2b2b2b';c.fillRect(-8*u,-37.4*u,16*u*(0.35+0.3*Math.abs(Math.sin(t*2))),2.6*u);
+  }
+  c.restore();
+}
+/* ---------- 噗！一团烟 ---------- */
+function puffDraw(c,p){
+  const k=p.age/0.45; if(k>=1)return;
+  const a=1-k;
+  c.save();c.globalAlpha=a*.9;c.fillStyle='#eceff1';
+  for(let i=0;i<6;i++){
+    const ang=i*1.047+p.age*2.4, d=p.r*(0.4+k*2.6);
+    c.beginPath();c.arc(p.x+Math.cos(ang)*d,p.y+Math.sin(ang)*d*0.72,p.r*(0.5+0.5*k),0,7);c.fill();
+  }
+  c.restore();
+  c.save();c.globalAlpha=a;c.fillStyle='#fff';c.textAlign='center';
+  c.font='900 '+Math.round(9+p.r*0.9)+'px "PingFang SC",sans-serif';
+  c.fillText('噗！',p.x,p.y-p.r-3-k*6);c.restore();
+}
+function hud(c,hearts,score){
+  c.save();c.font='900 13px "PingFang SC",sans-serif';c.textAlign='left';
+  let s='';for(let i=0;i<3;i++)s+=i<hearts?'❤️':'🖤';
+  c.fillText(s,8,17);
+  c.fillStyle='#ffd54f';c.fillText('⭐ '+score,W-58,17);
+  c.restore();
+}
+/* ============================================================
+   1 号 / 3 号：横版（僵尸从右向左），差别在路的样子和背景构图
+   ============================================================ */
+const SIDE={
+  a:{EDGES:[127,155,183,211,239,267],HZ:118},   // 等距五条光带（=现在的排布，只把遮罩变淡）
+  c:{EDGES:[127,148,171,197,228,267],HZ:100}    // 上窄下宽，越近越大
+};
+function leaves(c,t){
+  c.save();
+  for(let i=0;i<7;i++){
+    const x=((t*(14+i*4)+i*97)%(W+40))-20, y=((t*(20+i*6)+i*53)%(H+20))-10;
+    c.globalAlpha=.45;c.fillStyle=i%2?'#7cb342':'#a1887f';
+    c.save();c.translate(x,y);c.rotate(t*2+i);c.fillRect(-2.4,-1.2,4.8,2.4);c.restore();
+  }
+  c.restore();
+}
+function tufts(c,col,y0,y1,n){
+  c.fillStyle=col;
+  for(let i=0;i<n;i++){
+    const x=(i*53+11)%W, y=y0+((i*71)%Math.max(6,y1-y0));
+    c.fillRect(x,y,1.2,3);c.fillRect(x+1.6,y+0.8,1.2,2.4);c.fillRect(x-1.4,y+1,1.2,2.2);
+  }
+}
+/* ---------- 1 号背景：草地透出来 + 很淡的光带 ---------- */
+function bgA(c,t,E,HZ,hl){
+  skyForest(c,HZ,t);
+  moon(c,W*0.18,HZ*0.30,10);
+  pines(c,HZ-6,'#0a2b23',0.72,40);
+  pines(c,HZ+5,'#051914',1,56);
+  fogBands(c,t,HZ+2);
+  const g=c.createLinearGradient(0,HZ,0,H);
+  g.addColorStop(0,'#1d5138');g.addColorStop(.35,'#16402d');g.addColorStop(1,'#0c2519');
+  c.fillStyle=g;c.fillRect(0,HZ,W,H-HZ);
+  c.fillStyle='rgba(140,235,185,.09)';
+  for(let i=0;i<150;i++){const x=(i*37+9)%W,y=HZ+((i*53)%(H-HZ));c.fillRect(x,y,2.4,1.2);}
+  tufts(c,'rgba(120,220,165,.30)',HZ+4,H,60);
+  shroom(c,26,HZ+22,1.5,.55+.45*Math.abs(Math.sin(t*2)));
+  shroom(c,214,HZ+58,1.3,.55+.45*Math.abs(Math.sin(t*2+2)));
+  shroom(c,392,HZ+96,1.7,.55+.45*Math.abs(Math.sin(t*2+4)));
+  shroom(c,120,H-14,2.0,.55+.45*Math.abs(Math.sin(t*2+1)));
+  c.fillStyle='#3b2f22';                                   // 树根
+  c.fillRect(300,HZ+8,44,3);c.fillRect(306,HZ+11,7,6);c.fillRect(330,HZ+11,7,5);
+  for(let i=0;i<5;i+=2){c.fillStyle='rgba(150,255,200,.07)';c.fillRect(0,E[i],W,E[i+1]-E[i]);}
+  c.save();c.strokeStyle='rgba(170,255,210,.30)';
+  for(let i=0;i<=5;i++){
+    const y=E[i];c.lineWidth=(i===0||i===5)?1.8:1.2;
+    c.setLineDash(i>0&&i<5?[9,8]:[]);
+    c.beginPath();c.moveTo(0,y);c.lineTo(W,y);c.stroke();
+  }
+  c.restore();
+  c.fillStyle='rgba(120,255,190,.14)';c.fillRect(0,E[hl],W,E[hl+1]-E[hl]);
+}
+/* ---------- 3 号背景：五条泥土小路 + 路中间长东西 ---------- */
+function bgC(c,t,E,HZ,hl){
+  skyForest(c,HZ,t);
+  moon(c,W*0.16,HZ*0.32,10);
+  pines(c,HZ-10,'#0a2b23',0.8,38);
+  pines(c,HZ,'#04150f',1.05,54);
+  fogBands(c,t,HZ);
+  const g=c.createLinearGradient(0,HZ,0,H);
+  g.addColorStop(0,'#26603f');g.addColorStop(.4,'#1b4a32');g.addColorStop(1,'#11331f');
+  c.fillStyle=g;c.fillRect(0,HZ,W,H-HZ);
+  for(let i=0;i<5;i++){
+    const y0=E[i],y1=E[i+1],hh=y1-y0;
+    const dg=c.createLinearGradient(0,y0,0,y1);
+    dg.addColorStop(0,'#5b4830');dg.addColorStop(1,'#7d613b');
+    c.fillStyle=dg;c.fillRect(0,y0+1,W,hh-2);
+    c.fillStyle='rgba(0,0,0,.28)';c.fillRect(0,y0,W,1.6);
+    c.fillStyle='rgba(255,236,190,.10)';c.fillRect(0,y1-2.2,W,2.2);
+    c.fillStyle='rgba(0,0,0,.14)';
+    for(let k=0;k<16;k++){
+      const x=(k*67+i*23)%W, yy=y0+3+((k*29)%Math.max(3,hh-6));
+      c.fillRect(x,yy,3.2,1.4);
+    }
+  }
+  c.fillStyle='rgba(255,240,170,.10)';c.fillRect(0,E[hl],W,E[hl+1]-E[hl]);
+  const fg=c.createLinearGradient(0,E[0]-8,0,E[0]+56);      // 远处朦胧
+  fg.addColorStop(0,'rgba(205,242,228,.32)');fg.addColorStop(1,'rgba(205,242,228,0)');
+  c.fillStyle=fg;c.fillRect(0,E[0]-8,W,64);
+}
+function drawProp(c,p,t){
+  const s=p.s;
+  if(p.k===0){
+    c.fillStyle='#3b2f22';c.fillRect(p.x-s*0.09,p.y-s*0.34,s*0.18,s*0.36);
+    c.fillStyle='#0d3324';
+    c.beginPath();c.moveTo(p.x,p.y-s*1.5);c.lineTo(p.x+s*0.42,p.y-s*0.4);c.lineTo(p.x-s*0.42,p.y-s*0.4);c.closePath();c.fill();
+    c.beginPath();c.moveTo(p.x,p.y-s*1.1);c.lineTo(p.x+s*0.58,p.y);c.lineTo(p.x-s*0.58,p.y);c.closePath();c.fill();
+  }else if(p.k===1){
+    bush(c,p.x,p.y,s*0.9,'#1c4a30');
+  }else{
+    shroom(c,p.x,p.y,s*0.55,.5+.5*Math.abs(Math.sin(t*2+p.x*0.1)));
+  }
+}
+function makeSide(kind){
+  const cfg=SIDE[kind], E=cfg.EDGES, HZ=cfg.HZ;
+  const laneY=i=>(E[i]+E[i+1])/2;
+  function laneOf(y){for(let i=0;i<5;i++)if(y<E[i+1])return i;return 4;}
+  function scaleAt(y){
+    const k=Math.max(0,Math.min(1,(y-E[0])/(E[5]-E[0])));
+    return kind==='a' ? 42+9*k : 31+27*k;
+  }
+  const PROPS=[];
+  if(kind==='c'){
+    for(let d=1;d<5;d++)for(let k=0;k<7;k++){
+      const dep=(E[d]-E[0])/(E[5]-E[0]);
+      PROPS.push({y:E[d]+((k*7)%5)-2,x:(k*71+d*37)%W,k:(k+d)%3,s:3.6+dep*7});
+    }
+    PROPS.sort((a,b)=>a.y-b.y);
+  }
+  const o={kind,t:0,fire:0,fc:0,sp:0.6,score:0,hearts:3,zs:[],bls:[],ps:[],shake:0,dead:0,
+           hero:{x:70,lane:2,tx:70,y:laneY(2),ty:laneY(2),inv:0}};
+  o.reset=function(){
+    o.zs.length=0;o.bls.length=0;o.ps.length=0;
+    o.score=0;o.hearts=3;o.dead=0;o.sp=0.6;
+    o.hero.x=70;o.hero.tx=70;o.hero.lane=2;o.hero.y=o.hero.ty=laneY(2);o.hero.inv=0;
+  };
+  o.point=function(gx,gy){
+    const h=o.hero;
+    h.tx=Math.max(38,Math.min(252,gx));
+    h.lane=laneOf(gy);h.ty=laneY(h.lane);
+  };
+  o.update=function(dt){
+    o.t+=dt;o.fire=Math.max(0,o.fire-dt);o.shake=Math.max(0,o.shake-dt*3);
+    const h=o.hero,hs=scaleAt(h.y);
+    h.inv=Math.max(0,h.inv-dt);
+    h.x+=(h.tx-h.x)*Math.min(1,dt*9);
+    h.y+=(h.ty-h.y)*Math.min(1,dt*11);
+    if(o.dead>0){o.dead-=dt;if(o.dead<=0)o.reset();return;}
+    o.fc-=dt;
+    if(o.fc<=0){
+      o.fc=0.55;o.fire=0.14;
+      o.bls.push({lane:h.lane,x:h.x+16,y:h.y-hs*0.56,rot:0});
+    }
+    o.sp-=dt;
+    if(o.sp<=0&&o.zs.length<6){
+      o.sp=1.4+Math.random()*0.5;
+      const l=Math.floor(Math.random()*5);
+      o.zs.push({lane:l,x:W+22,v:21+Math.random()*9,ph:Math.random()*6,hp:1,die:0,
+                 y:laneY(l),s:scaleAt(laneY(l))});
+    }
+    for(let i=o.bls.length-1;i>=0;i--){
+      const b=o.bls[i];b.x+=190*dt;b.rot+=dt*9;
+      if(b.x>W+20){o.bls.splice(i,1);continue;}
+      let hit=false;
+      for(const z of o.zs){
+        if(z.lane===b.lane&&z.die<=0&&Math.abs(z.x-b.x)<z.s*0.28+4){
+          z.hp--;hit=true;if(z.hp<=0){z.die=0.28;o.score++;}break;
+        }
+      }
+      if(hit)o.bls.splice(i,1);
+    }
+    for(let i=o.zs.length-1;i>=0;i--){
+      const z=o.zs[i];
+      if(z.die>0){z.die-=dt;if(z.die<=0){o.ps.push({x:z.x,y:z.y-z.s*0.5,r:z.s/5,age:0});o.zs.splice(i,1);}continue;}
+      z.x-=z.v*dt;z.ph+=dt;
+      if(h.inv<=0&&z.lane===h.lane&&z.x>h.x-hs*0.5&&z.x-z.s*0.40<h.x+hs*0.14){
+        o.hearts--;h.inv=1.2;o.shake=1;z.die=0.28;
+        if(o.hearts<=0){o.hearts=0;o.dead=1.1;}
+      }
+      if(z.x<-30)o.zs.splice(i,1);
+    }
+    for(let i=o.ps.length-1;i>=0;i--){o.ps[i].age+=dt;if(o.ps[i].age>0.45)o.ps.splice(i,1);}
+  };
+  o.draw=function(c){
+    c.clearRect(0,0,W,H);
+    c.save();
+    if(o.shake>0)c.translate((Math.random()-.5)*5*o.shake,(Math.random()-.5)*5*o.shake);
+    const hl=o.hero.lane;
+    if(kind==='a')bgA(c,o.t,E,HZ,hl);else bgC(c,o.t,E,HZ,hl);
+    const list=[];
+    for(const p of PROPS)list.push([p.y,()=>drawProp(c,p,o.t)]);
+    for(const z of o.zs)list.push([z.y,()=>{
+      if(z.die>0){c.save();c.globalAlpha=Math.max(0,z.die/0.28)*0.7;
+        c.translate(0,(1-z.die/0.28)*-3);zombieArt(c,z.x,z.y,z.s,o.t,z.ph,false);c.restore();}
+      else zombieArt(c,z.x,z.y,z.s,o.t,z.ph,false);
+    }]);
+    list.push([o.hero.y,()=>{
+      if(o.dead>0)return;
+      if(h2blink(o))soldier(c,o.hero.x,o.hero.y,scaleAt(o.hero.y),o.t,o.fire);
+    }]);
+    list.sort((a,b)=>a[0]-b[0]);
+    for(const it of list)it[1]();
+    for(const b of o.bls){
+      c.save();c.globalAlpha=.35;star(c,b.x-6,b.y,3.4,b.rot,'#fff176');c.restore();
+      star(c,b.x,b.y,4.6,b.rot,'#ffd54f');
+    }
+    for(const p of o.ps)puffDraw(c,p);
+    fireflies(c,o.t,16,H-8,18);                              // 萤火虫在最前面飞
+    leaves(c,o.t);
+    c.restore();
+    hud(c,o.hearts,o.score);
+    if(o.dead>0){
+      c.save();c.fillStyle='rgba(6,12,24,.55)';c.fillRect(0,0,W,H);
+      c.fillStyle='#ffd54f';c.textAlign='center';c.font='900 26px "PingFang SC",sans-serif';
+      c.fillText('哎呀！重新开始～',W/2,H/2);c.restore();
+    }
+  };
+  return o;
+}
+function h2blink(o){return o.hero.inv<=0||Math.floor(o.t*14)%2===0;}
+/* ============================================================
+   2 号：纵深透视 —— 僵尸从远处走近（越走越大），小人左右移动
+   ============================================================ */
+const BHZ=98,BBOT=252,BVX=240,BFAR=13,BNEAR=94,BHEROT=0.93;
+function bpos(lane,u){
+  return {x:BVX+(lane-2)*(BFAR+(BNEAR-BFAR)*u), y:BHZ+(BBOT-BHZ)*u};
+}
+function bscale(u){return 0.34+0.88*u;}
+function bSpread(u){return BFAR+(BNEAR-BFAR)*u;}
+function bgB(c,t,hl){
+  skyForest(c,BHZ,t);
+  moon(c,W*0.20,BHZ*0.30,11);
+  pines(c,BHZ-14,'#0b3126',0.62,34);
+  pines(c,BHZ-4,'#08241b',0.9,46);
+  pines(c,BHZ+6,'#04150f',1.15,60);
+  fogBands(c,t,BHZ+4);
+  const g=c.createLinearGradient(0,BHZ,0,H);
+  g.addColorStop(0,'#2a6644');g.addColorStop(.45,'#1c4c33');g.addColorStop(1,'#102e1e');
+  c.fillStyle=g;c.fillRect(0,BHZ,W,H-BHZ);
+  c.fillStyle='rgba(150,240,190,.08)';
+  for(let i=0;i<170;i++){const x=(i*41+7)%W,y=BHZ+((i*61)%(H-BHZ));c.fillRect(x,y,2.4,1.2);}
+  /* 五条路的扇形泥土地 */
+  const near=BBOT+18;
+  c.beginPath();
+  c.moveTo(BVX-2.5*bSpread(0),BHZ);
+  c.lineTo(BVX+2.5*bSpread(0),BHZ);
+  c.lineTo(BVX+2.5*bSpread(1),near);
+  c.lineTo(BVX-2.5*bSpread(1),near);
+  c.closePath();
+  const dg=c.createLinearGradient(0,BHZ,0,near);
+  dg.addColorStop(0,'#4d3d28');dg.addColorStop(1,'#846741');
+  c.fillStyle=dg;c.fill();
+  /* 横向路纹（越走越疏，给速度感） */
+  c.save();c.strokeStyle='rgba(0,0,0,.13)';c.lineWidth=1.4;
+  for(let i=1;i<=9;i++){
+    const u=i/10, y=BHZ+(near-BHZ)*u;
+    c.beginPath();c.moveTo(BVX-2.5*bSpread(u),y);c.lineTo(BVX+2.5*bSpread(u),y);c.stroke();
+  }
+  c.restore();
+  /* 主角那条路发光 */
+  c.save();
+  c.beginPath();
+  c.moveTo(BVX+(hl-2.5)*bSpread(0),BHZ);
+  c.lineTo(BVX+(hl-1.5)*bSpread(0),BHZ);
+  c.lineTo(BVX+(hl-1.5)*bSpread(1),near);
+  c.lineTo(BVX+(hl-2.5)*bSpread(1),near);
+  c.closePath();c.fillStyle='rgba(255,240,170,.13)';c.fill();c.restore();
+  /* 路沿虚线 */
+  c.save();c.strokeStyle='rgba(255,244,214,.34)';
+  for(let i=0;i<=5;i++){
+    c.lineWidth=i===0||i===5?1.8:1.1;
+    c.setLineDash(i>0&&i<5?[7,7]:[]);
+    c.beginPath();
+    c.moveTo(BVX+(i-2.5)*bSpread(0),BHZ);
+    c.lineTo(BVX+(i-2.5)*bSpread(1),near);
+    c.stroke();
+  }
+  c.restore();
+  /* 远处朦胧 */
+  const fg=c.createLinearGradient(0,BHZ-6,0,BHZ+44);
+  fg.addColorStop(0,'rgba(205,242,228,.34)');fg.addColorStop(1,'rgba(205,242,228,0)');
+  c.fillStyle=fg;c.fillRect(0,BHZ-6,W,50);
+}
+const BPROPS=[];
+(function(){
+  const us=[0.10,0.22,0.36,0.52,0.70,0.90,1.05];
+  for(let i=0;i<us.length;i++){
+    const u=us[i],y=BHZ+(BBOT+18-BHZ)*Math.min(1,u);
+    for(const side of [-1,1]){
+      const x=BVX+side*(2.5*bSpread(Math.min(1,u))+9+26*u)+((i*17)%11)-5;
+      BPROPS.push({u,x,y,k:(i+(side>0?1:0))%3,s:5+18*Math.min(1,u)});
+    }
+  }
+  BPROPS.sort((a,b)=>a.u-b.u);
+})();
+function makePersp(){
+  const o={t:0,fire:0,fc:0,sp:0.5,score:0,hearts:3,zs:[],bls:[],ps:[],shake:0,dead:0,
+           hero:{lane:2,x:BVX,inv:0,u:BHEROT}};
+  o.hero.x=bpos(2,BHEROT).x;
+  o.reset=function(){
+    o.zs.length=0;o.bls.length=0;o.ps.length=0;
+    o.score=0;o.hearts=3;o.dead=0;o.sp=0.5;
+    o.hero.lane=2;o.hero.x=bpos(2,BHEROT).x;o.hero.inv=0;
+  };
+  o.point=function(gx){
+    o.hero.lane=Math.max(0,Math.min(4,Math.round((gx-BVX)/bSpread(BHEROT))+2));
+  };
+  o.update=function(dt){
+    o.t+=dt;o.fire=Math.max(0,o.fire-dt);o.shake=Math.max(0,o.shake-dt*3);
+    const h=o.hero;h.inv=Math.max(0,h.inv-dt);
+    h.x+=(bpos(h.lane,BHEROT).x-h.x)*Math.min(1,dt*12);
+    if(o.dead>0){o.dead-=dt;if(o.dead<=0)o.reset();return;}
+    o.fc-=dt;
+    if(o.fc<=0){o.fc=0.55;o.fire=0.14;o.bls.push({lane:h.lane,u:BHEROT-0.02});}
+    o.sp-=dt;
+    if(o.sp<=0&&o.zs.length<6){
+      o.sp=1.25+Math.random()*0.5;
+      o.zs.push({lane:Math.floor(Math.random()*5),u:0.012,ph:Math.random()*6,hp:1,die:0});
+    }
+    for(let i=o.bls.length-1;i>=0;i--){
+      const b=o.bls[i];b.u-=1.25*dt;
+      if(b.u<=0.015){o.bls.splice(i,1);continue;}
+      let hit=false;
+      for(const z of o.zs){
+        if(z.lane===b.lane&&z.die<=0&&Math.abs(z.u-b.u)<0.045){
+          z.hp--;hit=true;if(z.hp<=0){z.die=0.28;o.score++;}break;
+        }
+      }
+      if(hit)o.bls.splice(i,1);
+    }
+    for(let i=o.zs.length-1;i>=0;i--){
+      const z=o.zs[i];
+      if(z.die>0){z.die-=dt;if(z.die<=0){const p=bpos(z.lane,z.u);
+        o.ps.push({x:p.x,y:p.y-16*bscale(z.u),r:9*bscale(z.u),age:0});o.zs.splice(i,1);}continue;}
+      z.u+=dt*(0.075+0.42*Math.pow(z.u,1.8));z.ph+=dt;
+      if(z.u>=BHEROT-0.01&&z.u<BHEROT+0.05&&z.lane===h.lane&&h.inv<=0){
+        o.hearts--;h.inv=1.2;o.shake=1;z.die=0.28;
+        if(o.hearts<=0){o.hearts=0;o.dead=1.1;}
+      }
+      if(z.u>1.16)o.zs.splice(i,1);
+    }
+    for(let i=o.ps.length-1;i>=0;i--){o.ps[i].age+=dt;if(o.ps[i].age>0.45)o.ps.splice(i,1);}
+  };
+  o.draw=function(c){
+    c.clearRect(0,0,W,H);
+    c.save();
+    if(o.shake>0)c.translate((Math.random()-.5)*5*o.shake,(Math.random()-.5)*5*o.shake);
+    bgB(c,o.t,o.hero.lane);
+    const list=[];
+    for(const p of BPROPS)list.push([p.u,()=>drawProp(c,p,o.t)]);
+    for(const z of o.zs){
+      const u=Math.min(1.16,z.u),p=bpos(z.lane,u),s=46*bscale(u);
+      list.push([u,()=>{
+        c.save();
+        c.fillStyle='rgba(0,0,0,.24)';c.beginPath();
+        c.ellipse(p.x,p.y,s*0.30,s*0.09,0,0,7);c.fill();
+        if(z.die>0){c.globalAlpha=Math.max(0,z.die/0.28)*0.7;c.translate(0,(1-z.die/0.28)*-3);}
+        zombieArt(c,p.x,p.y,s,o.t,z.ph,false);
+        c.restore();
+      }]);
+    }
+    for(const b of o.bls){
+      const p=bpos(b.lane,b.u),r=5.2*bscale(b.u),rot=o.t*9;
+      list.push([b.u,()=>{
+        c.save();c.globalAlpha=.35;star(c,p.x-r*1.4,p.y+r*1.5,r*0.75,rot,'#fff176');c.restore();
+        c.save();c.shadowColor='#ffd54f';c.shadowBlur=6*bscale(b.u);
+        star(c,p.x,p.y,r,rot,'#ffd54f');c.restore();
+      }]);
+    }
+    list.push([BHEROT,()=>{
+      if(o.dead>0)return;
+      const h=o.hero,p=bpos(h.lane,BHEROT),s=46*bscale(BHEROT);
+      if(h.inv>0&&Math.floor(o.t*14)%2===1)return;
+      c.save();c.fillStyle='rgba(0,0,0,.26)';
+      c.beginPath();c.ellipse(p.x,p.y,s*0.30,s*0.10,0,0,7);c.fill();c.restore();
+      soldierBack(c,h.x,p.y,s,o.t);
+    }]);
+    list.sort((a,b)=>a[0]-b[0]);
+    for(const it of list)it[1]();
+    for(const p of o.ps)puffDraw(c,p);
+    fireflies(c,o.t,10,H-10,22);
+    leaves(c,o.t);
+    /* 上方伸进来的树枝，把画面框住 */
+    c.save();c.fillStyle='#04140e';
+    c.beginPath();c.ellipse(24,4,44,26,0.3,0,7);c.fill();
+    c.beginPath();c.ellipse(64,-6,38,22,-0.2,0,7);c.fill();
+    c.beginPath();c.ellipse(W-30,2,48,28,-0.3,0,7);c.fill();
+    c.beginPath();c.ellipse(W-74,-8,36,20,0.2,0,7);c.fill();
+    c.restore();
+    c.restore();
+    hud(c,o.hearts,o.score);
+    c.save();c.textAlign='center';c.fillStyle='rgba(255,255,255,.55)';
+    c.font='800 10px "PingFang SC",sans-serif';
+    c.fillText('← 左右拖，换一条路 →',W/2,H-6);c.restore();
+    if(o.dead>0){
+      c.save();c.fillStyle='rgba(6,12,24,.55)';c.fillRect(0,0,W,H);
+      c.fillStyle='#ffd54f';c.textAlign='center';c.font='900 26px "PingFang SC",sans-serif';
+      c.fillText('哎呀！重新开始～',W/2,H/2);c.restore();
+    }
+  };
+  return o;
+}
+/* ============================================================
+   装配：三个 demo + 拖动 + 语音 + 选择
+   ============================================================ */
+const INFO={
+  a:{emo:'🌫',name:'1 号 让路变透明',sub:'路变淡淡的光带，森林露出来，玩法完全不变',
+     tell:'「战场选 1 号：让路变透明（只改美术，玩法不变）」',
+     say:'一号，让路变透明。路变成淡淡的光，草地和小蘑菇都露出来了，玩法一模一样。'},
+  b:{emo:'🌲',name:'2 号 走进森林深处',sub:'僵尸从很远走过来，越走越大；小人左右拖着换路',
+     tell:'「战场选 2 号：纵深透视，僵尸从远处走近，小人左右移动」',
+     say:'二号，走进森林深处。僵尸从很远很远出现，一开始小小的，越走越近越走越大！小人左右拖着走，森林全都看得见。'},
+  c:{emo:'🛤',name:'3 号 五条林间小路',sub:'泥土小路越靠下越宽，路中间长草和蘑菇，僵尸越走越胖',
+     tell:'「战场选 3 号：五条林间小路（上窄下宽，有远近感）」',
+     say:'三号，五条林间小路。还是横着打，可是路变成泥土小路，越靠下越宽，僵尸越走越胖，像真的走进森林。'}
+};
+
+function speak(text){
+  try{
+    if(!('speechSynthesis' in window))return;
+    window.speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang='zh-CN';u.rate=0.92;u.pitch=1.15;
+    window.speechSynthesis.speak(u);
+  }catch(e){}
+}
+function say(text){
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang='zh-CN';u.rate=0.92;u.pitch=1.15;
+  window.speechSynthesis.speak(u);
+}
+
+const demos=[];
+function mount(id,make,card){
+  const {cv,c}=initCanvas(id);
+  const o=make();
+  demos.push({cv,c,o});
+  let pid=null;
+  const toG=e=>{const r=cv.getBoundingClientRect();
+    return {x:(e.clientX-r.left)/r.width*W,y:(e.clientY-r.top)/r.height*H};};
+  cv.addEventListener('pointerdown',e=>{
+    e.preventDefault();pid=e.pointerId;
+    try{cv.setPointerCapture(pid);}catch(err){}
+    const g=toG(e);o.point(g.x,g.y);select(card,false);
+  });
+  cv.addEventListener('pointermove',e=>{
+    if(pid!==e.pointerId)return;
+    e.preventDefault();
+    const g=toG(e);o.point(g.x,g.y);
+  });
+  const up=e=>{if(pid===e.pointerId)pid=null;};
+  cv.addEventListener('pointerup',up);
+  cv.addEventListener('pointercancel',up);
+  cv.addEventListener('click',e=>e.stopPropagation());   // 拖动画布不触发卡片朗读
+}
+
+const cards=[...document.querySelectorAll('.card')];
+const ov=document.getElementById('ov');
+let pending=null;
+
+function select(card,doSpeak){
+  cards.forEach(x=>x.classList.toggle('sel',x===card));
+  if(doSpeak)speak(INFO[card.dataset.k].say);
+}
+
+cards.forEach(card=>{
+  const k=card.dataset.k;
+  card.addEventListener('click',()=>select(card,true));
+  card.querySelector('.pick').addEventListener('click',e=>{
+    e.stopPropagation();
+    pending=k;
+    document.getElementById('ovEmo').textContent=INFO[k].emo;
+    document.getElementById('ovName').textContent=INFO[k].name;
+    document.getElementById('ovSub').textContent=INFO[k].sub;
+    document.getElementById('dadChoice').textContent=INFO[k].tell;
+    ov.classList.remove('hide');
+    speak('确认一下，你要'+INFO[k].name+'吗？');
+  });
+});
+document.getElementById('ovOk').addEventListener('click',()=>{
+  try{localStorage.setItem('moday_field',pending);}catch(e){}
+  ov.classList.add('hide');
+  speak('好！记住啦，'+INFO[pending].name+'！');
+});
+document.getElementById('ovNo').addEventListener('click',()=>{
+  ov.classList.add('hide');
+  pending=null;
+});
+document.getElementById('btnSpeakAll').addEventListener('click',()=>{
+  try{
+    if(!('speechSynthesis' in window))return;
+    window.speechSynthesis.cancel();
+    say('现在这五条路把森林挡住啦，只剩天上一个月亮。下面三个画面都会动，用手指拖一拖，选一个你最喜欢的！');
+    say(INFO.a.say);say(INFO.b.say);say(INFO.c.say);
+  }catch(e){}
+});
+
+/* 装配三张画布：1 号=透光横版，2 号=纵深透视，3 号=林间小路 */
+mount('cv1',()=>makeSide('a'),cards[0]);
+mount('cv2',()=>makePersp(),cards[1]);
+mount('cv3',()=>makeSide('c'),cards[2]);
+
+/* 之前选过的话，先把那张卡片亮起来 */
+try{
+  const saved=localStorage.getItem('moday_field');
+  if(saved&&INFO[saved]){
+    const card=cards.find(x=>x.dataset.k===saved);
+    if(card)card.classList.add('sel');
+  }
+}catch(e){}
+
+let last=0;
+function loop(now){
+  const t=now/1000;
+  let dt=last?t-last:0.016;
+  last=t;
+  if(dt>0.05)dt=0.05;
+  for(const d of demos){d.o.update(dt);d.o.draw(d.c);}
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+/* 平板上禁掉双指缩放 / 双击放大 */
+document.addEventListener('gesturestart',e=>e.preventDefault());
+document.addEventListener('dblclick',e=>e.preventDefault());
+let lastTouch=0;
+document.addEventListener('touchend',e=>{
+  const now=Date.now();
+  if(now-lastTouch<=320)e.preventDefault();
+  lastTouch=now;
+},{passive:false});
+</script>
+</body>
+</html>
