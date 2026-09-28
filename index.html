@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#14100f">
+<title>我的末日 · 小游戏合集</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    background:#14100f;color:#f0e6d8;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:24px 18px;overflow-x:hidden;position:relative;
+  }
+  /* 背景：废墟剪影 + 星尘 */
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;
+    background:
+      radial-gradient(circle at 20% 15%,rgba(255,183,77,.10),transparent 45%),
+      radial-gradient(circle at 82% 78%,rgba(255,87,34,.10),transparent 45%),
+      repeating-linear-gradient(90deg,rgba(255,255,255,.02) 0 2px,transparent 2px 60px);
+  }
+  .wrap{position:relative;width:100%;max-width:560px;text-align:center}
+  h1{
+    font-size:clamp(30px,8vw,46px);letter-spacing:.14em;font-weight:900;
+    color:#ffd54f;text-shadow:0 0 18px rgba(255,213,79,.45),0 3px 0 #7a4a12;
+  }
+  .sub{margin-top:10px;font-size:14px;color:#b9a99a;letter-spacing:.06em;line-height:1.7}
+  .play{
+    display:block;margin:26px auto 0;width:100%;max-width:380px;
+    padding:20px 16px;border:0;border-radius:16px;cursor:pointer;
+    background:linear-gradient(180deg,#ff8f3c,#e65100);
+    color:#fff;font-size:clamp(20px,5.4vw,26px);font-weight:900;letter-spacing:.1em;
+    font-family:inherit;
+    box-shadow:0 6px 0 #8d3200,0 14px 28px rgba(0,0,0,.45);
+    text-decoration:none;transition:transform .08s,box-shadow .08s;
+  }
+  .play:active{transform:translateY(5px);box-shadow:0 1px 0 #8d3200,0 6px 14px rgba(0,0,0,.4)}
+  .tip{margin-top:14px;font-size:13px;color:#8d7d70;line-height:1.8}
+  .tip b{color:#ffd54f}
+  .steps{
+    margin-top:30px;padding-top:20px;border-top:1px dashed rgba(255,255,255,.14);
+    text-align:left;
+  }
+  .steps h2{font-size:14px;color:#a08d7d;letter-spacing:.1em;margin-bottom:12px;font-weight:700}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px}
+  .grid a{
+    display:block;padding:11px 12px;border-radius:10px;text-decoration:none;
+    background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.09);
+    color:#d8c9b8;font-size:13.5px;transition:background .15s,transform .1s;
+  }
+  .grid a:active{transform:scale(.97);background:rgba(255,213,79,.16)}
+  .grid a span{color:#ffd54f;font-weight:800;margin-right:5px}
+  footer{margin-top:28px;font-size:12px;color:#6d6058;line-height:1.9}
+  footer a{color:#9c8b7e}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>我的末日</h1>
+  <div class="sub">爸爸和嵇焕宸一起设计的小游戏 · 用各种小游戏对抗末日</div>
+
+  <a class="play" href="我的末日-方块人大战方块僵尸.html">▶ 开始游戏</a>
+
+  <div class="tip">
+    建议<b>横屏</b>游玩 · 平板用手指点/滑，电脑用鼠标或方向键<br>
+    游戏进度自动保存在本机，不联网、不上传
+  </div>
+
+  <div class="steps">
+    <h2>设计过程（我们一起做的 9 个选择）</h2>
+    <div class="grid">
+      <a href="第1步-选玩法.html"><span>01</span>选玩法</a>
+      <a href="第2步-选主角.html"><span>02</span>选主角</a>
+      <a href="第3步-选僵尸.html"><span>03</span>选僵尸</a>
+      <a href="第4步-选武器.html"><span>04</span>选武器</a>
+      <a href="第5步-选特效.html"><span>05</span>选特效</a>
+      <a href="第6步-选背景.html"><span>06</span>选背景</a>
+      <a href="第7步-选音效.html"><span>07</span>选音效</a>
+      <a href="第8步-选战场样子.html"><span>08</span>选战场样子</a>
+      <a href="第9步-选扣星方式.html"><span>09</span>选扣星方式</a>
+    </div>
+  </div>
+
+  <footer>
+    纯 HTML5 单文件游戏，下载后双击也能玩<br>
+    源码：<a href="https://github.com/287683691-lgtm/my-doomsday-game">github.com/287683691-lgtm/my-doomsday-game</a>
+  </footer>
+</div>
+</body>
+</html>
