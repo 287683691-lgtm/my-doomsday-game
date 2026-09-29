@@ -1,0 +1,13 @@
+{
+  "name": "mydoomsday-mobile",
+  "private": true,
+  "version": "1.0.0",
+  "description": "《我的末日》安卓封装（Capacitor）",
+  "dependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/core": "^8.5.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.2"
+  }
+}

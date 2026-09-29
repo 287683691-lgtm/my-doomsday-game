@@ -1,0 +1,8 @@
+{
+  "appId": "com.jihuanhuan.mydoomsday",
+  "appName": "我的末日",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  }
+}

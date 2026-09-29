@@ -25,3 +25,6 @@ Desktop.ini
 # 编辑器
 .vscode/
 .idea/
+
+# Capacitor 打包暂存目录（build-apk.ps1 每次重新生成）
+mobile/www/
