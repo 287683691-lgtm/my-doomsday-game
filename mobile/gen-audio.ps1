@@ -1,4 +1,4 @@
-﻿﻿# gen-audio.ps1：预生成 APK 内置语音＋音效（voice/*.wav）
+﻿# gen-audio.ps1：预生成 APK 内置语音＋音效（voice/*.wav）
 # 台词用 Windows 自带中文语音（SAPI）合成；音效/BGM 按游戏里 tone()/noise() 的同一套参数用数学渲染，
 # 保证 APK 里听到的和桌面浏览器完全同款。改台词后重跑本脚本，再跑 build-apk.ps1 即可。
 $ErrorActionPreference = 'Stop'
@@ -39,15 +39,81 @@ $lines = [ordered]@{
   'over'        = '游戏结束，你得了'
   'fen'         = '分'
   'test'        = '一二三，语音测试'
+  'star1'       = '送你一颗星星！'
+  'star2'       = '送你两颗星星！'
+  'star3'       = '送你三颗星星！'
+  'welcome'     = '欢迎来到武器库！'
+  'w_star'      = '星星飞镖'
+  'w_bullet'    = '小子弹'
+  'w_shot'      = '散弹枪'
+  'w_fast'      = '快快飞镖'
+  'w_triple'    = '二连飞镖'
+  'w_boomer'    = '回旋镖'
+  'w_ice'       = '寒冰球'
+  'w_bolt'      = '雷电球'
+  'w_fire'      = '大火球'
+  'w_rocket'    = '火箭弹'
+  'w_bomb'      = '魔法炸弹'
+  'w_laser'     = '超级激光'
+  'zaidian'     = '再点一下就买啦'
+  'maidaola'    = '买到啦'
+  'jixu'        = '买好啦，继续加油！'
+  'huancha'     = '还差'
+  'gejb'        = '个金币'
   'n0' = '零'; 'n1' = '一'; 'n2' = '二'; 'n3' = '三'; 'n4' = '四'
   'n5' = '五'; 'n6' = '六'; 'n7' = '七'; 'n8' = '八'; 'n9' = '九'
   'n10' = '十'; 'n20' = '二十'; 'n30' = '三十'
+  'n40' = '四十'; 'n50' = '五十'; 'n60' = '六十'; 'n70' = '七十'; 'n80' = '八十'; 'n90' = '九十'
+}
+# 裁掉台词 wav 的头尾静音：SAPI 每句自带约 0.75s 尾静音＋0.055s 头静音，
+# 台词是按 clip 连播的（playClip 靠 ended 事件接续，中间没有延时），
+# 尾静音累加起来就是「第……2……关」之间明显的停顿。
+# 只处理台词（音效/BGM 是整段数学渲染的，节奏本身就是准的，不动）。
+function Trim-WavSilence($path, $tailSec, $headSec) {
+  $bytes = [System.IO.File]::ReadAllBytes($path)
+  if ($bytes.Length -lt 44) { return }
+  # 解析 RIFF 块：拿到采样率和 data 块位置（SAPI 写的是 16kHz 单声道 16bit PCM，标准头）
+  $pos = 12; $sr = 0; $dataOff = -1; $dataLen = 0
+  while ($pos + 8 -le $bytes.Length) {
+    $id = [System.Text.Encoding]::ASCII.GetString($bytes, $pos, 4)
+    $sz = [BitConverter]::ToUInt32($bytes, $pos + 4)
+    if ($id -eq 'fmt ') { $sr = [BitConverter]::ToUInt32($bytes, $pos + 12) }
+    elseif ($id -eq 'data') { $dataOff = $pos + 8; $dataLen = [Math]::Min($sz, $bytes.Length - $dataOff); break }
+    $pos += 8 + $sz + ($sz -band 1)          # 块按 2 字节对齐，奇数长度补 1 字节
+  }
+  if ($dataOff -lt 0 -or $sr -le 0) { return }
+  $n = [int]($dataLen / 2)
+  # SAPI 的静音是真 0：从尾向前找最后一个非零样本、从头向后找第一个非零样本
+  $last = -1
+  for ($i = $n - 1; $i -ge 0; $i--) {
+    if ([BitConverter]::ToInt16($bytes, $dataOff + $i * 2) -ne 0) { $last = $i; break }
+  }
+  if ($last -lt 0) { return }                # 整段全 0（异常），不动它
+  $first = $last
+  for ($i = 0; $i -le $last; $i++) {
+    if ([BitConverter]::ToInt16($bytes, $dataOff + $i * 2) -ne 0) { $first = $i; break }
+  }
+  $keepEnd = [Math]::Min($n, $last + 1 + [int]($sr * $tailSec))       # 人声后留一点余韵
+  $keepStart = [Math]::Max(0, $first - [int]($sr * $headSec))         # 开头最多留一小截，起音不顶
+  if ($keepStart -eq 0 -and $keepEnd -ge $n) { return }               # 没得裁就不重写
+  # 按保留区间重写为标准 44 字节头的 PCM wav
+  $newLen = $keepEnd - $keepStart
+  $ms = New-Object System.IO.MemoryStream
+  $bw = New-Object System.IO.BinaryWriter($ms)
+  $enc = [System.Text.Encoding]::ASCII
+  $bw.Write($enc.GetBytes('RIFF')); $bw.Write([UInt32](36 + $newLen * 2)); $bw.Write($enc.GetBytes('WAVE'))
+  $bw.Write($enc.GetBytes('fmt ')); $bw.Write([UInt32]16); $bw.Write([UInt16]1); $bw.Write([UInt16]1)
+  $bw.Write([UInt32]$sr); $bw.Write([UInt32]($sr * 2)); $bw.Write([UInt16]2); $bw.Write([UInt16]16)
+  $bw.Write($enc.GetBytes('data')); $bw.Write([UInt32]($newLen * 2))
+  $bw.Write($bytes, $dataOff + $keepStart * 2, $newLen * 2)
+  $bw.Flush(); [System.IO.File]::WriteAllBytes($path, $ms.ToArray()); $bw.Close()
 }
 foreach ($k in $lines.Keys) {
   $p = Join-Path $out ($k + '.wav')
   $syn.SetOutputToWaveFile($p, $fmt)
   $syn.Speak([string]$lines[$k])
   $syn.SetOutputToNull()
+  Trim-WavSilence $p 0.12 0.05               # 尾静音只留 0.12s、头静音最多 0.05s，连播间隔立刻变小
 }
 $syn.Dispose()
 Write-Host ('台词：' + $lines.Count + ' 句已生成')
@@ -142,6 +208,10 @@ Gen-Sfx 'over' 1.10 @(
   @{dur=0.26;f=120;f2=72;type='sine';vol=0.24;atk=0.008;delay=0.44},
   @{dur=0.26;f=90;f2=54;type='sine';vol=0.24;atk=0.008;delay=0.66})
 Gen-Sfx 'fw' 0.26 @(@{dur=0.16;f=620;f2=150;type='triangle';vol=0.08}, @{noise=1;dur=0.07;vol=0.05;f=2400;ftype='highpass'})
+Gen-Sfx 'coin' 0.32 @(@{dur=0.09;f=1319;type='sine';vol=0.13;atk=0.004}, @{dur=0.16;f=1760;type='sine';vol=0.11;atk=0.004;delay=0.07})
+Gen-Sfx 'boom' 0.62 @(@{dur=0.50;f=130;f2=32;type='sine';vol=0.32;atk=0.006}, @{noise=1;dur=0.34;vol=0.22;f=700})
+Gen-Sfx 'laserz' 0.42 @(@{dur=0.30;f=1800;f2=240;type='sawtooth';vol=0.12;atk=0.008}, @{noise=1;dur=0.16;vol=0.07;f=3200;ftype='highpass'})
+Gen-Sfx 'freeze' 0.40 @(@{dur=0.18;f=988;f2=1976;type='sine';vol=0.13;atk=0.006}, @{dur=0.22;f=1480;f2=2349;type='sine';vol=0.10;atk=0.006;delay=0.06})
 
 # BGM：8 步旋律循环（与 MELO 一致）。尾巴折回头部，保证 loop 拼接无断口
 $loopLen = [int](2.4 * $SR)
@@ -158,5 +228,5 @@ Write-Wav (Join-Path $out 'bgm.wav') $bgm $loopLen
 
 $files = Get-ChildItem $out -Filter *.wav
 $mb = [math]::Round(($files | Measure-Object Length -Sum).Sum / 1MB, 2)
-Write-Host ('音效/BGM：10 个已生成')
+Write-Host ('音效/BGM：14 个已生成')
 Write-Host ('合计 ' + $files.Count + ' 个 wav，' + $mb + ' MB → ' + $out)

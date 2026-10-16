@@ -1,4 +1,4 @@
-﻿﻿# 一键出 APK：复制最新游戏 -> www -> cap sync -> gradle 构建
+﻿# 一键出 APK：复制最新游戏 -> www -> cap sync -> gradle 构建
 # 用法：在 mobile/ 目录下执行  powershell -ExecutionPolicy Bypass -File build-apk.ps1
 $ErrorActionPreference = 'Stop'
 $mobile = $PSScriptRoot

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>我的末日 · 武器选择大会</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:#0a1224;color:#e8f0ff;font:16px/1.5 -apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;padding-bottom:96px}
+header{padding:18px 16px 6px;text-align:center}
+h1{margin:0;font-size:26px;color:#ffd54f}
+.dad{margin:8px auto 0;max-width:720px;font-size:14px;color:#9fb3d9;background:#101a30;border:1px dashed #33507e;border-radius:10px;padding:8px 12px;text-align:left}
+#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;padding:14px;max-width:1060px;margin:0 auto}
+.wc{position:relative;background:#101a30;border:2px solid #263a5e;border-radius:16px;padding:10px;cursor:pointer;transition:transform .12s,border-color .12s;user-select:none}
+.wc:active{transform:scale(.98)}
+.wc.sel{border-color:#66bb6a;background:#12271d}
+.wc.sel .nm{color:#a5d6a7}
+.chk{position:absolute;top:10px;right:10px;width:36px;height:36px;border-radius:50%;background:#66bb6a;color:#08210c;font-size:22px;font-weight:900;display:none;align-items:center;justify-content:center;z-index:2}
+.wc.sel .chk{display:flex}
+.art svg{width:100%;height:auto;display:block;border-radius:10px}
+.info{padding:6px 4px 2px}
+.nm{font-size:22px;font-weight:900;color:#ffe082}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.tag{font-size:13px;color:#9fb3d9;background:#0b1428;border:1px solid #263a5e;border-radius:999px;padding:2px 10px}
+.tag.price{color:#ffd54f;border-color:#7a5c00}
+.desc{font-size:14px;color:#c6d6f5;margin-top:5px}
+#bar{position:fixed;left:0;right:0;bottom:0;background:#0d1730f2;border-top:2px solid #263a5e;padding:10px 14px calc(10px + env(safe-area-inset-bottom));display:flex;gap:10px;align-items:center;flex-wrap:wrap;z-index:10}
+#picked{flex:1;min-width:200px;font-size:15px;color:#c6d6f5}
+#picked b{color:#a5d6a7}
+.btns{display:flex;gap:10px}
+button{font:inherit;font-weight:900;border:none;border-radius:14px;padding:14px 22px;cursor:pointer}
+#reset{background:#263a5e;color:#c6d6f5}
+#done{background:#43a047;color:#fff;font-size:18px}
+#done:disabled{background:#2c3f22;color:#6f8560}
+#final{position:fixed;inset:0;background:#040a18ee;display:flex;align-items:center;justify-content:center;z-index:20;padding:16px}
+#final[hidden]{display:none}
+.fcard{background:#101a30;border:3px solid #ffd54f;border-radius:20px;max-width:520px;width:100%;max-height:92vh;overflow:auto;padding:22px;text-align:center}
+.fcard h2{margin:0 0 12px;color:#ffd54f;font-size:24px}
+#flist{list-style:none;margin:0;padding:0;text-align:left}
+#flist li{font-size:24px;font-weight:900;color:#e8f0ff;background:#0b1428;border:1px solid #263a5e;border-radius:12px;padding:12px 16px;margin-bottom:10px}
+.snap{color:#9fb3d9;font-size:15px;margin:14px 0}
+#close{background:#263a5e;color:#e8f0ff;width:100%}
+@media(prefers-reduced-motion:no-preference){
+.spin{animation:spn 1.4s linear infinite;transform-box:fill-box;transform-origin:center}
+@keyframes spn{to{transform:rotate(360deg)}}
+.proj{animation:fly 2.4s ease-in infinite}
+@keyframes fly{0%{transform:translateX(0);opacity:0}6%{opacity:1}52%{transform:translateX(150px);opacity:1}58%{transform:translateX(150px);opacity:0}100%{transform:translateX(150px);opacity:0}}
+.beam{animation:bm 2.4s infinite}
+@keyframes bm{0%,54%{opacity:0}58%{opacity:1}74%{opacity:0}100%{opacity:0}}
+.burst{animation:bm2 2.4s infinite;transform-box:fill-box;transform-origin:center;transform:scale(.2)}
+@keyframes bm2{0%,54%{opacity:0;transform:scale(.2)}60%{opacity:1;transform:scale(1)}86%{opacity:0;transform:scale(1.25)}100%{opacity:0;transform:scale(1.25)}}
+.big .burst{transform:scale(.2)}
+.zsh{animation:zs 2.4s infinite}
+@keyframes zs{0%,58%,70%,100%{transform:translateX(0)}62%{transform:translateX(5px)}66%{transform:translateX(-2px)}}
+.fl{animation:fl .45s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:right center}
+@keyframes fl{from{opacity:.8;transform:scaleX(1)}to{opacity:.45;transform:scaleX(.75)}}
+.bk{animation:bk .5s steps(2) infinite}
+@keyframes bk{50%{opacity:.25}}}
+</style>
+</head>
+<body>
+<header>
+<h1>🎯 我的末日 · 武器选择大会</h1>
+<p class="dad">给爸爸：让小朋友点卡片挑武器，可以多选，选好点底部绿色大按钮「就选这些！」，弹出的大字清单截图发到电脑里给 AI 就能开工。点已选中的卡片可以取消。</p>
+</header>
+<main id="grid"></main>
+<div id="bar">
+  <div id="picked">还没有选，点点上面的卡片吧</div>
+  <div class="btns">
+    <button id="reset">重新选</button>
+    <button id="done">就选这些！</button>
+  </div>
+</div>
+<div id="final" hidden>
+  <div class="fcard">
+    <h2>🏆 小朋友选的武器</h2>
+    <ul id="flist"></ul>
+    <p class="snap">📸 把这一页截图，发给爸爸电脑里的 AI</p>
+    <button id="close">再改一改</button>
+  </div>
+</div>
+<script>
+/* ---------- 通用小素材（和游戏里方块画风一致） ---------- */
+const BG='<rect width="340" height="150" rx="10" fill="#0e1730"/><rect y="114" width="340" height="18" fill="#223052"/>';
+const HERO='<g><rect x="26" y="58" width="14" height="12" rx="2" fill="#f5cba7"/><rect x="24" y="70" width="18" height="22" rx="3" fill="#7c8b5e"/><rect x="42" y="72" width="12" height="5" rx="2" fill="#f5cba7"/></g>';
+const ZOMBIE='<g class="zsh"><rect x="292" y="50" width="16" height="14" rx="2" fill="#66bb6a"/><rect x="290" y="64" width="20" height="24" rx="3" fill="#43a047"/><rect x="280" y="66" width="12" height="6" rx="3" fill="#66bb6a"/><circle cx="297" cy="56" r="1.8" fill="#1b5e20"/><circle cx="303" cy="56" r="1.8" fill="#1b5e20"/></g>';
+const STAR16='0,-16 4.7,-5.2 15.2,-4.9 6.9,2.1 9.4,12.9 0,6.5 -9.4,12.9 -6.9,2.1 -15.2,-4.9 -4.7,-5.2';
+const STAR9='0,-9 2.6,-2.9 8.6,-2.8 3.9,1.2 5.3,7.3 0,3.7 -5.3,7.3 -3.9,1.2 -8.6,-2.8 -2.6,-2.9';
+function burst(c){return '<g stroke="'+c+'" stroke-width="4" stroke-linecap="round">'
+ +'<line x1="288" y1="46" x2="288" y2="32"/><line x1="308" y1="56" x2="318" y2="46"/>'
+ +'<line x1="314" y1="76" x2="328" y2="76"/><line x1="308" y1="96" x2="318" y2="106"/>'
+ +'<line x1="288" y1="104" x2="288" y2="118"/><line x1="268" y1="96" x2="258" y2="106"/>'
+ +'<line x1="262" y1="56" x2="252" y2="46"/></g>'
+ +'<circle cx="288" cy="76" r="12" fill="'+c+'" opacity=".35"/>';}
+function scene(w,delay){
+  const proj=w.beam?'':'<g class="proj" style="animation-delay:'+delay+'s"><g transform="translate(108,78)">'+w.proj+'</g></g>';
+  const beam=w.beam?'<g class="beam" style="animation-delay:'+delay+'s">'+w.proj+'</g>':'';
+  return '<svg viewBox="0 0 340 150" aria-hidden="true">'+BG+HERO+proj+beam+ZOMBIE
+    +'<g class="burst'+(w.big?' big':'')+'" style="animation-delay:'+delay+'s">'+burst(w.bcol)+'</g></svg>';
+}
+/* ---------- 十把候选武器 ---------- */
+const W=[
+{id:'star',emoji:'⭐',name:'星星飞镖',tags:['现在的武器','免费'],price:false,desc:'旋转的金星星，就是现在手里这把',bcol:'#ffd54f',
+ proj:'<polygon class="spin" points="'+STAR16+'" fill="#ffd54f" stroke="#f9a825" stroke-width="2" stroke-linejoin="round"/>'},
+{id:'fast',emoji:'🌀',name:'快快飞镖',tags:['切换 · 永久'],price:20,desc:'射速快一倍，咻咻咻连着发',bcol:'#26c6da',
+ proj:'<polygon class="gh2" points="'+STAR9+'" fill="#26c6da" opacity=".35" transform="translate(-46,0)"/><polygon class="gh2" points="'+STAR9+'" fill="#26c6da" opacity=".15" transform="translate(-72,0)"/><polygon class="spin" points="0,-13 3.8,-4.2 12.4,-4 5.6,1.7 7.6,10.5 0,5.3 -7.6,10.5 -5.6,1.7 -12.4,-4 -3.8,-4.2" fill="#26c6da" stroke="#00838f" stroke-width="2" stroke-linejoin="round"/>'},
+{id:'triple',emoji:'✨',name:'三连飞镖',tags:['切换 · 永久'],price:40,desc:'一次发三颗，上中下一起打',bcol:'#ffe082',
+ proj:'<polygon class="spin" points="'+STAR9+'" fill="#ffd54f" transform="translate(-6,-18)"/><polygon class="spin" points="'+STAR9+'" fill="#ffe082" transform="translate(-6,18)"/><polygon class="spin" points="'+STAR16+'" fill="#ffd54f" stroke="#f9a825" stroke-width="2"/>'},
+{id:'fire',emoji:'🔥',name:'大火球',tags:['切换 · 永久'],price:50,desc:'一发顶三发，还能穿透后面那只',bcol:'#ff7043',
+ proj:'<ellipse class="fl" cx="-24" cy="0" rx="13" ry="8" fill="#ff8a65" opacity=".6"/><ellipse class="fl" cx="-44" cy="0" rx="8" ry="5" fill="#ffccbc" opacity=".3"/><circle class="spin" r="18" fill="#ff7043" stroke="#e64a19" stroke-width="2"/><circle r="9" fill="#ffd180"/><circle cx="-4" cy="-4" r="4" fill="#fff3e0"/>'},
+{id:'ice',emoji:'❄️',name:'寒冰球',tags:['切换 · 永久'],price:45,desc:'打中把僵尸冻住，走得慢吞吞',bcol:'#81d4fa',
+ proj:'<circle r="15" fill="#b3e5fc" stroke="#4fc3f7" stroke-width="2.5"/><circle r="6" fill="#e1f5fe"/><rect x="-16" y="-11" width="6" height="6" transform="rotate(45 -13 -8)" fill="#4fc3f7"/><rect x="8" y="-14" width="5" height="5" transform="rotate(45 10.5 -11.5)" fill="#4fc3f7"/><rect x="4" y="9" width="5" height="5" transform="rotate(45 6.5 11.5)" fill="#4fc3f7"/>'},
+{id:'bolt',emoji:'⚡',name:'雷电球',tags:['切换 · 永久'],price:60,desc:'打中一只，闪电电到旁边的僵尸一起掉血',bcol:'#ffee58',
+ proj:'<circle r="15" fill="#fff9c4" stroke="#fbc02d" stroke-width="2.5"/><polyline points="-9,-4 -2,-4 -6,4 7,4 2,11" stroke="#f9a825" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="-18" y1="-10" x2="-12" y2="-6" stroke="#fbc02d" stroke-width="3" stroke-linecap="round"/><line x1="14" y1="-12" x2="10" y2="-7" stroke="#fbc02d" stroke-width="3" stroke-linecap="round"/>'},
+{id:'rang',emoji:'🪃',name:'回旋镖',tags:['切换 · 永久'],price:35,desc:'飞出去再飞回来，一路打两次',bcol:'#ffb74d',
+ proj:'<g class="spin"><path d="M-15,-13 L3,0 L-15,13" stroke="#ffb74d" stroke-width="9" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M-9,-8 L2,0 L-9,8" stroke="#ffe0b2" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>'},
+{id:'rocket',emoji:'🚀',name:'火箭弹',tags:['切换 · 永久'],price:70,desc:'打中就爆炸，轰一大片',bcol:'#ef5350',big:true,
+ proj:'<ellipse class="fl" cx="-20" cy="0" rx="9" ry="4.5" fill="#ff9800" opacity=".8"/><rect x="-12" y="-5" width="22" height="10" rx="4" fill="#eceff1"/><polygon points="10,-5 19,0 10,5" fill="#ef5350"/><polygon points="-12,-5 -19,-10 -12,1" fill="#ef5350"/><polygon points="-12,5 -19,10 -12,-1" fill="#ef5350"/>'},
+{id:'bomb',emoji:'💥',name:'魔法炸弹',tags:['一次性'],price:10,unit:'/个',desc:'扔出去全屏轰，救命神器，用完就没',bcol:'#b388ff',big:true,
+ proj:'<path d="M10,-13 q8,-9 15,-6" stroke="#8d6e63" stroke-width="3" fill="none" stroke-linecap="round"/><polygon class="bk" points="26,-20 29,-26 35,-27 30,-31 32,-37 26,-34 20,-37 22,-31 17,-27 23,-26" fill="#b388ff"/><circle r="15" fill="#37474f" stroke="#263238" stroke-width="2"/><circle cx="-5" cy="-5" r="4.5" fill="#90a4ae" opacity=".6"/>'},
+{id:'laser',emoji:'🔆',name:'超级激光',tags:['一次性'],price:15,unit:'/个',desc:'从枪口射出一条光贯穿整条路，路上的僵尸一起掉血',bcol:'#80d8ff',big:true,beam:true,
+ proj:'<rect x="-48" y="-6" width="288" height="12" rx="6" fill="#80d8ff"/><rect x="-48" y="-2" width="288" height="4" rx="2" fill="#ffffff"/>'}
+];
+/* ---------- 渲染 + 选择逻辑 ---------- */
+const KEY='moday_wpn_pick';
+let picked=new Set();
+try{picked=new Set(JSON.parse(localStorage.getItem(KEY)||'[]'))}catch(e){}
+const $=s=>document.querySelector(s);
+const grid=$('#grid');
+grid.innerHTML=W.map((w,i)=>
+ '<div class="wc'+(picked.has(w.id)?' sel':'')+'" data-id="'+w.id+'">'
+ +'<div class="chk">✓</div>'+scene(w,(i%3)*0.45)
+ +'<div class="info"><div class="nm">'+w.emoji+' '+w.name+'</div>'
+ +'<div class="tags">'+w.tags.map(t=>'<span class="tag'+(w.price&&!t.includes('免费')?'':' price')+'">'+t+'</span>').join('')+'</div>'
+ +'<div class="desc">'+w.desc+'</div></div></div>').join('');
+function beep(f){try{const a=new (window.AudioContext||window.webkitAudioContext)();
+ const o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(a.destination);
+ o.frequency.value=f||880;g.gain.value=.07;o.start();o.stop(a.currentTime+.06);
+ o.onended=function(){a.close()}}catch(e){}}
+function updateBar(){
+ const names=W.filter(w=>picked.has(w.id)).map(w=>w.emoji+w.name);
+ $('#picked').innerHTML=names.length
+   ?'已选 <b>'+names.length+'</b> 把：'+names.map(n=>'<b>'+n+'</b>').join('、')
+   :'还没有选，点点上面的卡片吧';
+ $('#done').disabled=!names.length;
+ grid.querySelectorAll('.wc').forEach(c=>c.classList.toggle('sel',picked.has(c.dataset.id)));
+ try{localStorage.setItem(KEY,JSON.stringify([...picked]))}catch(e){}
+}
+grid.addEventListener('click',e=>{
+ const c=e.target.closest('.wc');if(!c)return;
+ const id=c.dataset.id;
+ picked.has(id)?picked.delete(id):picked.add(id);
+ beep(picked.has(id)?988:440);
+ if(navigator.vibrate)try{navigator.vibrate(30)}catch(e){}
+ updateBar();
+});
+$('#reset').onclick=()=>{picked.clear();beep(330);updateBar()};
+$('#done').onclick=()=>{
+ if(!picked.size)return;
+ beep(1319);
+ $('#flist').innerHTML=W.filter(w=>picked.has(w.id))
+   .map(w=>'<li>'+w.emoji+' '+w.name+'<span style="font-size:15px;font-weight:400;color:#9fb3d9">　'+w.tags.join(' · ')+'</span></li>').join('');
+ $('#final').hidden=false;
+};
+$('#close').onclick=()=>{$('#final').hidden=true;beep(660)};
+updateBar();
+</script>
+</body>
+</html>

@@ -131,6 +131,38 @@ h1{margin:0;font-size:clamp(38px,8vw,86px);line-height:1;font-weight:900;letter-
 .dbRow{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
 .dbRow .big{height:46px;font-size:17px;padding:0 16px}
 
+/* ---------- 金币盘（HUD 左侧） ---------- */
+#coinPlate b{color:#ffd54f}
+/* ---------- 武器栏：战斗中底部一排，半透明不挡路 ---------- */
+#wbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(6px + env(safe-area-inset-bottom));
+  z-index:6;display:flex;flex-wrap:wrap;justify-content:center;gap:8px;align-items:center;padding:6px 10px;border-radius:20px;
+  /* max-content 关掉 shrink-to-fit：绝对定位 + left:50% 时浏览器只给半屏可用宽，武器买多了就折行，把行军路线压掉一两排 */
+  background:rgba(8,14,28,.42);border:2px solid rgba(255,255,255,.14);width:-webkit-max-content;width:max-content;max-width:96vw;max-height:44vh;overflow:auto}
+#wbar.hide{display:none}
+.wb{width:clamp(40px,6vw,52px);height:clamp(40px,6vw,52px);border-radius:14px;font-size:clamp(18px,2.7vw,25px);
+  line-height:1;flex:0 0 auto;padding:0;display:flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,.10);border:2px solid rgba(255,255,255,.22);color:#fff;position:relative}
+/* 手绘 SVG 图标（激光枪/双飞镖）跟着字号缩放，和 emoji 一样占一格 */
+.wb svg,.wi svg{width:1em;height:1em;display:block}
+.wb:active{transform:translateY(2px)}
+.wb.sel{border-color:#ffd54f;background:rgba(255,202,40,.28)}
+.wb.wshop{border-color:rgba(255,213,79,.6);background:rgba(255,202,40,.18)}  /* 武器商店入口：金色描边一眼认出 */
+.wb.empty{opacity:.35}
+.wb .cnt{position:absolute;right:3px;bottom:1px;font-size:12px;font-weight:900;color:#ffd54f}
+.wsep{width:2px;height:36px;border-radius:2px;background:rgba(255,255,255,.18);flex:0 0 auto}
+/* ---------- 武器库商店 ---------- */
+#btnArsenal b{color:#ffd54f}
+#scrArsenal{justify-content:flex-start;overflow-y:auto;gap:10px;-webkit-overflow-scrolling:touch}
+#arsGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:8px;width:min(880px,94vw)}
+.wcard{background:rgba(255,255,255,.07);border:3px solid rgba(255,255,255,.16);border-radius:18px;
+  padding:10px 6px 8px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer}
+.wcard:active{transform:scale(.96)}
+.wcard.sel{border-color:#ffd54f;background:rgba(255,202,40,.14)}
+.wcard.pend{border-color:#4fc3f7;background:rgba(79,195,247,.15)}
+.wcard .wi{font-size:36px;line-height:1.15}
+.wcard .wn{color:#fff;font-weight:900;font-size:14px}
+.wcard .wp{color:#ffd54f;font-weight:800;font-size:13px}
+.wcard .wp.own{color:#69f0ae}
 /* 竖屏提示 */
 #scrRotate{z-index:60;background:#0b1020}
 #scrRotate .emo{animation:rot 1.8s ease-in-out infinite}
@@ -146,6 +178,7 @@ h1{margin:0;font-size:clamp(38px,8vw,86px);line-height:1;font-weight:900;letter-
 <div id="hud" class="hide">
   <div class="hudL">
     <div id="hearts">❤️❤️❤️</div>
+    <div class="plate" id="coinPlate">🪙 <b id="uiCoin">0</b></div>
     <div class="plate">分数 <b id="uiScore">0</b></div>
     <div class="plate">第 <b id="uiStage">1</b> 关</div>
     <div class="plate" id="uiQuotaBox">还要打 <b id="uiQuota">7</b> 只</div>
@@ -157,6 +190,9 @@ h1{margin:0;font-size:clamp(38px,8vw,86px);line-height:1;font-weight:900;letter-
 </div>
 
 <div id="banner"></div>
+
+<!-- 战斗武器栏：切换武器 + 一次性武器（内容由 renderWbar 生成） -->
+<div id="wbar" class="hide"></div>
 
 <!-- 家长诊断：长按首页标题「我的末日」0.8 秒打开 -->
 <div id="scrDiag">
@@ -198,7 +234,10 @@ h1{margin:0;font-size:clamp(38px,8vw,86px);line-height:1;font-weight:900;letter-
       <button class="spot" data-bg="desert" style="left:86%;top:52%"><span>🌵</span><i>太阳沙漠</i></button>
     </div>
   </div>
-  <button class="big" id="btnStart">▶ 开始打僵尸！</button>
+  <div class="btnRow">
+    <button class="big" id="btnStart">▶ 开始打僵尸！</button>
+    <button class="big blue" id="btnArsenal">🛠 武器库 🪙<b id="uiMenuCoin">0</b></button>
+  </div>
   <div class="menuRow">
     <span class="best">🏆 最高分 <b id="uiBest">0</b></span>
     <button class="mini" id="btnSound2">🔊 声音 开</button>
@@ -239,6 +278,14 @@ h1{margin:0;font-size:clamp(38px,8vw,86px);line-height:1;font-weight:900;letter-
     <button class="big blue" id="btnRestart">↻ 重新开始</button>
     <button class="big gray" id="btnHome2">🏠 回主菜单</button>
   </div>
+</div>
+
+<!-- 武器库：打死僵尸赚金币，在这里买武器 / 换武器。不识字也能玩：第一次点＝语音报价，再点＝确认买 -->
+<div class="scr hide" id="scrArsenal">
+  <p class="ttl">🛠 武器库</p>
+  <p class="subttl">🪙 金币 <b id="arsCoin" style="color:#ffd54f">0</b></p>
+  <div id="arsGrid"></div>
+  <button class="big gray" id="btnArsClose">✖ 回主菜单</button>
 </div>
 
 <!-- 竖屏提示 -->
@@ -302,12 +349,24 @@ function star(ctx,x,y,r,c,rot){
   }
   ctx.closePath();ctx.fill();ctx.restore();
 }
+/* 四角闪星（十字星光）：快快飞镖的弹体，和五角星的星星飞镖明显区分 */
+function spark4(ctx,x,y,r,rot,c){
+  ctx.save();ctx.translate(x,y);if(rot)ctx.rotate(rot);ctx.fillStyle=c;ctx.beginPath();
+  for(let i=0;i<8;i++){
+    const a=-Math.PI/2+i*Math.PI/4, rr=i%2?r*0.3:r;
+    ctx.lineTo(Math.cos(a)*rr,Math.sin(a)*rr);
+  }
+  ctx.closePath();ctx.fill();ctx.restore();
+}
 function updParts(a,dt){
   for(let i=a.length-1;i>=0;i--){
     const p=a[i];p.t+=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;
     if(p.g!==0)p.vy+=300*dt;
     if(p.vr)p.rot=(p.rot||0)+p.vr*dt;
-    if(p.gr)p.r+=p.gr*dt;
+    /* 会缩小的粒子（gr 为负，比如火箭尾焰）缩到 0 就退休，别让它变成负数：
+       半径为负时 ctx.arc 会抛 IndexSizeError，异常穿出去会把 render() 整帧打断，
+       后果是 ctx.restore() 被跳过——震屏位移和 globalAlpha 一层层累积下来，画面就是「闪」。 */
+    if(p.gr){p.r+=p.gr*dt;if(p.r<=0){a.splice(i,1);continue;}}
     if(p.t>=p.life)a.splice(i,1);
   }
 }
@@ -1017,7 +1076,19 @@ const SFX={
   click(){noise({dur:0.05,vol:0.20,f:3400,ftype:'highpass'});
           tone({f:520,f2:360,dur:0.09,type:'triangle',vol:0.20});},
   fw(){tone({f:620,f2:150,dur:0.16,type:'triangle',vol:0.08});
-       noise({dur:0.07,vol:0.05,f:2400,ftype:'highpass'});}
+       noise({dur:0.07,vol:0.05,f:2400,ftype:'highpass'});},
+  /* 金币到账叮：两颗上行短音，轻快不吵（金币飞进盘子才响） */
+  coin(){tone({f:1319,dur:0.09,type:'sine',vol:0.13,atk:0.004});
+         tone({f:1760,dur:0.16,type:'sine',vol:0.11,atk:0.004,delay:0.07});},
+  /* 火箭弹/魔法炸弹的爆炸：低音砸下去＋一团噪声 */
+  boom(){tone({f:130,f2:32,dur:0.50,type:'sine',vol:0.32,atk:0.006});
+         noise({dur:0.34,vol:0.22,f:700});},
+  /* 超级激光：高频锯齿往下滑的“嗞——” */
+  laserz(){tone({f:1800,f2:240,dur:0.30,type:'sawtooth',vol:0.12,atk:0.008});
+           noise({dur:0.16,vol:0.07,f:3200,ftype:'highpass'});},
+  /* 寒冰球冻住：两颗上行的玻璃叮 */
+  freeze(){tone({f:988,f2:1976,dur:0.18,type:'sine',vol:0.13,atk:0.006});
+           tone({f:1480,f2:2349,dur:0.22,type:'sine',vol:0.10,atk:0.006,delay:0.06});}
 };
 const MELO={type:'triangle',vol:0.10,gap:300,notes:[196,0,262,0,196,0,294,262]};
 let bgmTimer=null;
@@ -1087,6 +1158,67 @@ function applyStageBG(){
 }
 
 /* =========================================================
+   金币 & 武器库：打死僵尸赚金币（普通＋1 / BOSS＋15），
+   金币在武器库里买武器。存档：moday_coin / moday_own / moday_cur_thin·fat
+   ========================================================= */
+let coins=loadInt('moday_coin',0,0,9999999);
+/* 武器表：switch＝买一次永久拥有、随时切换；once＝按个数买、战斗里点了立刻用。
+   rate＝发射间隔(秒)、spd＝飞行速度、dmg＝单发伤害。
+   弹速规范：常规 460、shot 560（一梭子排开的枪口初速）、fire 400、rocket 360；ice 620 和 fast 600 是唯二的快弹。
+   特殊效果：pellets 一梭子多发（同一条线前后排开） / pierce 穿透 / multi 两路齐发 / back 回旋（回程换相邻路） /
+             frz 冻住秒数 / chain 雷电链 / splash 火箭溅射 / blast 大火球命中即炸（三条路前后范围） */
+/* 两个手绘 SVG 图标：emoji 里根本没有「激光枪」和「两把飞镖」——🔆 看着像太阳、✌️ 是剪刀手，
+   小朋友认不出来。SVG 跟 font-size 缩放（见 .wb svg / .wi svg），武器栏小格子和商店大卡片都能用。 */
+const ICO_LASER='<svg viewBox="0 0 32 32" aria-hidden="true">'
+  +'<path d="M22 15.5h8.4" stroke="#4dd0e1" stroke-width="5.4" stroke-linecap="round" opacity=".5"/>'   // 外发光
+  +'<path d="M22 15.5h8.4" stroke="#e0f7fa" stroke-width="2" stroke-linecap="round"/>'                  // 白热光束芯
+  +'<rect x="2.6" y="11" width="16" height="8.4" rx="2.6" fill="#546e7a"/>'                             // 枪身
+  +'<rect x="13.4" y="12.6" width="9.6" height="5.2" rx="2.2" fill="#90a4ae"/>'                         // 枪管
+  +'<path d="M6.4 19.2l2.4 8.6h5.2l-2.2-8.6z" fill="#37474f"/>'                                        // 握把
+  +'<circle cx="9.4" cy="15.2" r="2.9" fill="#40c4ff"/><circle cx="9.4" cy="15.2" r="1.2" fill="#e0f7fa"/></svg>';  // 能量核心
+const ICO_TRIPLE='<svg viewBox="0 0 32 32" aria-hidden="true">'
+  +'<path d="M12 2l2.35 6.76 7.16.15-5.71 4.33 2.08 6.85L12 16l-5.88 4.09 2.08-6.85L2.49 8.91l7.16-.15z"'
+  +' fill="#ffd54f" stroke="#f9a825" stroke-width="1"/>'                                                // 大飞镖
+  +'<path d="M24 16.8l1.46 4.2 4.44.08-3.54 2.69 1.28 4.25L24 25.48l-3.64 2.54 1.28-4.25-3.54-2.69 4.44-.08z"'
+  +' fill="#ffe082" stroke="#f9a825" stroke-width="1"/></svg>';                                         // 小飞镖（斜后方跟着）
+const WEAPONS=[
+  {id:'star',  icon:'⭐', name:'星星飞镖', type:'switch', price:0,  rate:0.55, spd:460, dmg:1},
+  {id:'bullet',icon:'⚪', name:'小子弹',   type:'switch', price:0,  rate:0.55, spd:460, dmg:1},   // 和星星飞镖同威力同节奏，只是弹体长相不同（焕宸＝星星、爸爸＝子弹）
+  {id:'shot',  icon:'🔫', name:'散弹枪',   type:'switch', price:40, rate:1.50, spd:560, dmg:1, pellets:3},   // ＝最早版本冲锋战士那把冲锋枪：一梭子三发、同一条线前后排开、不穿透
+  {id:'fast',  icon:'✨', name:'快快飞镖', type:'switch', price:10, rate:0.28, spd:600, dmg:1},
+  {id:'triple',icon:ICO_TRIPLE, name:'二连飞镖', type:'switch', price:20, rate:0.55, spd:460, dmg:1, multi:1},
+  {id:'boomer',icon:'🪃', name:'回旋镖',   type:'switch', price:18, rate:1.20, spd:460, dmg:1, pierce:1, back:1},
+  {id:'ice',   icon:'❄️', name:'寒冰球',   type:'switch', price:22, rate:1.60, spd:620, dmg:4, frz:5},   // 快、疼、冻得久：控场武器就该一扔一片定住
+  {id:'bolt',  icon:'⚡', name:'雷电球',   type:'switch', price:30, rate:0.90, spd:460, dmg:2, chain:1},
+  {id:'fire',  icon:'🔥', name:'大火球',   type:'switch', price:25, rate:1.40, spd:400, dmg:3, blast:1},   // 命中即炸：三条路、爆心前后 110px 内全体挨烧
+  {id:'rocket',icon:'🚀', name:'火箭弹',   type:'switch', price:35, rate:0.85, spd:360, dmg:3, splash:1},
+  {id:'bomb',  icon:'💥', name:'魔法炸弹', type:'once',   price:5},
+  {id:'laser', icon:ICO_LASER, name:'超级激光', type:'switch', price:60, rate:1.10, dmg:3}   // 常驻光束：无弹体，开火沿本路贯穿、全体各 3 伤
+];
+function weaponOf(id){for(const w of WEAPONS)if(w.id===id)return w;return null;}
+/* 拥有/持有存档：{sw:[买断的切换型 id], oc:{bomb:个数}}，坏档一律当空（防御性加载） */
+let OWN={sw:[],oc:{bomb:0}};
+(function loadOwn(){
+  let o=null;try{o=JSON.parse(LS.get('moday_own',''));}catch(e){}
+  if(o&&Array.isArray(o.sw))for(const id of o.sw){const w=weaponOf(id);if(w&&w.type==='switch'&&!OWN.sw.includes(id))OWN.sw.push(id);}
+  if(o&&o.oc&&typeof o.oc==='object')OWN.oc.bomb=Math.max(0,parseInt(o.oc.bomb,10)||0);
+})();
+function saveOwn(){LS.set('moday_own',JSON.stringify(OWN));}
+function hasWeapon(id){const w=weaponOf(id);if(!w||w.type!=='switch')return false;return w.price===0||OWN.sw.indexOf(id)>=0;}
+function onceCnt(id){return Math.max(0,parseInt(OWN.oc[id],10)||0);}
+/* 当前装备：两个主角各存一份（免费默认武器＝thin 星星飞镖 / fat 小子弹） */
+function loadCur(k,d){const id=LS.get(k,d),w=weaponOf(id);return (w&&w.type==='switch'&&hasWeapon(id))?id:d;}   // 只认已拥有/免费的切换型，坏档不会留着没买过的武器
+let curThin=loadCur('moday_cur_thin','star');
+let curFat=loadCur('moday_cur_fat','bullet');
+function curWeaponId(){return curChar==='fat'?curFat:curThin;}
+function equipWeapon(id){
+  if(curChar==='fat')curFat=id;else curThin=id;
+  LS.set(curChar==='fat'?'moday_cur_fat':'moday_cur_thin',id);
+  renderWbar();
+  say(['w_'+id]);                            // 报武器名：不识字也知道换上了哪把
+}
+
+/* =========================================================
    内置语音/音效文件（APK 专用通路）
    实测这台平板（DBY2-W00 / Android 12 / WebView 114）诊断面板显示：
    speechSynthesis 不存在，WebAudio 管线在跑但喇叭不出声。
@@ -1105,10 +1237,17 @@ const VTEXT={
   di:'第',guanwin:'关打赢啦！马上进入第',guan:'关',next:'马上进入下一关',
   congrats:'恭喜你！打败了',choose:'选一个吧：回首页，或者进下一关！',
   over:'游戏结束，你得了',fen:'分',test:'一二三，语音测试',
+  star1:'送你一颗星星！',star2:'送你两颗星星！',star3:'送你三颗星星！',
+  welcome:'欢迎来到武器库！',
+  w_star:'星星飞镖',w_bullet:'小子弹',w_shot:'散弹枪',w_fast:'快快飞镖',
+  w_triple:'二连飞镖',w_boomer:'回旋镖',w_ice:'寒冰球',w_bolt:'雷电球',
+  w_fire:'大火球',w_rocket:'火箭弹',w_bomb:'魔法炸弹',w_laser:'超级激光',
+  zaidian:'再点一下就买啦',maidaola:'买到啦',huancha:'还差',gejb:'个金币',jixu:'买好啦，继续加油！',
   n0:'零',n1:'一',n2:'二',n3:'三',n4:'四',n5:'五',n6:'六',n7:'七',n8:'八',n9:'九',
-  n10:'十',n20:'二十',n30:'三十'};
+  n10:'十',n20:'二十',n30:'三十',n40:'四十',n50:'五十',n60:'六十',n70:'七十',
+  n80:'八十',n90:'九十'};
 const BOSS_KEY={'藤蔓僵王':'boss_forest','铁皮僵王':'boss_city','沙暴僵王':'boss_desert'};
-const SFX_KEYS=['click','shoot','bossshoot','hit','boss','hurt','win','over','fw'];
+const SFX_KEYS=['click','shoot','bossshoot','hit','boss','hurt','win','over','fw','coin','boom','laserz','freeze'];
 let VOICES={},bgmA=null;
 if(IN_APK){
   for(const k in VTEXT){const a=new Audio('voice/'+k+'.wav');a.preload='auto';VOICES[k]=a;}
@@ -1132,7 +1271,7 @@ function numClips(n){
   if(n===10)return['n10'];
   if(n>10&&n<20)return['n10','n'+(n-10)];
   if(n===20||n===30)return['n'+n];
-  if(n>20&&n<40){const t=Math.floor(n/10),r=n%10;return['n'+(t*10)].concat(r?['n'+r]:[]);}
+  if(n>20&&n<100){const t=Math.floor(n/10),r=n%10;return['n'+(t*10)].concat(r?['n'+r]:[]);}
   return null;
 }
 function digitsClips(n){const s=String(Math.max(0,Math.floor(n)));const out=[];for(const ch of s)out.push('n'+ch);return out;}
@@ -1281,10 +1420,12 @@ const BOSSCFG=[
     {name:'铁皮僵王',hp:12,fireT:2.4,lanes:1,bspd:210,v:30,p2Fire:1.8,p2Lanes:2,minions:false,minionT:99,minionCap:0},  // 城市：子弹和走速略降，简单一点点
     {name:'沙暴僵王',hp:14,fireT:2.2,lanes:2,bspd:220,v:30,p2Fire:1.6,p2Lanes:2,minions:true, minionT:4.0,minionCap:2}  // 沙漠：子弹和走速略降，简单一点点
   ];
+let zid=1;            // 僵尸编号：穿透弹/回旋镖靠它记住"打过谁"，一只只吃一次伤害
 const G={
-  score:0, hearts:3, stage:1, kills:0, quota:20,
-  zs:[], bls:[], ps:[], ebs:[],
+  score:0, hearts:3, bonus:0, stage:1, kills:0, quota:20,
+  zs:[], bls:[], ps:[], ebs:[], cs:[], bolts:[],
   spawnT:1.2, bossOut:false, bossDone:false, shake:0,
+  flash:0, laser:null,
   hero:{x:230,y:laneY(2),tx:230,ty:laneY(2),lane:2,inv:0,cd:0.6,fire:0}
 };
 function sceneIdx(){const i=BG_ORDER.indexOf(curBG);return i<0?0:i;}
@@ -1309,8 +1450,9 @@ function depthS(y,base,span){
 function heroS(){return depthS(G.hero.y,86,30);}   // 远近大小差拉大＝更立体（人物画法不变）
 
 function resetGame(){
-  G.score=0;G.hearts=3;G.stage=1;G.kills=0;
+  G.score=0;G.hearts=3;G.bonus=0;G.stage=1;G.kills=0;
   G.zs.length=0;G.bls.length=0;G.ps.length=0;G.ebs.length=0;
+  G.bolts.length=0;G.cs.length=0;G.flash=0;G.laser=null;
   G.bossOut=false;G.bossDone=false;G.spawnT=1.1;G.shake=0;
   const h=G.hero;
   h.x=h.tx=230;h.lane=2;h.y=h.ty=laneY(2);h.inv=0;h.cd=0.5;h.fire=0;
@@ -1323,6 +1465,7 @@ function nextStage(){
   applyStageBG();                             // 同一场景内进入下一关
   G.quota=stCfg().quota;
   G.zs.length=0;G.bls.length=0;G.ebs.length=0;G.spawnT=1.1;
+  G.bolts.length=0;G.cs.length=0;G.flash=0;G.laser=null;
   G.hearts=Math.min(3,G.hearts+1);          // 过关奖励一颗心
   resetFlags();                             // 下一关旗子重新立满
 }
@@ -1331,7 +1474,7 @@ function spawnZombie(lane){
   if(lane==null)lane=Math.floor(Math.random()*LANES);
   const y=laneY(lane);
   G.zs.push({x:GW+80,y,lane,s:depthS(y,70,30),ph:Math.random()*6,
-    boss:false,hp:1,hpMax:1,v:c.v*(0.92+Math.random()*0.16),die:0,dieT:0,sq:0});
+    boss:false,hp:1,hpMax:1,v:c.v*(0.92+Math.random()*0.16),die:0,dieT:0,sq:0,id:zid++,frz:0});
 }
 /* 出一波怪：按本关概率决定 1~3 只，且分别落在互不相同的路上（不叠路），受同屏上限约束 */
 function spawnWave(){
@@ -1358,14 +1501,29 @@ function spawnBoss(){
   }
   G.ebs.length=0;
   G.zs.push({x:GW+150,y,lane,s:depthS(y,138,40),ph:0,boss:true,hp,hpMax:hp,
-    v:cfg.v||34,die:0,dieT:0,tY:y,swT:2.0,sq:0,lv,
+    v:cfg.v||34,die:0,dieT:0,tY:y,swT:2.0,sq:0,lv,id:zid++,frz:0,
     cfg,phase:1,fireT:1.6,tele:0,teleLanes:[],minionT:cfg.minionT});   // fireT＝几秒后开火，tele＝预警剩余
   G.bossOut=true;
+  /* BOSS 战礼物：第 1/2/3 个 BOSS 分别送 1/2/3 颗星星。
+     星星＝多出来的命（挨打先扣星星，扣完才扣红心），
+     小朋友输得起才敢练走位，不会一挨打就崩 */
+  const starN=sceneIdx()+1;
+  G.bonus=starN;
   updateHUD();
-  banner('💀 '+cfg.name+' 来啦！',3.5);   // 比原来 1.5 秒长一倍，名字看得清；但打斗中大字不能久留，免得挡住子弹
+  /* 星星从主角身上炸开一小圈，让小朋友一眼看到"来星星了" */
+  const hx=G.hero.x,hy=G.hero.y-heroS()*0.5,n=starN*4;
+  for(let i=0;i<n;i++){
+    const an=i/n*Math.PI*2+Math.random()*0.35,v=90+Math.random()*110;
+    G.ps.push({kind:'star',x:hx,y:hy,vx:Math.cos(an)*v,vy:Math.sin(an)*v-60,
+      life:0.7+Math.random()*0.35,t:0,c:'#ffd740',r:4.5+Math.random()*2.2,
+    /* g 写 0＝不往下坠（引擎里 g 是开关不是数值，非 0 一律 300px/s² 猛掉）；
+       星星原地炸开、转着圈淡出，像礼花纸屑 */
+      rot:Math.random()*6,vr:(Math.random()-0.5)*14,g:0});
+  }
+  banner('💀 '+cfg.name+' 来啦！⭐×'+starN,3.5);   // 比原来 1.5 秒长一倍，名字看得清；但打斗中大字不能久留，免得挡住子弹
   sfx('boss');
   /* 台词缩短：原来 34 字要读 9.5 秒，期间打到半血就会被"狂暴"那句顶掉，安全提示听不完 */
-  say([BOSS_KEY[cfg.name]||'boss_forest','coming']);
+  say([BOSS_KEY[cfg.name]||'boss_forest','coming','star'+starN]);
 }
 /* 选目标路：离主角最近的路优先，最多 count 条，且永远留至少 2 条安全路（可躲） */
 function bossTargetLanes(count){
@@ -1385,6 +1543,8 @@ function bossFire(z){
 }
 /* BOSS：走到场中就站住，随机换路；定期预警后发射子弹；半血狂暴；沙漠还会召唤小怪 */
 function stepBoss(z,dt){
+  /* 冻住时不会走到这里：主循环是 if(z.frz>0){计时} else {走路; stepBoss()}，
+     所以 BOSS 被冻住时既不挪路也不开火，计时也由主循环统一扣，这里不用再判一次。 */
   z.x=Math.max(z.x,GW*0.68);                   // 靠右站位，贴脸时子弹也有反应时间
   /* E：血量过半 → 狂暴（射得更快、路数更多） */
   if(z.phase===1&&z.hp<=z.hpMax/2){
@@ -1429,24 +1589,29 @@ function stepBoss(z,dt){
 }
 
 /* ---------- 打击 / 受伤 ---------- */
-function hitZ(z,bx,by){
-  z.hp--;
+/* quiet＝爆炸类伤害专用开关。puffFX 是「一个白色光环＋9 团近白色烟雾」，单发子弹打一只僵尸时很好看；
+   但爆炸一次能溅射到十来只，十来团白烟在同一帧一起炸开＝整屏白闪一下。爆炸自己有火光，不需要再配白烟。 */
+function hitZ(z,bx,by,dmg,quiet){
+  z.hp-=(dmg||1);
   z.sq=0.18;                                    // 命中即果冻抖一下（squash&stretch）
   if(z.hp>0){
     sfx('hit');
-    puffFX(G.ps,bx,by,0.8);
+    if(!quiet)puffFX(G.ps,bx,by,0.8);
     z.x+=12;                                  // 击退一点点
     addHitStop(0.035);                        // 极短顿帧：打击更有分量，不打断节奏
     updateHUD();
     return;
   }
   z.die=z.boss?1.6:0.34; z.dieT=0;   // BOSS 倒下慢一点，庆祝动画才看得清
+  coinBurst(z,z.boss?15:1);          // 掉金币：普通＋1、BOSS＋15（弹出后飞进 HUD 金币盘）
   const k=z.s/52;
-  puffFX(G.ps,z.x,z.y-z.s*0.5,k);             // 噗！一团烟
+  if(!quiet)puffFX(G.ps,z.x,z.y-z.s*0.5,k);   // 噗！一团烟
   G.kills++;
   if(z.boss){
-    puffFX(G.ps,z.x-z.s*0.3,z.y-z.s*0.72,k*1.2);
-    puffFX(G.ps,z.x+z.s*0.2,z.y-z.s*0.34,k*1.2);
+    if(!quiet){                                 // BOSS 体积大，k*1.2 的白烟团能涨到近 100px，被火箭炸死时更要免掉
+      puffFX(G.ps,z.x-z.s*0.3,z.y-z.s*0.72,k*1.2);
+      puffFX(G.ps,z.x+z.s*0.2,z.y-z.s*0.34,k*1.2);
+    }
     G.score+=10;G.bossDone=true;G.shake=1;
     G.ebs.length=0;                             // BOSS 一倒，它射出的子弹全部消失（松一口气）
     addHitStop(0.16);                         // BOSS 倒下：长顿帧＋震屏，庆祝打击感
@@ -1458,9 +1623,164 @@ function hitZ(z,bx,by){
   }
   updateHUD();
 }
+/* ---------- 金币：从僵尸身上弹出，飞进 HUD 左上角的金币盘 ---------- */
+function coinTarget(){
+  const r=$('coinPlate').getBoundingClientRect();
+  if(!r||r.width===0)return {x:80,y:40};       // HUD 隐藏（结算/菜单）时金币盘没有尺寸：兜底飞向左上角，别飞去 (0,0)
+  return {x:(r.left+r.width/2-OX)/S,y:(r.top+r.height/2-OY)/S};   // 金币盘中心换算到逻辑画布坐标
+}
+function coinBurst(z,total){
+  const n=z.boss?5:1,v=Math.ceil(total/n);      // BOSS 的大赏金分 5 枚、错峰起飞
+  for(let i=0;i<n;i++)
+    G.cs.push({x:z.x,y:z.y-z.s*0.5,vx:(Math.random()-0.5)*140,vy:-(240+Math.random()*120),
+      t:-i*0.08,v,sp:0,tg:coinTarget()});
+}
+function stepCoins(dt){
+  for(let i=G.cs.length-1;i>=0;i--){
+    const c=G.cs[i];c.t+=dt;
+    if(c.t<0)continue;                          // 还没轮到这枚起飞
+    if(c.t<0.32){c.vy+=900*dt;c.x+=c.vx*dt;c.y+=c.vy*dt;}   // 先往上蹦一下
+    else{                                       // 再加速飞向金币盘，到了＋币＋叮一声
+      const dx=c.tg.x-c.x,dy=c.tg.y-c.y,d=Math.hypot(dx,dy);
+      c.sp+=1600*dt;
+      const st=c.sp*dt;
+      if(d<=Math.max(26,st)){
+        G.cs.splice(i,1);coins+=c.v;LS.set('moday_coin',String(coins));
+        sfx('coin');updateHUD();
+      }else{c.x+=dx/d*st;c.y+=dy/d*st;}
+    }
+  }
+}
+
+/* ---------- 武器机制：每种武器生成什么样的子弹、命中后做什么 ---------- */
+let tripleAlt=0,boomerAlt=0;                   // 中间路的交替标志：二连飞镖/回旋镖轮流选上、下相邻路
+function fireWeapon(w,bx,by,ln){
+  const h=G.hero;h.cd=w.rate;                   // 发射节奏由当前武器决定
+  if(w.id==='laser'){fireLaser(w.dmg);return;}  // 超级激光：无弹体，从枪口沿本路一道贯穿光束（本路全体各 dmg 伤）
+  if(w.multi){                                  // 二连飞镖：本路＋一条相邻路各一颗（边路只有一条相邻路可配，中间路用交替标志轮换）
+    tripleAlt=1-tripleAlt;
+    const off=ln===0?1:(ln===LANES-1?-1:(tripleAlt?1:-1));
+    for(const l of [ln,ln+off]){
+      /* 两颗各沿自己那条路的高度飞（保持枪口相对路面的高度差），否则两颗叠成一颗、邻路是隐形的 */
+      G.bls.push({kind:'star',x:bx,y:laneY(l)+(by-laneY(ln)),lane:l,vx:w.spd,rot:0,dmg:1,pierce:0,hit:{}});
+    }
+    sfx('shoot');return;
+  }
+  if(w.pellets){                                // 散弹枪＝最早版本冲锋战士那把冲锋枪：一梭子 3 发红弹，同一条线上前后错开，不穿透
+    for(let i=0;i<w.pellets;i++)
+      G.bls.push({kind:'smg',x:bx-i*15,y:by,lane:ln,vx:w.spd,rot:0,dmg:w.dmg,pierce:0,hit:{}});
+    sfx('shoot');return;
+  }
+  const b={kind:w.id==='fast'?'spark':w.id,x:bx,y:by,lane:ln,vx:w.spd,rot:0,dmg:w.dmg,pierce:w.pierce?1:0,hit:{}};
+  if(w.back){                                   // 回旋镖：去程本路穿透打全部，回程换相邻一条路再扫一遍
+    b.back=1;
+    if(ln===0)b.retOff=1;                       // 0 号路只能回下路
+    else if(ln===LANES-1)b.retOff=-1;           // 4 号路只能回上路
+    else{boomerAlt=1-boomerAlt;b.retOff=boomerAlt?1:-1;}   // 中间路：交替标志轮流回上/下路
+  }
+  if(w.frz)b.frz=w.frz;                         // 寒冰球：命中冻一片
+  if(w.chain)b.chain=1;                         // 雷电球：链跳相邻两条路
+  if(w.splash)b.splash=1;                       // 火箭弹：命中爆炸溅射
+  if(w.blast)b.blast=1;                         // 大火球：命中就在爆点炸开，三条路前后一片都挨烧
+  G.bls.push(b);
+  sfx('shoot');
+}
+function explodeRocket(b){
+  const R=180;                                  // 爆炸半径：只炸爆心附近的僵尸
+  for(const z of G.zs){                         // 爆心同路 3 伤，相邻两条路各 2 伤
+    if(z.die||z.leave)continue;
+    if(Math.abs(z.x-b.x)>R)continue;            // 之前没限制＝全屏同路/邻路都挨打，太超模；现在按爆心距离裁剪
+    const d=Math.abs(z.lane-b.lane);
+    if(d===0)hitZ(z,z.x,z.y-z.s*0.4,3,true);   // quiet：下面这团火光就是它的受击表现，别再叠白烟
+    else if(d===1)hitZ(z,z.x,z.y-z.s*0.4,2,true);
+  }
+  /* 视觉：只留一团紧凑的橙红火光。以前这里叠了 puffFX(1.6)（内含一个白色大光环）＋半径涨到 88px 的大橙环，
+     在 960×540 的画面上看着就像整屏白闪一下——现在白环全删、橙环收小，火光只在爆点附近炸开。
+     注意：光删这里还不够，溅射打中的每只僵尸原本都会各自喷一团白烟（见 hitZ 的 quiet），那才是白闪的主力。 */
+  G.ps.push({kind:'ring',x:b.x,y:b.y,vx:0,vy:0,life:0.26,t:0,c:'#ff9e50',r:9,gr:150,g:0});
+  for(let i=0;i<8;i++){                         // 一团橙红火光
+    const an=Math.random()*Math.PI*2,v=60+Math.random()*90;
+    G.ps.push({kind:'smoke',x:b.x,y:b.y,vx:Math.cos(an)*v,vy:Math.sin(an)*v-30,
+      life:0.3+Math.random()*0.2,t:0,c:i%2?'#ff7043':'#ffca28',r:4+Math.random()*4,gr:18,g:0});
+  }
+  G.shake=Math.max(G.shake,0.35);addHitStop(0.05);sfx('boom');
+}
+/* 大火球：命中就在爆点炸开——爆点左右 110px、连同上下相邻路（三条路）里的僵尸全体挨烧。
+   直接命中的那只吃弹体伤害(b.dmg)，其余吃 2 点溅射伤。和火箭弹的区别：范围窄但更疼、不带白闪。 */
+function explodeFire(b,z0){
+  const R=110;
+  for(const z of G.zs){
+    if(z.die||z.leave)continue;
+    if(Math.abs(z.x-b.x)>R||Math.abs(z.lane-b.lane)>1)continue;
+    hitZ(z,z.x,z.y-z.s*0.4,z===z0?b.dmg:2,true);   // quiet：同火箭弹，烧一片时不给每只各配一团白烟
+  }
+  /* 视觉：贴地横向摊开的火舌＋往上蹿的火星，全部橙红色，不用任何白光 */
+  G.ps.push({kind:'ring',x:b.x,y:b.y,vx:0,vy:0,life:0.24,t:0,c:'#ff8a65',r:9,gr:170,g:0});
+  for(let i=0;i<14;i++){
+    const c=i%3===0?'#ffca28':(i%3===1?'#ff7043':'#ff5722');
+    G.ps.push({kind:'smoke',x:b.x+(Math.random()-0.5)*R*1.6,y:b.y+(Math.random()-0.5)*12,
+      vx:(Math.random()-0.5)*46,vy:-60-Math.random()*90,life:0.3+Math.random()*0.25,t:0,c,r:5+Math.random()*6,gr:14,g:0});
+  }
+  G.shake=Math.max(G.shake,0.45);addHitStop(0.05);sfx('boom');
+}
+function freezeAround(zc,ln,dur){               // dur＝武器表里的 frz（寒冰球 5 秒）；以前这里写死 3，改表根本没用
+  const d=dur||3;
+  let any=false;
+  for(const z of G.zs){                         // 冻住命中点周围：|路差|≤1 且 x 距离 ≤170 的僵尸
+    if(z.die||z.leave)continue;
+    if(Math.abs(z.lane-ln)>1||Math.abs(z.x-zc.x)>170||z.frz>0)continue;
+    z.frz=z.boss?1.0:d;any=true;                // BOSS 只冻 1.0s（普通冻满 d 秒）：寒冰球冷却 1.6s，冻得比冷却还久会把 BOSS 永久定住
+    for(let i=0;i<5;i++){                       // 冻住时冒几粒冰晶
+      const an=Math.random()*Math.PI*2,v=40+Math.random()*70;
+      G.ps.push({kind:'smoke',x:z.x+(Math.random()-0.5)*z.s*0.6,y:z.y-z.s*0.5+(Math.random()-0.5)*z.s*0.7,
+        vx:Math.cos(an)*v,vy:Math.sin(an)*v,life:0.5,t:0,c:'#b3e5fc',r:3+Math.random()*3,g:0});
+    }
+  }
+  if(any)sfx('freeze');
+}
+function boltChain(zc,b){
+  const pts=[[b.x,b.y]];
+  for(const off of [-1,1]){                     // 闪电链跳到相邻两条路：各挑最近的一只
+    const ln=zc.lane+off;if(ln<0||ln>=LANES)continue;
+    let best=null;
+    for(const z of G.zs){
+      if(z.die||z.leave||z.lane!==ln)continue;
+      if(!best||Math.abs(z.x-b.x)<Math.abs(best.x-b.x))best=z;
+    }
+    if(best){
+      pts.push([best.x,best.y-best.s*0.5]);
+      hitZ(best,best.x,best.y-best.s*0.5,2);
+    }
+  }
+  if(pts.length>1)G.bolts.push({pts,t:0.16});   // 折线闪电，短暂特效
+}
+function fireLaser(dmg){
+  const h=G.hero,s=heroS();
+  G.laser={x:h.x+s*0.40,y:h.y-s*0.56,t:0.35};   // 光束必须从主角枪口发出
+  for(const z of G.zs){                         // 沿他所在那条路贯穿，全体各 dmg 伤（默认 3）
+    if(z.die||z.leave||z.lane!==h.lane)continue;
+    hitZ(z,z.x,z.y-z.s*0.5,dmg||3);
+  }
+  sfx('laserz');G.shake=Math.max(G.shake,0.35);
+}
+/* ---------- 一次性武器：战斗中点了立刻用 ---------- */
+function useOnce(id){
+  if(mode!=='play')return;                     // 只有战斗中能用：庆祝/过渡/结算屏里点了无效（不然白闪会冻在定格画面上）
+  const n=onceCnt(id);if(n<=0)return;
+  OWN.oc[id]=n-1;saveOwn();renderWbar();
+  if(id==='bomb'){
+    G.ebs.length=0;                             // 魔法炸弹：清空敌方子弹
+    for(const z of G.zs){if(!z.die&&!z.leave)hitZ(z,z.x,z.y-z.s*0.5,3);}
+    G.flash=0.3;                                // 全屏白闪一下
+    sfx('boom');G.shake=1;addHitStop(0.08);
+  }
+}
+
 function hurt(flag){
   const h=G.hero;
-  G.hearts--;h.inv=1.3;G.shake=1;
+  /* BOSS 送的星星先挡伤害：星星扣完才扣红心，红心扣完才游戏结束 */
+  if(G.bonus>0)G.bonus--;else G.hearts--;
+  h.inv=1.3;G.shake=1;
   addHitStop(0.09);                           // 受伤：中等顿帧，强调“挨了一下”
   sfx('hurt');
   if(flag)banner('🚩 红旗被拔掉啦！');
@@ -1508,6 +1828,7 @@ function stageClear(){
    烟花持续升空炸开；等「恭喜你打败了XX」读完，结算面板边放烟花边浮现，等小朋友选 */
 function celebrate(){
   mode='win';winT=0;fwT=0.25;winPanelOn=false;freezeT=T;
+  G.flash=0;G.laser=null;G.bolts.length=0;      // 定格画面不再推进 update，特效清干净别冻在屏上
   stopBgm();sfx('win');
   G.hero.inv=0;                                  // 防止定格时主角正处在受伤闪烁的"灭"帧
   const bi=BG_ORDER.indexOf(curBG);              // 打败哪块战场的 BOSS，就解锁地图下一块
@@ -1523,7 +1844,7 @@ function celebrate(){
 /* 烟花继续放，结算面板浮现：回首页 或 进下一关 */
 function showWinPanel(){
   const ni=BG_ORDER[(BG_ORDER.indexOf(curBG)+1)%BG_ORDER.length];
-  $('winSub').textContent='分数 '+G.score+' · 还剩 '+G.hearts+' 颗心 · 最高分 '+best;
+  $('winSub').textContent='分数 '+G.score+' · 还剩 '+G.hearts+' 颗心'+(G.bonus>0?'、'+G.bonus+' 颗星':'')+' · 最高分 '+best;
   $('btnWinNext').textContent='➡ 进下一关 · '+BG_NAME[ni];
   $('scrWin').classList.add('show');
   say(['choose']);
@@ -1565,6 +1886,7 @@ function gameOver(){
 }
 function startPlay(){
   mode='play';
+  renderWbar();                                // 战斗武器栏：列出已拥有的切换型＋一次性魔法炸弹
   hideWinPanel();
   show(null);
   updateHUD();
@@ -1574,8 +1896,9 @@ function startPlay(){
 function startRun(){loopN=1;resetGame();startPlay();}   // 从主菜单开始＝回到第 1 轮
 function retryStage(){
   const wasFacingBoss=(G.bossOut||G.bossDone)&&G.stage>=STAGES.length;   // 死在BOSS面前才直接重开BOSS
-  G.score=0;G.hearts=3;G.kills=0;
+  G.score=0;G.hearts=3;G.bonus=0;G.kills=0;
   G.zs.length=0;G.bls.length=0;G.ps.length=0;G.ebs.length=0;
+  G.bolts.length=0;G.cs.length=0;G.flash=0;G.laser=null;
   G.bossOut=false;G.bossDone=false;G.spawnT=1.1;G.shake=0;
   const h=G.hero;
   h.x=h.tx=230;h.lane=2;h.y=h.ty=laneY(2);h.inv=0;h.cd=0.5;h.fire=0;
@@ -1595,6 +1918,7 @@ function toMenu(){
   mode='menu';stopBgm();
   hideWinPanel();
   $('uiBest').textContent=best;
+  $('uiMenuCoin').textContent=coins;           // 菜单上的金币数也要刷新
   renderMap();
   show('scrMenu');
 }
@@ -1621,27 +1945,55 @@ function update(dt){
     }
   }else laneHoldT=0;
 
-  h.cd-=dt;                                    // 自动向前连发
+  h.cd-=dt;                                    // 自动向前连发（节奏由当前装备的武器决定）
   if(h.cd<=0){
     h.fire=1;
     const s=heroS(),bx=h.x+s*0.40,by=h.y-s*0.56,ln=laneOf(h.y);
-    if(curChar==='thin'){h.cd=0.55;G.bls.push({x:bx,y:by,lane:ln,rot:0});}
-    else{h.cd=1.5;for(let k=0;k<3;k++)G.bls.push({x:bx-k*15,y:by,lane:ln,rot:0,smg:true});}   // 冲锋枪：一梭子三发，间隔换长＝爆发但不超模
-    sfx('shoot');
+    fireWeapon(weaponOf(curWeaponId()),bx,by,ln);
   }
 
   for(let i=G.bls.length-1;i>=0;i--){
     const b=G.bls[i];
-    b.x+=560*dt;b.rot+=dt*11;
-    if(b.x>GW+40){G.bls.splice(i,1);continue;}
-    let hit=false;
-    for(const z of G.zs){
-      if(z.die||z.leave||z.lane!==b.lane)continue;      // 只打同一条路上的
-      if(b.x>z.x-z.s*0.55&&b.x<z.x+z.s*0.26){
-        hitZ(z,b.x,b.y);hit=true;break;
+    b.x+=b.vx*dt;b.rot+=dt*(b.kind==='boomer'?13:11);
+    if(b.kind==='rocket'){                      // 火箭弹：机尾持续喷火焰尾迹粒子（节流，别刷爆粒子池）
+      b.tt=(b.tt||0)+dt;
+      if(b.tt>0.045){b.tt=0;
+        G.ps.push({kind:'smoke',x:b.x-20,y:b.y+(Math.random()-0.5)*5,vx:-70-Math.random()*70,
+          vy:(Math.random()-0.5)*40,life:0.2+Math.random()*0.12,t:0,
+          c:Math.random()<0.5?'#ffca28':'#ff7043',r:3+Math.random()*3,gr:-14,g:0});
       }
     }
-    if(hit)G.bls.splice(i,1);
+    if(b.kind==='bolt'){                        // 雷电球：身后甩小电花（节流，别刷爆粒子池）
+      b.tt=(b.tt||0)+dt;
+      if(b.tt>0.05){b.tt=0;
+        G.ps.push({kind:'star',x:b.x-10,y:b.y+(Math.random()-0.5)*8,vx:-60-Math.random()*40,
+          vy:(Math.random()-0.5)*60,life:0.18+Math.random()*0.12,t:0,c:'#fff176',
+          r:2.5+Math.random()*2,rot:Math.random()*6,vr:0,g:0});
+      }
+    }
+    if(b.back){                                 // 回旋镖：飞到尽头折返，回程换相邻一条路再各吃一次伤害
+      if(b.vx>0&&b.x>GW+30){
+        b.vx=-b.vx*0.72;b.hit={};
+        const oy=b.y-laneY(b.lane);             // 保留枪口相对路面的高度差
+        b.lane=Math.max(0,Math.min(LANES-1,b.lane+b.retOff));   // 0 号回下路、4 号回上路、中间路按发射时的交替标志
+        b.y=laneY(b.lane)+oy;                   // 换路发生在画面外，直接落位即可
+      }
+      else if(b.vx<0&&b.x<-40){G.bls.splice(i,1);continue;}
+    }else if(b.x>GW+40){G.bls.splice(i,1);continue;}
+    let dead=false;
+    for(const z of G.zs){
+      if(z.die||z.leave||z.lane!==b.lane||b.hit[z.id])continue;   // 只打同一条路上的
+      if(b.x>z.x-z.s*0.55&&b.x<z.x+z.s*0.26){
+        if(b.splash){explodeRocket(b);dead=true;break;}           // 火箭弹：一碰就炸
+        if(b.blast){explodeFire(b,z);dead=true;break;}            // 大火球：一碰就在爆点炸开三条路
+        hitZ(z,b.x,b.y,b.dmg);
+        b.hit[z.id]=1;                          // 穿透弹/回旋镖：同一只每趟只吃一次伤害
+        if(b.frz)freezeAround(z,b.lane,b.frz);  // 寒冰球：本路这只直接打死，周围（含上下路）冻住 b.frz 秒
+        if(b.chain)boltChain(z,b);
+        if(!b.pierce){dead=true;break;}
+      }
+    }
+    if(dead)G.bls.splice(i,1);
   }
 
   const hs=heroS();
@@ -1654,18 +2006,21 @@ function update(dt){
       if(z.x-z.s*0.5>GW){z.die=0.25;z.dieT=0;puffFX(G.ps,GW-18,z.y-z.s*0.5,z.s/52);}
       continue;
     }
-    z.x-=z.v*dt;z.ph+=dt*(z.boss?3.2:4.6);
     if(z.sq>0)z.sq=Math.max(0,z.sq-dt);         // 果冻抖动衰减
-    if(z.boss)stepBoss(z,dt);                   // BOSS：站到场中＋随机换路
-    else if(z.x-z.s*0.40<BASE_X){               // 走到最左边＝拔掉这条路的红旗！
-      pullFlag(z.lane);                          // 旗倒下 → 星星落回来变成新旗
-      if(h.inv<=0)hurt(true);                   // 同一帧多只拔旗也只掉一颗心
-      z.die=0.28;z.dieT=0;
-      puffFX(G.ps,BASE_X+14,z.y-z.s*0.5,z.s/52);
-      if(mode!=='play')return;                  // 已经 gameOver
-      continue;
+    if(z.frz>0){z.frz-=dt;}                     // 被寒冰球冻住：位置不前进、不开火、走路动画停，只留冰霜外观（BOSS 同样冻住）
+    else{
+      z.x-=z.v*dt;z.ph+=dt*(z.boss?3.2:4.6);    // 走路：前进＋迈步动画（冻住时全停）
+      if(z.boss)stepBoss(z,dt);                 // BOSS：站到场中＋随机换路
+      else if(z.x-z.s*0.40<BASE_X){             // 走到最左边＝拔掉这条路的红旗！
+        pullFlag(z.lane);                          // 旗倒下 → 星星落回来变成新旗
+        if(h.inv<=0)hurt(true);                   // 同一帧多只拔旗也只掉一颗心
+        z.die=0.28;z.dieT=0;
+        puffFX(G.ps,BASE_X+14,z.y-z.s*0.5,z.s/52);
+        if(mode!=='play')return;                  // 已经 gameOver
+        continue;
+      }
+      else if(z.x<-100){G.zs.splice(i,1);continue;}
     }
-    else if(z.x<-100){G.zs.splice(i,1);continue;}
     if(h.inv<=0&&z.lane===h.lane&&z.x>h.x-hs*0.55&&z.x-z.s*0.40<h.x+hs*0.16&&Math.abs(z.y-h.y)<LANE_H*0.55){
       hurt();
       if(z.boss){z.x+=80;}                      // BOSS 碰人不会自己死，只被 knock 退一点
@@ -1689,6 +2044,9 @@ function update(dt){
   }
   updParts(G.ps,dt);
   G.shake=Math.max(0,G.shake-dt*3);
+  for(let i=G.bolts.length-1;i>=0;i--){G.bolts[i].t-=dt;if(G.bolts[i].t<=0)G.bolts.splice(i,1);}
+  if(G.laser){G.laser.t-=dt;if(G.laser.t<=0)G.laser=null;}
+  G.flash=Math.max(0,G.flash-dt);
 
   /* 出怪 */
   const bossStage=(G.stage>=STAGES.length);
@@ -1727,6 +2085,13 @@ function drawZombie(z){
   }
   if(z.leave)ctx.scale(-1,1);                   // 撤退中：水平镜像＝真的转身朝右走，而不是倒着滑
   drawZombieV(ctx,0,0,z.s,z.boss?(BOSS_SK[curBG]||BOSS_SK.forest):ZK,T,z.ph);
+  if(z.frz>0&&!z.die){                          // 被冻住：罩一层冰蓝＋一片雪花
+    ctx.save();ctx.globalAlpha=.5;ctx.fillStyle='#81d4fa';
+    rrect(ctx,-z.s*0.42,-z.s*0.98,z.s*0.84,z.s*1.02,8);ctx.fill();
+    ctx.globalAlpha=.95;ctx.font='900 '+Math.round(z.s*0.36)+'px system-ui,sans-serif';
+    ctx.textAlign='center';ctx.fillText('❄',0,-z.s*0.32);
+    ctx.restore();
+  }
   ctx.restore();
 }
 /* BOSS 血条：固定在屏幕顶部中央，不跟着 BOSS 走，避免挡住它的头 */
@@ -1857,16 +2222,64 @@ function render(){
   for(const it of list){ if(it[1])drawZombie(it[1]); else drawHero(); }
 
   for(const b of G.bls){
-    if(b.smg){                                  // 爸爸的冲锋枪红弹：小圆弹＋短尾
-      ctx.save();ctx.globalAlpha=.3;ctx.fillStyle='#ef5350';
-      rrect(ctx,b.x-13,b.y-2.2,11,4.4,2.2);ctx.fill();ctx.restore();
-      ctx.fillStyle='#ef5350';ctx.beginPath();ctx.arc(b.x,b.y,4.6,0,7);ctx.fill();
-      ctx.fillStyle='#ffcdd2';ctx.beginPath();ctx.arc(b.x+1.5,b.y-1.5,1.7,0,7);ctx.fill();
-    }else{
+    if(b.kind==='star'){                        // 星星飞镖：黄星星＋淡尾
       ctx.save();ctx.globalAlpha=.35;
       star(ctx,b.x-15,b.y,7,'#fff176',b.rot);
       ctx.restore();
       star(ctx,b.x,b.y,10,'#ffd54f',b.rot);
+    }else if(b.kind==='bullet'){                // 小子弹：红色小圆弹（不穿透）
+      ctx.fillStyle='#ef5350';ctx.beginPath();ctx.arc(b.x,b.y,4.6,0,7);ctx.fill();
+      ctx.fillStyle='#ffcdd2';ctx.beginPath();ctx.arc(b.x+1.5,b.y-1.5,1.7,0,7);ctx.fill();
+    }else if(b.kind==='smg'){                   // 散弹枪弹丸＝最早版本冲锋战士的红色小圆弹＋短尾（照原样搬回来）
+      ctx.save();ctx.globalAlpha=.3;ctx.fillStyle='#ef5350';
+      rrect(ctx,b.x-13,b.y-2.2,11,4.4,2.2);ctx.fill();ctx.restore();
+      ctx.fillStyle='#ef5350';ctx.beginPath();ctx.arc(b.x,b.y,4.6,0,7);ctx.fill();
+      ctx.fillStyle='#ffcdd2';ctx.beginPath();ctx.arc(b.x+1.5,b.y-1.5,1.7,0,7);ctx.fill();
+    }else if(b.kind==='fire'){                  // 大火球：大、稍慢，砸中就在爆点炸开三条路
+      ctx.save();ctx.globalAlpha=.30;ctx.fillStyle='#ff7043';
+      ctx.beginPath();ctx.arc(b.x-14,b.y,15,0,7);ctx.fill();ctx.restore();
+      ctx.fillStyle='#ff7043';ctx.beginPath();ctx.arc(b.x,b.y,13,0,7);ctx.fill();
+      ctx.fillStyle='#ffca28';ctx.beginPath();ctx.arc(b.x+2,b.y,8.5,0,7);ctx.fill();
+      ctx.fillStyle='#fff59d';ctx.beginPath();ctx.arc(b.x+4,b.y,4,0,7);ctx.fill();
+    }else if(b.kind==='ice'){                   // 寒冰球：冰蓝光球＋雪花芯
+      ctx.save();ctx.globalAlpha=.35;ctx.fillStyle='#81d4fa';
+      ctx.beginPath();ctx.arc(b.x,b.y,13,0,7);ctx.fill();ctx.restore();
+      ctx.fillStyle='#b3e5fc';ctx.beginPath();ctx.arc(b.x,b.y,9,0,7);ctx.fill();
+      star(ctx,b.x,b.y,5,'#ffffff',b.rot);
+    }else if(b.kind==='bolt'){                  // 雷电球：真闪电⚡——锯齿电光＋每帧抖闪＋紫色电晕＋电花尾迹
+      const fl=.7+Math.random()*.3;             // 亮度随机抖动＝电流噼里啪啦的感觉
+      ctx.save();ctx.globalAlpha=.32*fl;ctx.fillStyle='#b388ff';
+      ctx.beginPath();ctx.arc(b.x,b.y,13,0,7);ctx.fill();ctx.restore();
+      ctx.save();ctx.translate(b.x,b.y);
+      ctx.lineJoin='round';ctx.lineCap='round';
+      ctx.strokeStyle='#fff176';ctx.lineWidth=4;
+      ctx.beginPath();
+      ctx.moveTo(-14,(Math.random()-.5)*3);
+      ctx.lineTo(-6,-5+(Math.random()-.5)*3);
+      ctx.lineTo(0,2+(Math.random()-.5)*3);
+      ctx.lineTo(7,-4+(Math.random()-.5)*3);
+      ctx.lineTo(14,1+(Math.random()-.5)*3);
+      ctx.stroke();
+      ctx.strokeStyle='#ffffff';ctx.lineWidth=1.6;ctx.stroke();   // 白芯叠一道＝更亮更电
+      ctx.restore();
+    }else if(b.kind==='spark'){                 // 快快飞镖：黄色四角闪星，缩放脉动＋微拖尾（和五角星星星飞镖区分）
+      const r=9*(1+0.22*Math.sin(b.rot*2.6));
+      ctx.save();ctx.globalAlpha=.28;spark4(ctx,b.x-14,b.y,r*0.7,b.rot*0.7,'#ffd740');ctx.restore();
+      spark4(ctx,b.x,b.y,r,b.rot,'#ffd740');
+    }else if(b.kind==='rocket'){                // 火箭弹：34px 小火箭（红尖头＋机身＋尾翼）＋尾焰粒子，慢速也看得清
+      ctx.fillStyle='#90a4ae';rrect(ctx,b.x-12,b.y-5,22,10,5);ctx.fill();   // 机身
+      ctx.fillStyle='#e53935';                                              // 红尖头＋上下尾翼
+      ctx.beginPath();ctx.moveTo(b.x+10,b.y-5);ctx.lineTo(b.x+22,b.y);ctx.lineTo(b.x+10,b.y+5);ctx.closePath();ctx.fill();
+      ctx.beginPath();ctx.moveTo(b.x-12,b.y-5);ctx.lineTo(b.x-20,b.y-9);ctx.lineTo(b.x-9,b.y-1);ctx.closePath();ctx.fill();
+      ctx.beginPath();ctx.moveTo(b.x-12,b.y+5);ctx.lineTo(b.x-20,b.y+9);ctx.lineTo(b.x-9,b.y+1);ctx.closePath();ctx.fill();
+      ctx.fillStyle='#fff59d';ctx.beginPath();ctx.arc(b.x-3,b.y-1.5,2,0,7);ctx.fill();   // 舷窗
+    }else{                                      // 回旋镖：旋转的 L 形双翼，飞出去再飞回来
+      ctx.save();ctx.translate(b.x,b.y);ctx.rotate(b.rot);
+      ctx.fillStyle='#8d6e63';
+      rrect(ctx,-3,-16,6,18,3);ctx.fill();
+      rrect(ctx,-3,-2,15,6,3);ctx.fill();
+      ctx.fillStyle='#a1887f';rrect(ctx,-1.5,-14,3,14,1.5);ctx.fill();
+      ctx.restore();
     }
   }
   for(const b of G.ebs){                        // BOSS 子弹：橙红色，向左飞，和主角黄子弹区分
@@ -1875,8 +2288,41 @@ function render(){
     ctx.restore();
     star(ctx,b.x,b.y,11,'#ff5722',b.rot);
   }
+  for(const b of G.bolts){                      // 雷电链：亮黄折线，中点抖一下更像闪电
+    ctx.save();ctx.globalAlpha=Math.max(0,Math.min(1,b.t/0.16));
+    ctx.strokeStyle='#fff176';ctx.lineWidth=5;ctx.lineJoin='round';
+    ctx.beginPath();
+    for(let i=0;i<b.pts.length;i++){
+      const p=b.pts[i];
+      if(i===0)ctx.moveTo(p[0],p[1]);
+      else{
+        ctx.lineTo((b.pts[i-1][0]+p[0])/2+(Math.random()-0.5)*22,(b.pts[i-1][1]+p[1])/2+(Math.random()-0.5)*26);
+        ctx.lineTo(p[0],p[1]);
+      }
+    }
+    ctx.stroke();ctx.restore();
+  }
+  if(G.laser){                                  // 超级激光：从枪口到屏幕右缘的亮白光束
+    const a=Math.max(0,Math.min(1,G.laser.t/0.35));
+    ctx.save();ctx.globalAlpha=a;
+    ctx.fillStyle='rgba(255,241,118,.35)';ctx.fillRect(G.laser.x,G.laser.y-14,GW-G.laser.x,28);
+    ctx.fillStyle='#ffffff';ctx.fillRect(G.laser.x,G.laser.y-4,GW-G.laser.x,8);
+    ctx.restore();
+  }
+  for(const c of G.cs){                         // 金币：转着飞的小金币
+    if(c.t<0)continue;
+    ctx.save();ctx.translate(c.x,c.y);ctx.scale(Math.max(0.25,Math.abs(Math.cos(c.t*12))),1);
+    ctx.fillStyle='#f9a825';ctx.beginPath();ctx.arc(0,0,8,0,7);ctx.fill();
+    ctx.fillStyle='#ffd54f';ctx.beginPath();ctx.arc(0,0,6,0,7);ctx.fill();
+    ctx.fillStyle='#fff59d';ctx.fillRect(-2,-4,3,3);
+    ctx.restore();
+  }
   drawParts(ctx,G.ps);
   ctx.restore();
+  if(G.flash>0){                                // 魔法炸弹：全屏白闪
+    ctx.fillStyle='rgba(255,255,255,'+(G.flash/0.3*0.85).toFixed(3)+')';
+    ctx.fillRect(0,0,GW,GH);
+  }
   drawFG();                                     // 萤火虫/落叶飘在最前面
   drawBossBar();                                // BOSS 血条固定在最前层，始终可见
 }
@@ -1915,6 +2361,7 @@ function frame(ts){
   if(hitStop>0){hitStop-=dt;if(mode!=='menu')render();return;}   // 定格期间不推进模拟，只画这一帧（含震屏）
   T+=dt;
   stepFlags(dt);                                // 拔旗动画（星星落回插旗）在暂停/结束时也要走完
+  stepCoins(dt);                                // 金币飞行：任何模式下都飞完，进账叮声不丢
   if(mode==='play')update(dt);
   else if(mode==='inter'){interT-=dt;if(interT<=0){nextStage();startPlay();}}  // 关卡间自动过渡
   else if(mode==='win')stepWin(dt);               // 打败BOSS：定格＋放烟花，1.9秒后浮现面板等选择
@@ -1926,11 +2373,12 @@ function frame(ts){
    界面
    ========================================================= */
 function $(id){return document.getElementById(id);}
-const SCRS=['scrMenu','scrOver','scrPause'];
-const FOCUS={'scrMenu':'btnStart','scrOver':'btnAgain','scrPause':'btnResume'};   // 每屏初始焦点，键盘/手柄可按 Enter 触发
+const SCRS=['scrMenu','scrOver','scrPause','scrArsenal'];
+const FOCUS={'scrMenu':'btnStart','scrOver':'btnAgain','scrPause':'btnResume','scrArsenal':'btnArsClose'};   // 每屏初始焦点，键盘/手柄可按 Enter 触发
 function show(id){
   SCRS.forEach(s=>$(s).classList.toggle('hide',s!==id));
   $('hud').classList.toggle('hide',!(mode==='play'||mode==='pause'));
+  $('wbar').classList.toggle('hide',!(mode==='play'||mode==='pause'));
   const f=id&&FOCUS[id];
   if(f){try{$(f).focus({preventScroll:true});}catch(e){try{$(f).focus();}catch(e2){}}}
 }
@@ -1946,9 +2394,10 @@ function banner(txt,secs){
 }
 function updateHUD(){
   $('uiScore').textContent=G.score;
+  $('uiCoin').textContent=coins;
   $('uiStage').textContent=G.stage;
   const hv=Math.max(0,G.hearts);
-  $('hearts').textContent='❤️'.repeat(hv)+'🖤'.repeat(Math.max(0,3-hv));
+  $('hearts').textContent='❤️'.repeat(hv)+'🖤'.repeat(Math.max(0,3-hv))+(G.bonus>0?' '+'⭐'.repeat(G.bonus):'');
   const bossStage=(G.stage>=STAGES.length);
   if(bossStage&&G.kills>=G.quota){const bn=(BOSSCFG[sceneIdx()]||BOSSCFG[0]).name;$('uiQuotaBox').innerHTML='💀 打 <b>'+bn+'</b>！';}
   else $('uiQuotaBox').innerHTML='还要打 <b>'+Math.max(0,G.quota-G.kills)+'</b> 只';
@@ -1981,7 +2430,7 @@ $('btnWinNext').onclick=()=>{                        // 打败BOSS＝去藏宝�
   loopN=Math.min(10,loopN+1);
   pickBG=BG_ORDER[(BG_ORDER.indexOf(curBG)+1)%BG_ORDER.length];
   LS.set('moday_bgcur',pickBG);
-  resetGame();startPlay();
+  resetGame();startPlay();                         // 星星只在 BOSS 战里送：打完就收走，下个 BOSS 重新送
 };
 $('btnAgain').onclick=()=>{sfx('click');restartRun();};
 $('btnHome').onclick=()=>{sfx('click');toMenu();};
@@ -2082,6 +2531,105 @@ document.querySelectorAll('.spot').forEach(b=>{
   };
 });
 
+/* ---------- 战斗武器栏：左边已拥有的切换型（高亮＝装备中），右边一次性（魔法炸弹） ---------- */
+function renderWbar(){
+  const bar=$('wbar');bar.innerHTML='';
+  for(const w of WEAPONS){
+    if(w.type!=='switch'||!hasWeapon(w.id))continue;
+    const b=document.createElement('button');
+    b.className='wb'+(curWeaponId()===w.id?' sel':'');
+    b.innerHTML=w.icon;                         // 用 innerHTML：激光枪/二连飞镖的图标是手绘 SVG，textContent 会把源码当文字显示出来
+    b.setAttribute('aria-label',w.name);
+    b.onclick=()=>{sfx('click');equipWeapon(w.id);};
+    bar.appendChild(b);
+  }
+  const sep=document.createElement('div');sep.className='wsep';bar.appendChild(sep);
+  for(const id of ['bomb']){                    // 一次性只剩魔法炸弹（超级激光已改成切换型，走上面通用分支）
+    const w=weaponOf(id),n=onceCnt(id);
+    const b=document.createElement('button');
+    b.className='wb'+(n<=0?' empty':'');       // 数量 0 置灰
+    b.innerHTML=w.icon+(n>0?'<span class="cnt">'+n+'</span>':'');
+    b.setAttribute('aria-label',w.name);
+    b.onclick=()=>{if(onceCnt(id)<=0)return;sfx('click');useOnce(id);};
+    bar.appendChild(b);
+  }
+  /* 武器商店入口：固定在武器栏最右边。右上角那个小朋友老是找不到，挪到这里一眼就能看到 */
+  const sep2=document.createElement('div');sep2.className='wsep';bar.appendChild(sep2);
+  const shop=document.createElement('button');
+  shop.className='wb wshop';shop.textContent='🛒';
+  shop.setAttribute('aria-label','武器商店');
+  shop.onclick=openBattleShop;
+  bar.appendChild(shop);
+}
+
+/* ---------- 武器库商店：第一次点＝语音报价，再点同一张＝确认买；已拥有的点一下直接装备 ---------- */
+let pendBuy=null;
+function renderArsenal(){
+  $('arsCoin').textContent=coins;
+  $('uiMenuCoin').textContent=coins;
+  const g=$('arsGrid');g.innerHTML='';
+  for(const w of WEAPONS){
+    const card=document.createElement('div');
+    card.className='wcard';
+    let st,owned=false;
+    if(w.type==='switch'){
+      owned=hasWeapon(w.id);
+      st=owned?(curWeaponId()===w.id?'✔ 装备中':'点我装备'):('🪙 '+w.price);
+      if(owned&&curWeaponId()===w.id)card.classList.add('sel');
+    }else st='持有 '+onceCnt(w.id)+' · 🪙'+w.price+'/个';
+    card.innerHTML='<span class="wi">'+w.icon+'</span><span class="wn">'+w.name+
+      '</span><span class="wp'+(owned?' own':'')+'">'+st+'</span>';
+    if(pendBuy===w.id)card.classList.add('pend');
+    card.onclick=()=>tapWeapon(w);
+    g.appendChild(card);
+  }
+}
+function tapWeapon(w){
+  if(w.type==='switch'&&hasWeapon(w.id)){      // 已拥有：点一下直接装备并报名
+    sfx('click');pendBuy=null;equipWeapon(w.id);renderArsenal();return;
+  }
+  if(pendBuy===w.id){                          // 再点同一张＝确认购买
+    pendBuy=null;
+    if(coins<w.price){                         // 钱不够：报「还差X个金币」
+      sfx('click');
+      say(['huancha'].concat(numClips(w.price-coins),['gejb']));
+      renderArsenal();return;
+    }
+    coins-=w.price;LS.set('moday_coin',String(coins));
+    if(w.type==='switch')OWN.sw.push(w.id);
+    else OWN.oc[w.id]=onceCnt(w.id)+1;
+    saveOwn();
+    renderWbar();updateHUD();                    // 战斗中买的立即生效：武器栏多出新武器、HUD 金币同步
+    sfx('win');
+    say(['maidaola']);
+    renderArsenal();return;
+  }
+  pendBuy=w.id;                                // 第一次点：语音报价「XX，X个金币，再点一下就买啦」
+  sfx('click');
+  say(['w_'+w.id].concat(numClips(w.price),['gejb','zaidian']));
+  renderArsenal();
+}
+let shopFromBattle=false;                      // 武器库是从战斗中打开的吗：关闭时回战场而不是回主菜单
+$('btnArsenal').onclick=()=>{sfx('click');pendBuy=null;renderArsenal();show('scrArsenal');say(['welcome']);};
+/* 战斗中也能逛武器库：入口在底部武器栏最右边的 🛒。和 ⏸ 同一条暂停路径
+   （update() 只在 play 下推进，僵尸/子弹/出怪全冻结），买完关店直接回战场继续打 */
+function openBattleShop(){
+  if(mode!=='play')return;                     // 只在战斗中有意义（暂停屏/菜单下点了不响应）
+  sfx('click');
+  shopFromBattle=true;pendBuy=null;
+  $('btnArsClose').textContent='✖ 回战场';     // 关店按钮的文案跟着行为走，不误导小朋友
+  mode='pause';stopBgm();                      // 停 BGM＋冻结战斗，同 #btnPause
+  renderArsenal();show('scrArsenal');say(['welcome']);
+}
+$('btnArsClose').onclick=()=>{
+  sfx('click');pendBuy=null;
+  if(!shopFromBattle){toMenu();return;}        // 主菜单开的店：照旧回主菜单
+  shopFromBattle=false;                        // 战斗中开的店：回战场继续
+  $('btnArsClose').textContent='✖ 回主菜单';
+  mode='play';show(null);startBgm();
+  say(['jixu']);
+};
+
 /* ---------- 键盘控制（input-systems：命名 action + held 状态）----------
    电脑/平板外接键盘也能玩：← → 或 A D 左右移动，↑ ↓ 或 W S 换路。
    上下键长按会连续换路（带冷却），对小朋友更友好。 */
@@ -2095,7 +2643,7 @@ window.addEventListener('keydown',e=>{
   /* 键盘快捷键：Esc / P 暂停·继续（接键盘或蓝牙手柄的电脑也能玩） */
   if(e.code==='Escape'||e.code==='KeyP'){
     if(mode==='play')$('btnPause').click();
-    else if(mode==='pause')$('btnResume').click();
+    else if(mode==='pause'){if(shopFromBattle)$('btnArsClose').click();else $('btnResume').click();}   // 商店开着＝Esc 关店回战场，否则继续
   }
 });
 window.addEventListener('keyup',e=>setKey(e.code,false));
@@ -2159,6 +2707,7 @@ pvA=setupPreview('cvA');
 pvB=setupPreview('cvB');
 document.querySelectorAll('.chc').forEach(el=>el.classList.toggle('sel',el.dataset.c===curChar));
 $('uiBest').textContent=best;
+$('uiMenuCoin').textContent=coins;
 syncSound();
 renderMap();
 show('scrMenu');
