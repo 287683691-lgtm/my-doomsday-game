@@ -4,11 +4,19 @@ $ErrorActionPreference = 'Stop'
 $mobile = $PSScriptRoot
 $root = Split-Path -Parent $mobile
 
+# 0) 暂存目录可能不存在（首次构建 / 被清理过），先保证它在
+$www = Join-Path $mobile 'www'
+if (-not (Test-Path $www)) { New-Item -ItemType Directory -Path $www | Out-Null }
+
 # 1) 同步最新游戏文件为应用首页
-Copy-Item (Join-Path $root '我的末日-方块人大战方块僵尸.html') (Join-Path $mobile 'www\index.html') -Force
+Copy-Item (Join-Path $root '我的末日-方块人大战方块僵尸.html') (Join-Path $www 'index.html') -Force
 
 # 1.5) 内置语音/音效（voice/*.wav，由 gen-audio.ps1 生成）
-Copy-Item (Join-Path $root 'voice') (Join-Path $mobile 'www\voice') -Recurse -Force
+# 必须先删再拷：目标已存在时 Copy-Item -Recurse 会把源目录套成 www\voice\voice\，
+# 结果游戏读 voice/*.wav 落空（新音效全丢），APK 里还多塞一整套重复音频。
+$voiceDst = Join-Path $www 'voice'
+if (Test-Path $voiceDst) { Remove-Item $voiceDst -Recurse -Force }
+Copy-Item (Join-Path $root 'voice') $voiceDst -Recurse -Force
 
 # 2) 原生工程用 ASCII 入口路径（AGP 拒绝中文路径）：junction 指向 mobile/
 $junction = 'D:\AndroidTools\mydoomsday-mobile'
