@@ -28,3 +28,6 @@ Desktop.ini
 
 # Capacitor 打包暂存目录（build-apk.ps1 每次重新生成）
 mobile/www/
+
+# 编辑器「分享/预览」导出的临时压缩包
+.trae-html-share-packages/

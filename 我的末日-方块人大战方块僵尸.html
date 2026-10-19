@@ -88,7 +88,7 @@ h1{margin:0;font-size:clamp(38px,8vw,86px);line-height:1;font-weight:900;letter-
   background:linear-gradient(160deg,#f0dfae,#dcc189 60%,#cfae74);
   border:3px dashed #8d6e63;box-shadow:inset 0 0 26px rgba(120,84,40,.35)}
 .mapWrap svg{position:absolute;inset:0;width:100%;height:100%}
-.mapWrap::after{content:'🧭';position:absolute;right:8px;top:6px;font-size:20px;opacity:.75}
+.mapWrap::after{content:'🧭';position:absolute;left:36%;bottom:3px;font-size:19px;opacity:.7}
 .spot{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;
   gap:1px;padding:5px 10px 4px;border-radius:14px;background:rgba(255,251,235,.82);
   border:3px solid #6d4c41;color:#4e342e;font-weight:900;font-size:12px;line-height:1.1}
@@ -225,13 +225,16 @@ h1{margin:0;font-size:clamp(38px,8vw,86px);line-height:1;font-weight:900;letter-
     <div class="mapTitle">🗺 末日藏宝图 · 点一块去探险</div>
     <div class="mapWrap">
       <svg viewBox="0 0 600 120" preserveAspectRatio="none" aria-hidden="true">
-        <path d="M70 66 C 150 22, 230 30, 300 44 S 460 84, 516 64" fill="none"
+        <path d="M70 66 C 150 22, 230 30, 300 44 S 470 70, 540 48" fill="none"
           stroke="#8d6e63" stroke-width="3.5" stroke-dasharray="7 8" stroke-linecap="round"/>
-        <path d="M508 76 l16 16 M524 76 l-16 16" stroke="#c62828" stroke-width="4" stroke-linecap="round"/>
+        <path d="M540 48 C 520 82, 468 92, 400 84" fill="none"
+          stroke="#7e57c2" stroke-width="3.5" stroke-dasharray="6 9" stroke-linecap="round"/>
+        <path d="M462 30 l14 14 M476 30 l-14 14" stroke="#c62828" stroke-width="4" stroke-linecap="round"/>
       </svg>
       <button class="spot" data-bg="forest" style="left:11%;top:55%"><span>🌲</span><i>发光森林</i></button>
       <button class="spot" data-bg="city" style="left:50%;top:36%"><span>🌃</span><i>破破城市</i></button>
-      <button class="spot" data-bg="desert" style="left:86%;top:52%"><span>🌵</span><i>太阳沙漠</i></button>
+      <button class="spot" data-bg="desert" style="left:90%;top:40%"><span>🌵</span><i>太阳沙漠</i></button>
+      <button class="spot" data-bg="valley" style="left:66%;top:70%"><span>🧟</span><i>丧尸山谷</i></button>
     </div>
   </div>
   <div class="btnRow">
@@ -579,7 +582,142 @@ function tufts(ctx,color,base){
     ctx.beginPath();ctx.moveTo(x,base);ctx.lineTo(x+2,base-h);ctx.lineTo(x+4.4,base);ctx.closePath();ctx.fill();
   }
 }
-/* ---------- 三套背景 ---------- */
+/* ---------- 第二章（丧尸山谷）背景零件 ---------- */
+function starsN(ctx,t,n,xs,ys,maxY,color){
+  ctx.save();ctx.fillStyle=color;
+  for(let i=0;i<n;i++){
+    const x=(i*xs+13)%W, y=(i*ys+7)%maxY;
+    ctx.globalAlpha=.16+.62*Math.abs(Math.sin(t*1.2+i*1.3));
+    ctx.fillRect(x,y,1.6,1.6);
+  }
+  ctx.restore();
+}
+function peaks(ctx,base,color,amp,step,seed){
+  /* 锯齿山脊：远处一排尖山，一直填到画面底（后面再用地面渐变盖住下半截） */
+  ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(-12,H+12);ctx.lineTo(-12,base);
+  let x=-12,i=seed;
+  while(x<W+24){
+    const h=amp*(0.4+((i*37)%10)/16);
+    ctx.lineTo(x+step*0.5,base-h);ctx.lineTo(x+step,base);
+    x+=step;i++;
+  }
+  ctx.lineTo(W+12,base);ctx.lineTo(W+12,H+12);ctx.closePath();ctx.fill();
+}
+function volcano(ctx,x,base,h,t){
+  const fl=.55+.45*Math.abs(Math.sin(t*1.6));
+  ctx.fillStyle='#3a1a12';
+  ctx.beginPath();ctx.moveTo(x-h*0.78,base);ctx.lineTo(x-h*0.2,base-h);
+  ctx.lineTo(x+h*0.2,base-h);ctx.lineTo(x+h*0.78,base);ctx.closePath();ctx.fill();
+  ctx.fillStyle='rgba(255,120,60,.5)';              // 山坡上淌下来两条火
+  ctx.beginPath();ctx.moveTo(x-h*0.17,base-h);ctx.lineTo(x-h*0.07,base-h);
+  ctx.lineTo(x-h*0.30,base);ctx.lineTo(x-h*0.44,base);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(x+h*0.06,base-h);ctx.lineTo(x+h*0.15,base-h);
+  ctx.lineTo(x+h*0.34,base);ctx.lineTo(x+h*0.22,base);ctx.closePath();ctx.fill();
+  ctx.save();ctx.shadowColor='#ff7043';ctx.shadowBlur=16*fl;   // 火山口一亮一亮，像还在喘气
+  ctx.fillStyle='#ff9d5c';ctx.fillRect(x-h*0.2,base-h-2.5,h*0.4,5);
+  ctx.restore();
+}
+function ashFall(ctx,t){
+  ctx.save();ctx.fillStyle='#ffd0a8';
+  for(let i=0;i<26;i++){
+    const x=((i*57+Math.sin(t*0.8+i)*9)+t*(10+i%5*8))%(W+20)-10;
+    const y=(i*29+t*(20+i%7*8))%(GROUND+14);
+    ctx.globalAlpha=.10+.28*Math.abs(Math.sin(t*2+i));
+    ctx.fillRect(x,y,2,2);
+  }
+  ctx.restore();
+}
+function embersUp(ctx,t,n,color,base){
+  /* 火星往上飘：地面是烫的，一眼看出来 */
+  ctx.save();ctx.fillStyle=color;
+  for(let i=0;i<n;i++){
+    const y=base+16-((t*(16+i%6*9)+i*41)%(base+30));
+    const x=(((i*53+Math.sin(t*1.5+i)*12)%W)+W)%W;
+    ctx.globalAlpha=.15+.5*Math.abs(Math.sin(t*2.4+i*1.1));
+    ctx.fillRect(x,y,2,2);
+  }
+  ctx.restore();
+}
+function glowCracks(ctx,t,color,rows){
+  const fl=.55+.45*Math.sin(t*2.2);
+  ctx.save();ctx.strokeStyle=color;ctx.lineWidth=1.8;ctx.lineCap='round';
+  ctx.shadowColor=color;ctx.shadowBlur=7;ctx.globalAlpha=.42+.34*fl;
+  for(let i=0;i<rows;i++){
+    const y=GROUND+4+((i*7)%(H-GROUND-16)), x0=(i*83+18)%(W-90);
+    ctx.beginPath();ctx.moveTo(x0,y);
+    ctx.lineTo(x0+16,y+4);ctx.lineTo(x0+11,y+11);ctx.lineTo(x0+30,y+16);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(x0+52,y+2);ctx.lineTo(x0+66,y+9);ctx.stroke();
+  }
+  ctx.restore();
+}
+function bones(ctx,base){
+  /* 散落的骷髅和腿骨：白骨地的"草丛" */
+  ctx.fillStyle='#d8d2c0';
+  ctx.strokeStyle='#d8d2c0';ctx.lineWidth=2.4;ctx.lineCap='round';
+  const S=[[32,4.4],[104,3.2],[188,5.2],[262,3.6],[336,4.8],[382,3]];
+  for(let i=0;i<S.length;i++){
+    const x=S[i][0],r=S[i][1];
+    ctx.beginPath();ctx.arc(x,base+7,r,0,7);ctx.fill();
+    ctx.fillRect(x-r*0.75,base+7+r*0.5,r*1.5,r*0.85);
+    ctx.fillStyle='#3a372e';
+    ctx.beginPath();ctx.arc(x-r*0.42,base+6,r*0.3,0,7);ctx.fill();
+    ctx.beginPath();ctx.arc(x+r*0.42,base+6,r*0.3,0,7);ctx.fill();
+    ctx.fillStyle='#d8d2c0';
+  }
+  for(let i=0;i<5;i++){                            // 骨头：两头一个圆结
+    const x=24+i*80, y=base+22+(i%3)*3;
+    ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+17,y+2);ctx.stroke();
+    ctx.beginPath();ctx.arc(x,y+1,2.2,0,7);ctx.fill();
+    ctx.beginPath();ctx.arc(x+17,y+3,2.2,0,7);ctx.fill();
+  }
+}
+function ribs(ctx,base,color){
+  /* 巨兽骨架：三副肋拱立在远处，这就是丧尸大王的老窝 */
+  ctx.save();ctx.strokeStyle=color;ctx.lineWidth=5;ctx.lineCap='round';
+  for(let i=0;i<3;i++){
+    const x=52+i*126,h=58-i*8;
+    ctx.beginPath();ctx.moveTo(x,base);ctx.quadraticCurveTo(x+4,base-h,x+40,base-h*0.62);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(x+72,base);ctx.quadraticCurveTo(x+68,base-h,x+32,base-h*0.62);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(x+8,base);ctx.quadraticCurveTo(x+36,base-h*1.18,x+64,base);ctx.stroke();
+  }
+  ctx.restore();
+}
+function crystals(ctx,base,color,scale,step){
+  /* 冰棱：比松树更瘦更尖，一簇簇斜着长 */
+  ctx.fillStyle=color;
+  let i=0;
+  for(let x=-18;x<W+22;x+=step,i++){
+    const h=(34+((i*41)%26))*scale,w=h*0.32;
+    ctx.beginPath();ctx.moveTo(x,base-h);ctx.lineTo(x+w*0.6,base);ctx.lineTo(x-w*0.6,base);ctx.closePath();ctx.fill();
+    ctx.beginPath();ctx.moveTo(x+w*1.5,base-h*0.5);ctx.lineTo(x+w*1.9,base);ctx.lineTo(x+w*1.0,base);ctx.closePath();ctx.fill();
+  }
+}
+function aurora(ctx,t,y0){
+  ctx.save();ctx.lineCap='round';
+  const C=['rgba(130,225,255,','rgba(170,255,220,','rgba(200,170,255,'];
+  for(let b=0;b<3;b++){
+    ctx.strokeStyle=C[b]+(0.14+0.07*Math.sin(t*0.8+b)).toFixed(3)+')';
+    ctx.lineWidth=14-b*3;
+    ctx.beginPath();
+    for(let x=-10;x<=W+10;x+=10){
+      const y=y0+b*20+Math.sin(x*0.02+t*0.9+b*1.7)*12;
+      if(x<=-10)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+function snowFall(ctx,t){
+  ctx.save();ctx.fillStyle='#eaf6ff';
+  for(let i=0;i<32;i++){
+    const x=((i*61+Math.sin(t*0.7+i)*18)+t*(8+i%5*5))%(W+20)-10;
+    const y=(i*29+t*(18+i%6*6))%(GROUND+16);
+    ctx.globalAlpha=.22+.5*Math.abs(Math.sin(t*1.5+i));
+    ctx.beginPath();ctx.arc(x,y,1.2+(i%3)*0.5,0,7);ctx.fill();
+  }
+  ctx.restore();
+}
+/* ---------- 七套背景（第一章三块 ＋ 第二章四块） ---------- */
 const BG={
   city(ctx,t){
     const g=ctx.createLinearGradient(0,0,0,GROUND);
@@ -695,6 +833,93 @@ const BG={
     ctx.moveTo(W+8,-4);ctx.lineTo(W-4,-4);
     ctx.quadraticCurveTo(W,92,W-20,162);ctx.quadraticCurveTo(W-32,202,W-10,H+8);
     ctx.lineTo(W+8,H+8);ctx.closePath();ctx.fill();
+    vg(ctx);
+  },
+  /* ---------- 第二章四块：丧尸山谷的四个战场 ---------- */
+  lava(ctx,t){
+    /* 熔岩谷：天是烧红的，远处火山一亮一亮，灰往下落、火星往上飘 */
+    const g=ctx.createLinearGradient(0,0,0,GROUND);
+    g.addColorStop(0,'#180505');g.addColorStop(.42,'#4a1108');g.addColorStop(.78,'#8e2a10');g.addColorStop(1,'#c9591f');
+    ctx.fillStyle=g;ctx.fillRect(0,0,W,GROUND);
+    starsN(ctx,t,24,71,43,88,'#ffd7b0');
+    peaks(ctx,156,'#5a1c0d',26,54,2);           // 远山脊（浅＝更远）
+    volcano(ctx,300,GROUND,94,t);               // 主角火山：整个山谷的热源
+    peaks(ctx,GROUND-2,'#2a0f0a',17,36,5);      // 近山脊（深＝更近）
+    fogBands(ctx,t,GROUND-26);                  // 热气凝成的白汽
+    const gg=ctx.createLinearGradient(0,GROUND,0,H);
+    gg.addColorStop(0,'#4a1c11');gg.addColorStop(.5,'#2c1009');gg.addColorStop(1,'#1c0a07');
+    ctx.fillStyle=gg;ctx.fillRect(0,GROUND,W,H-GROUND);
+    ctx.fillStyle='rgba(255,140,80,.38)';ctx.fillRect(0,GROUND,W,2);
+    glowCracks(ctx,t,'#ff7043',4);              // 地面裂缝透光：脚下是岩浆
+    ashFall(ctx,t);
+    embersUp(ctx,t,18,'#ffb066',GROUND);
+    vg(ctx);
+  },
+  bone(ctx,t){
+    /* 白骨地：巨兽的坟场，月亮很冷，三副骨架立在雾里 */
+    const g=ctx.createLinearGradient(0,0,0,GROUND);
+    g.addColorStop(0,'#070c10');g.addColorStop(.5,'#243a34');g.addColorStop(1,'#6d7a63');
+    ctx.fillStyle=g;ctx.fillRect(0,0,W,GROUND);
+    starsN(ctx,t,22,83,37,86,'#dff2e6');
+    drawMoon(ctx,74,40,13);
+    peaks(ctx,150,'#3b443a',24,60,4);
+    ribs(ctx,GROUND-4,'#c9c2ae');               // 骨架比山更近，压在雾前面
+    fogBands(ctx,t,GROUND-30);
+    const gg=ctx.createLinearGradient(0,GROUND,0,H);
+    gg.addColorStop(0,'#b6ad97');gg.addColorStop(.45,'#8b836d');gg.addColorStop(1,'#5c5646');
+    ctx.fillStyle=gg;ctx.fillRect(0,GROUND,W,H-GROUND);
+    ctx.fillStyle='rgba(255,250,230,.34)';ctx.fillRect(0,GROUND,W,2);
+    bones(ctx,GROUND-2);                        // 脚边全是骷髅和腿骨
+    vg(ctx);
+  },
+  ice(ctx,t){
+    /* 寒冰谷：极光在天上慢慢走，冰棱一丛丛，雪一直没停 */
+    const g=ctx.createLinearGradient(0,0,0,GROUND);
+    g.addColorStop(0,'#04091c');g.addColorStop(.5,'#0f2a4d');g.addColorStop(1,'#4c7fa0');
+    ctx.fillStyle=g;ctx.fillRect(0,0,W,GROUND);
+    starsN(ctx,t,28,59,31,82,'#eaf6ff');
+    drawMoon(ctx,322,44,14);
+    aurora(ctx,t,22);
+    peaks(ctx,152,'#1b3f63',28,50,6);
+    peaks(ctx,GROUND-4,'#102a45',18,34,2);
+    fogBands(ctx,t,GROUND-26);
+    const gg=ctx.createLinearGradient(0,GROUND,0,H);
+    gg.addColorStop(0,'#cfe9f7');gg.addColorStop(.45,'#93bdd4');gg.addColorStop(1,'#5b8aa8');
+    ctx.fillStyle=gg;ctx.fillRect(0,GROUND,W,H-GROUND);
+    ctx.fillStyle='rgba(255,255,255,.55)';ctx.fillRect(0,GROUND,W,2);
+    ctx.strokeStyle='rgba(255,255,255,.22)';ctx.lineWidth=1.6;   // 冰面反光
+    for(let i=0;i<5;i++){const y=GROUND+7+i*7;ctx.beginPath();ctx.moveTo(8+i*24,y);ctx.lineTo(98+i*32,y+3);ctx.stroke();}
+    crystals(ctx,GROUND+4,'#6ea8cd',0.8,52);    // 远一丛（小、偏蓝）
+    crystals(ctx,GROUND+22,'#bfe4f5',1.15,88);  // 近一丛（大、发白）
+    snowFall(ctx,t);
+    vg(ctx);
+  },
+  rift(ctx,t){
+    /* 合体山谷：天被撕开一道口子，紫红的光从缝里漏下来，地下一片焦黑 */
+    const g=ctx.createLinearGradient(0,0,0,GROUND);
+    g.addColorStop(0,'#0d0318');g.addColorStop(.45,'#33072a');g.addColorStop(.78,'#711628');g.addColorStop(1,'#b4441d');
+    ctx.fillStyle=g;ctx.fillRect(0,0,W,GROUND);
+    starsN(ctx,t,26,67,29,92,'#e3c7ff');
+    const fl=.5+.5*Math.abs(Math.sin(t*1.9));
+    ctx.save();ctx.lineCap='round';
+    ctx.strokeStyle='rgba(255,90,120,'+(0.45+0.35*fl).toFixed(3)+')';
+    ctx.shadowColor='#ff4d6d';ctx.shadowBlur=14*fl;ctx.lineWidth=2.6+1.8*fl;
+    ctx.beginPath();                                // 主裂缝：从头顶一直撕到山脊
+    ctx.moveTo(40,4);ctx.lineTo(76,34);ctx.lineTo(58,54);
+    ctx.lineTo(106,86);ctx.lineTo(90,108);ctx.lineTo(152,142);ctx.stroke();
+    ctx.strokeStyle='rgba(190,120,255,.5)';ctx.lineWidth=1.6;ctx.shadowBlur=8*fl;
+    ctx.beginPath();ctx.moveTo(76,34);ctx.lineTo(126,26);ctx.lineTo(148,44);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(106,86);ctx.lineTo(152,78);ctx.lineTo(172,96);ctx.stroke();
+    ctx.restore();
+    peaks(ctx,150,'#3a1030',26,56,3);
+    peaks(ctx,GROUND-2,'#1e0722',18,38,7);
+    fogBands(ctx,t,GROUND-26);
+    const gg=ctx.createLinearGradient(0,GROUND,0,H);
+    gg.addColorStop(0,'#3a0d20');gg.addColorStop(.5,'#22081a');gg.addColorStop(1,'#14040e');
+    ctx.fillStyle=gg;ctx.fillRect(0,GROUND,W,H-GROUND);
+    ctx.fillStyle='rgba(255,110,160,.35)';ctx.fillRect(0,GROUND,W,2);
+    glowCracks(ctx,t,'#ff4d6d',4);
+    embersUp(ctx,t,16,'#ff9ecb',GROUND);
     vg(ctx);
   }
 };
@@ -963,6 +1188,281 @@ function drawZombieV(ctx,x,y,s,zk,t,ph){
   ctx.restore();
 }
 
+/* ---------- 第二章丧尸小兵：全直角 + 黑眼窝发光方瞳（焕宸从五版里选的） ----------
+   和第一章的圆角绿僵尸彻底分开：方块身体、黑眼窝里一盏方灯、嘴里一排方块牙、绝不吐舌头。
+   键名与 KIND 表一一对应；kind 决定这一版独有的外形记号：
+   notch 头顶被咬掉一角 / oneeye 超大眼窝＋头顶木棍 / hole 胸口方洞露骨头＋断臂 /
+   ice 一身白冰晶＋冻紧的眉毛 / fire 炭灰身体＋头顶阶梯火苗＋走路掉火星 */
+const KIND_SK={
+  notch :{kind:'notch', skin:'#689f38', skinDark:'#33691e', cloth:'#4e342e', clothDark:'#3b2420',
+          socket:'#1f1608', glow:'#e6ee9c', tooth:'#ece5d8', teeth:'gap'},
+  oneeye:{kind:'oneeye',skin:'#8d6e63', skinDark:'#5d4037', cloth:'#37474f', clothDark:'#263238',
+          socket:'#1f1608', glow:'#ffe0b2', tooth:'#ece5d8', teeth:'gap', patch:'#455a64', stick:'#a1887f'},
+  hole  :{kind:'hole',  skin:'#a5d6a7', skinDark:'#81c784', cloth:'#455a64', clothDark:'#37474f',
+          socket:'#1f1608', glow:'#c5e1a5', tooth:'#ece5d8', teeth:'none'},
+  ice   :{kind:'ice',   skin:'#90caf9', skinDark:'#42a5f5', cloth:'#1565c0', clothDark:'#0d47a1',
+          socket:'#0d2b45', glow:'#f8fdff', tooth:'#e1f5fe', teeth:'ice', brow:'#1565c0'},
+  fire  :{kind:'fire',  skin:'#616161', skinDark:'#424242', cloth:'#3e2723', clothDark:'#2b1a16',
+          socket:'#1b1110', glow:'#ffee58', tooth:'#ff7043', teeth:'fire'}
+};
+function drawBlockZombie(ctx,x,y,s,zk,t,ph){
+  const u=s/58;
+  const bob=Math.sin(ph)*1.4*u, rot=Math.sin(ph)*0.05;
+  const liftL=Math.max(0,Math.sin(ph))*3.4*u, liftR=Math.max(0,-Math.sin(ph))*3.4*u;
+  const sw=Math.sin(ph)*1.6*u;
+  ctx.save();ctx.translate(x,y+bob);ctx.rotate(rot);
+  /* 地面影子 */
+  ctx.fillStyle='rgba(0,0,0,.25)';
+  ctx.beginPath();ctx.ellipse(0,1,16*u,3.6*u,0,0,7);ctx.fill();
+  /* 火星（只有火焰丧尸）：脚边两个小方块往下掉 */
+  if(zk.kind==='fire'){
+    for(let i=0;i<2;i++){
+      const p=(t*0.7+i*0.5)%1;
+      ctx.globalAlpha=1-p;
+      ctx.fillStyle=i?'#ffb300':'#ff8a65';
+      ctx.fillRect((13-i*26)*u,-1*u+p*9*u,2.2*u,2.2*u);
+    }
+    ctx.globalAlpha=1;
+  }
+  /* 腿：后腿压暗一档，前腿亮；全是直角 */
+  ctx.fillStyle=zk.clothDark;ctx.fillRect(2*u,-18*u,9*u,18*u-liftR);
+  ctx.fillStyle=zk.skinDark;ctx.fillRect(1*u,-5*u-liftR,10*u,5*u);
+  ctx.fillStyle='rgba(0,0,0,.15)';ctx.fillRect(1*u,-5*u-liftR,10*u,5*u);
+  ctx.fillStyle=zk.cloth;ctx.fillRect(-11*u,-18*u,9*u,18*u-liftL);
+  ctx.fillStyle=zk.skinDark;ctx.fillRect(-12*u,-5*u-liftL,10*u,5*u);
+  /* 手臂：前平举（僵尸招牌姿势），破洞版一只手断成两截 */
+  if(zk.kind==='hole'){
+    ctx.fillStyle=zk.skin;
+    ctx.fillRect(-28*u,-28*u-sw,17*u,7.5*u);
+    ctx.fillRect(-26*u,-36*u+sw,14*u,7.5*u);
+    ctx.fillStyle=zk.skinDark;
+    ctx.fillRect(-32*u,-29*u-sw,6*u,9*u);
+    ctx.fillRect(-35*u,-35.5*u+sw,7*u,7*u);            // 悬空的手方块
+  }else{
+    ctx.fillStyle=zk.skin;
+    ctx.fillRect(-28*u,-28*u-sw,17*u,7.5*u);
+    ctx.fillRect(-30*u,-36*u+sw,19*u,7.5*u);
+    ctx.fillStyle=zk.skinDark;
+    ctx.fillRect(-32*u,-29*u-sw,6*u,9*u);
+    ctx.fillRect(-34*u,-37*u+sw,6*u,9*u);
+  }
+  /* 身体 */
+  ctx.fillStyle=zk.skin;ctx.fillRect(-13*u,-38*u,26*u,21*u);
+  ctx.fillStyle='rgba(0,0,0,.12)';ctx.fillRect(-13*u,-26*u,26*u,9*u);
+  /* 身体特征 */
+  if(zk.kind==='oneeye'&&zk.patch){                   // 方形布补丁（无圆角、无缝线）
+    ctx.fillStyle=zk.patch;ctx.fillRect(-9.5*u,-32*u,9*u,7*u);
+    ctx.fillStyle='rgba(0,0,0,.25)';ctx.fillRect(-9.5*u,-32*u,9*u,1.4*u);
+  }
+  if(zk.kind==='hole'){                               // 胸口方洞 + 三根骨头
+    ctx.fillStyle='#2b332b';ctx.fillRect(-4*u,-33*u,10*u,8*u);
+    ctx.fillStyle='#eceff1';
+    ctx.fillRect(-3.4*u,-32.2*u,8.8*u,1.7*u);
+    ctx.fillRect(-3.4*u,-29.4*u,8.8*u,1.7*u);
+    ctx.fillRect(-3.4*u,-26.6*u,8.8*u,1.7*u);
+  }
+  if(zk.kind==='ice'){                                // 白色方冰晶
+    ctx.fillStyle=zk.tooth;
+    ctx.fillRect(-11.5*u,-34*u,4*u,4*u);
+    ctx.fillRect(5*u,-23*u,3.6*u,3.6*u);
+    ctx.fillRect(-24*u,-33*u,3.4*u,3.4*u);
+  }
+  /* 头：缺牙咬右上角、破洞少左上角，其余整块 */
+  if(zk.kind==='notch'){
+    ctx.fillStyle=zk.skin;
+    ctx.fillRect(-12*u,-56*u,18*u,19*u);
+    ctx.fillRect(6*u,-50*u,6*u,13*u);
+    ctx.fillStyle='rgba(0,0,0,.1)';ctx.fillRect(6*u,-50*u,6*u,13*u);
+    ctx.fillStyle='rgba(0,0,0,.22)';ctx.fillRect(6*u,-50*u,6*u,1.8*u);
+  }else if(zk.kind==='hole'){
+    ctx.fillStyle=zk.skin;
+    ctx.fillRect(-12*u,-52*u,24*u,15*u);
+    ctx.fillRect(-5*u,-56*u,17*u,4*u);
+    ctx.fillStyle='rgba(0,0,0,.1)';
+    ctx.fillRect(5*u,-52*u,7*u,15*u);
+    ctx.fillRect(5*u,-56*u,7*u,4*u);
+  }else{
+    ctx.fillStyle=zk.skin;ctx.fillRect(-12*u,-56*u,24*u,19*u);
+    ctx.fillStyle='rgba(0,0,0,.1)';ctx.fillRect(5*u,-55*u,7*u,18*u);
+  }
+  /* 眼睛：黑眼窝 + 发光方瞳（和旧僵尸的白眼球彻底分开） */
+  if(zk.kind==='oneeye'){                             // 一只超大眼窝
+    ctx.fillStyle=zk.socket;ctx.fillRect(-11.5*u,-52*u,12*u,9.5*u);
+    ctx.fillStyle=zk.glow;ctx.fillRect(-9*u,-49.6*u,6*u,4.6*u);
+    ctx.fillStyle=zk.socket;ctx.fillRect(3*u,-48.5*u,4.6*u,4.6*u);
+    ctx.fillStyle=zk.glow;ctx.fillRect(4*u,-47.2*u,2.4*u,2.2*u);
+  }else if(zk.kind==='fire'){                         // 整格发黄光的眼
+    ctx.fillStyle=zk.socket;
+    ctx.fillRect(-10.6*u,-51.6*u,9.2*u,8.2*u);
+    ctx.fillRect(1*u,-50*u,7.5*u,7*u);
+    ctx.fillStyle=zk.glow;
+    ctx.fillRect(-10*u,-51*u,8*u,7*u);
+    ctx.fillRect(1.5*u,-49.5*u,6.5*u,6*u);
+  }else{
+    ctx.fillStyle=zk.socket;
+    ctx.fillRect(-10*u,-51*u,8*u,7*u);
+    ctx.fillRect(1.5*u,-49.5*u,6.5*u,6*u);
+    ctx.fillStyle=zk.glow;
+    ctx.fillRect(-8.4*u,-49.4*u,4*u,3.4*u);
+    ctx.fillRect(2.6*u,-48*u,3.2*u,2.8*u);
+  }
+  if(zk.kind==='ice'){                                // 冻紧的眉毛＋额上一块冰
+    ctx.fillStyle=zk.brow;
+    ctx.fillRect(-10.5*u,-53.6*u,9*u,2*u);
+    ctx.fillRect(1*u,-52.2*u,7.5*u,2*u);
+    ctx.fillStyle=zk.tooth;ctx.fillRect(0,-55.5*u,4*u,3.2*u);
+  }
+  /* 嘴：一条方块嘴，绝对不吐舌头 */
+  ctx.fillStyle=zk.socket;ctx.fillRect(-6.5*u,-43*u,13.5*u,5.5*u);
+  if(zk.teeth==='gap'){
+    ctx.fillStyle=zk.tooth;
+    ctx.fillRect(-5.6*u,-43*u,3.2*u,2.6*u);
+    ctx.fillRect(1.6*u,-43*u,3.2*u,2.6*u);            // 中间缺了一颗门牙
+  }else if(zk.teeth==='ice'){
+    ctx.fillStyle=zk.tooth;
+    for(let i=0;i<3;i++)ctx.fillRect((-5.6+i*4.2)*u,-43*u,2.8*u,2.6*u);
+  }else if(zk.teeth==='fire'){
+    ctx.fillStyle='#ff7043';ctx.fillRect(-5.6*u,-43*u,3.2*u,2.6*u);
+    ctx.fillStyle='#ffca28';ctx.fillRect(1.6*u,-43*u,3.2*u,2.6*u);
+  }
+  /* 头顶附件 */
+  if(zk.kind==='oneeye'){                             // 斜插一根方块木棍
+    ctx.save();ctx.translate(8.5*u,-56*u);ctx.rotate(0.22);
+    ctx.fillStyle=zk.stick;ctx.fillRect(-1.5*u,-17*u,3.2*u,17*u);
+    ctx.fillStyle=zk.skin;ctx.fillRect(-2*u,-20*u,4.2*u,4.2*u);
+    ctx.restore();
+  }
+  if(zk.kind==='fire'){                               // 三块阶梯火苗，随时间抖
+    const f1=Math.sin(t*8)*0.9*u, f2=Math.sin(t*8+2)*1.2*u, f3=Math.sin(t*8+4)*0.8*u;
+    ctx.fillStyle='#ffca28';ctx.fillRect(-8*u,-68*u+f1,5*u,12*u);
+    ctx.fillStyle='#ff7043';ctx.fillRect(-2*u,-75*u+f2,7*u,19*u);
+    ctx.fillStyle='#ffb300';ctx.fillRect(6*u,-66*u+f3,4.5*u,10*u);
+  }
+  ctx.restore();
+}
+
+/* ---------- 第二章三位大王：方块丧尸风（焕宸从两两对比里挑的 1B / 2B / 3B） ----------
+   键名就是 ZB 表里的 mech：取到就画这套方块大王，取不到（第一章）还画原来的圆角绿大王。
+   和第一章彻底分家：全直角、黑眼窝里一盏方灯、嘴里方块牙、绝不吐舌头。
+   weak = 弱点零件在身上的位置（u 单位，脚底 y=0）。weakPos／破绽粒子／炉子塌的烟都从这一处取，
+   不再各写各的系数，改外形时只改一行。
+   高度上限：火柱和高举的骨棒最高削到 72u，别长成一条烟烟囱。
+   够不够得着血条要看站位：路 0 最远（u=2.379）却离三条血条（底边 104）最近，
+   72u 往上只留 2px 会被切顶——所以终章让最矮的独眼王（61u）守路 0，
+   火柱王／骨锤王走路 2／路 4，实测顶点 y≈193／280，离血条远得很。 */
+const BOSS_ZK={
+  furnace:{art:'furnace',skin:'#616161',skinDark:'#424242',cloth:'#3e2723',clothDark:'#2b1a16',
+           socket:'#1b1110',glow:'#ffee58',tooth:'#ff7043',
+           gait:{bob:1.0,rot:0.035,lift:2.0,sw:0.8,sh:22},weak:[15.5,-36.5]},
+  hammer :{art:'hammer', skin:'#a5d6a7',skinDark:'#81c784',cloth:'#455a64',clothDark:'#37474f',
+           socket:'#1f1608',glow:'#c5e1a5',tooth:'#eceff1',
+           gait:{bob:1.5,rot:0.06,lift:4.2,sw:1.6,sh:19},weak:[-2,-46]},
+  drag   :{art:'drag',   skin:'#689f38',skinDark:'#33691e',cloth:'#4e342e',clothDark:'#3b2420',
+           socket:'#1f1608',glow:'#e6ee9c',tooth:'#ece5d8',
+           gait:{bob:1.0,rot:0.03,lift:2.2,sw:0.7,sh:21},weak:[-6.5,-46]}
+};
+/* 零件一律写成 [x,y,w,h,颜色]（u 单位），和小兵那套直角积木是同一个画法 */
+const bb =(c,u,b)=>{c.fillStyle=b[4];c.fillRect(b[0]*u,b[1]*u,b[2]*u,b[3]*u);};
+const bbs=(c,u,a)=>{a.forEach(p=>bb(c,u,p));};
+/* 黑眼窝＋发光方瞳：三位大王共用，保证还是这一家子的脸 */
+function beyes(c,u,zk,E){
+  c.fillStyle=zk.socket;E.forEach(e=>c.fillRect(e[0]*u,e[1]*u,e[2]*u,e[3]*u));
+  c.fillStyle=zk.glow;
+  E.forEach(e=>c.fillRect((e[0]+e[2]*0.22)*u,(e[1]+e[3]*0.25)*u,e[2]*0.56*u,e[3]*0.5*u));
+}
+/* 方块嘴（绝不吐舌头），牙是一列小方块 */
+function bmouth(c,u,zk,m,ts){
+  bb(c,u,[m[0],m[1],m[2],m[3],zk.socket]);
+  (ts||[]).forEach(p=>bb(c,u,[p[0],p[1],p[2],p[3],p[4]||zk.tooth]));
+}
+const BOSS_ART={
+  /* 1B 背炉火柱王：剪影记号＝双臂全断＋背后一个比身体还宽的方块熔炉＋炉顶三节火柱 */
+  furnace(c,u,zk,t,g){
+    const {liftL,liftR}=g;
+    bbs(c,u,[[1,-58,28,46,'#3e2723'],[1,-58,28,4,'#2b1a16'],[25,-58,4,46,'rgba(0,0,0,.25)'],
+             [1,-16,28,4,'rgba(0,0,0,.3)']]);
+    bb(c,u,[8,-44,15,16,'#2b1a16']);                      // 炉膛口
+    c.globalAlpha=0.6+0.4*Math.sin(t*4);                  // 炉火一亮一暗：小朋友一眼认出"这就是要打的地方"
+    bbs(c,u,[[10,-42,11,11,'#ff7043'],[11,-38,9,2,'#ffca28'],[11,-34,9,2,'#ffca28']]);
+    c.globalAlpha=1;
+    /* 炉顶火柱：底边钉在炉口上，只有顶端往上窜；最末压一道炉口暗边，像从炉膛里冒出来 */
+    bb(c,u,[4,-66-Math.sin(t*8)*2,9,8+Math.sin(t*8)*2,'#ff7043']);
+    bb(c,u,[11,-70-Math.sin(t*8+1)*2,11,12+Math.sin(t*8+1)*2,'#ffca28']);
+    bb(c,u,[20,-68-Math.sin(t*8+3)*1.5,7,10+Math.sin(t*8+3)*1.5,'#ffb300']);
+    bb(c,u,[13,-72,8,10,'#ffe082']);
+    bb(c,u,[1,-58,28,5,'#2b1a16']);
+    for(let i=0;i<4;i++){                                 // 走路一路掉火星：四颗小方块循环往下飘
+      const p=(t*0.7+i/4)%1;
+      c.globalAlpha=1-p;c.fillStyle=['#ff8a65','#ffb300','#ffca28','#ff7043'][i];
+      c.fillRect((14-i*10)*u,-1*u+p*9*u,2.4*u,2.4*u);
+    }
+    c.globalAlpha=1;
+    bbs(c,u,[[3,-12,13,12-liftR,zk.clothDark],[2,-4,13,4,zk.skinDark],   // 腿：短到几乎没有
+             [-16,-12,13,12-liftL,zk.cloth],[-17,-4,13,4,zk.skinDark]]);
+    bbs(c,u,[[-23,-32,11,9,zk.skin],[-26,-24,8,7,zk.skinDark],           // 两条胳膊全断成短桩
+             [13,-31,10,8,zk.skinDark],[19,-24,7,6,zk.skinDark]]);
+    bb(c,u,[-14,-34,28,22,zk.skin]);bb(c,u,[-14,-24,28,8,'rgba(0,0,0,.12)']);
+    bbs(c,u,[[-12,-46,22,13,zk.skin],[6,-46,4,13,'rgba(0,0,0,.1)'],      // 头缩进肩里，头发烧焦
+             [-12,-49,10,3,'#2b1a16']]);
+    beyes(c,u,zk,[[-10,-44,8,6],[1,-43.5,7,5.5]]);
+    bmouth(c,u,zk,[-8,-38,14,4],[[-6,-38,3,2.2,'#ff7043'],[1,-38,3,2.2,'#ffca28']]);
+  },
+  /* 2B 骨锤独腿王：剪影记号＝单手把巨骨棒举过头顶＋一条腿只剩一根骨棍 */
+  hammer(c,u,zk,t,g){
+    const {liftL,liftR}=g;
+    bb(c,u,[10,-42,11,8,zk.skinDark]);bb(c,u,[16,-52,8,12,zk.skinDark]);  // 高举的手臂（先画，压在头后面）
+    bbs(c,u,[[17,-58,6,18,'#cfd8dc'],[11,-72,20,14,'#eceff1'],[11,-72,20,3,'rgba(0,0,0,.12)'],
+             [27,-72,4,14,'rgba(0,0,0,.2)'],[15,-61,10,4,'#b0bec5']]);    // 骨棒最高点 72u
+    bbs(c,u,[[5,-18,4,18-liftR,'#cfd8dc'],[3,-19,8,3,'#eceff1'],[3,-4,8,4,'#90a4ae'],  // 后腿＝一根骨棍
+             [-13,-18,11,18-liftL,zk.cloth],[-14,-5,12,5,zk.skinDark]]);
+    bb(c,u,[-15,-38,30,24,zk.skin]);bb(c,u,[-15,-26,30,9,'rgba(0,0,0,.12)']);
+    [[-10,-34,10,8],[-1,-22,9,7],[-13,-19,7,6],[3,-32,7,6]].forEach(h=>{  // 身上四个破洞，每个洞里两根骨条
+      bb(c,u,[h[0],h[1],h[2],h[3],'#2b332b']);
+      bb(c,u,[h[0]+0.7,h[1]+1.4,h[2]-1.4,1.6,'#eceff1']);
+      bb(c,u,[h[0]+0.7,h[1]+h[3]-3,h[2]-1.4,1.6,'#eceff1']);
+    });
+    bb(c,u,[-31,-34,19,9,zk.skin]);bb(c,u,[-33,-35,7,10,zk.skinDark]);    // 近侧胳膊还是僵尸招牌的前平举
+    bbs(c,u,[[-12,-52,24,15,zk.skin],[-3,-56,15,4,zk.skin],               // 天灵盖掀开一块
+             [6,-52,6,15,'rgba(0,0,0,.1)'],[6,-56,6,2.4,'rgba(0,0,0,.26)'],
+             [-6,-63,4,8,'#eceff1']]);                                    // 顶上插一片骨
+    beyes(c,u,zk,[[-9,-48,7,6],[3,-47,6,5]]);
+    bmouth(c,u,zk,[-7,-43,14,5],[[-5,-43,3,2.4,'#eceff1'],[4,-43,3,2.4,'#eceff1']]);
+  },
+  /* 3B 拖地长臂王：剪影记号＝两条胳膊长到拖地＋背上三把断骨刃＋只剩一只眼窝亮着 */
+  drag(c,u,zk,t,g){
+    const {liftL,liftR}=g;
+    bbs(c,u,[[14,-48,4,9,'#cfd8dc'],[17,-41,4,8,'#cfd8dc'],                // 背上斜插三把断骨刃（两节直角拼斜）
+             [7,-52,4,8,'#eceff1'],[10,-46,4,7,'#eceff1'],
+             [20,-42,4,8,'#b0bec5'],[23,-36,4,7,'#b0bec5']]);
+    bbs(c,u,[[3,-18,10,18-liftR,zk.clothDark],[2,-5,11,5,zk.skinDark],
+             [-13,-18,10,18-liftL,zk.cloth],[-14,-5,11,5,zk.skinDark]]);
+    bb(c,u,[12,-32,10,7,zk.skinDark]);bb(c,u,[20,-26,7,12,zk.skinDark]);   // 远侧胳膊
+    bb(c,u,[-14,-38,28,24,zk.skin]);bb(c,u,[-14,-26,28,9,'rgba(0,0,0,.12)']);
+    bb(c,u,[-9,-33,12,7,'#2b332b']);
+    bb(c,u,[-34,-34,22,8,zk.skin]);                                        // 近侧胳膊：前伸→下垂→拖地
+    bb(c,u,[-40,-27,8,20,zk.skin]);
+    bb(c,u,[-46,-8,16,9,zk.skinDark]);
+    bbs(c,u,[[-46,-4,4,4,'#eceff1'],[-40,-4,4,4,'#eceff1'],[-34,-3,4,3,'#cfd8dc']]);
+    bbs(c,u,[[-13,-54,26,17,zk.skin],[-8,-57,14,3,zk.skin],                // 头：顶是平的，两边都被咬
+             [-13,-54,6,2.4,'rgba(0,0,0,.26)'],[7,-54,6,17,'rgba(0,0,0,.1)'],
+             [6,-60,4,4,'#cfd8dc']]);
+    bb(c,u,[-11,-50,9,8,zk.socket]);bb(c,u,[-9,-48,4,4,zk.glow]);          // 只剩左边一只眼窝会发光
+    bb(c,u,[2,-49,7,7,'#2b332b']);bb(c,u,[3.5,-47.5,4,4,'#eceff1']);       // 右边是个露骨头的空眼
+    bmouth(c,u,zk,[-12,-43,20,6],[[-10,-43,4,3.4],[2,-43,4,3.4],[-4,-40,4,3,'#d7ccc8']]);
+  }
+};
+/* 大王外壳：只管站位、影子、步态，轮廓交给 BOSS_ART（步态参数来自 BOSS_ZK.gait） */
+function drawBlockBoss(ctx,x,y,s,zk,t,ph){
+  const u=s/58,g=zk.gait;
+  const st={ph,liftL:Math.max(0,Math.sin(ph))*(g.lift||3.4)*u,
+            liftR:Math.max(0,-Math.sin(ph))*(g.lift||3.4)*u};
+  ctx.save();ctx.translate(x,y+Math.sin(ph)*(g.bob||1.4)*u);ctx.rotate(Math.sin(ph)*(g.rot||0.05));
+  ctx.fillStyle='rgba(0,0,0,.25)';
+  ctx.beginPath();ctx.ellipse(0,1,(g.sh||20)*u,(g.sh||20)*0.21*u,0,0,7);ctx.fill();
+  BOSS_ART[zk.art](ctx,u,zk,t,st);
+  ctx.restore();
+}
+
 /* =========================================================
    音效：3 号 咚咚卡通音（Web Audio 纯合成，无音频文件）
    ========================================================= */
@@ -1145,14 +1645,27 @@ function loadInt(k,d,lo,hi){const n=parseInt(LS.get(k,String(d)),10);return isNa
 let SND_ON=LS.get('moday_snd','1')==='1';
 let best=loadInt('moday_best',0,0,9999999);
 let curChar=LS.get('moday_char','thin')==='fat'?'fat':'thin';
-/* 藏宝图：三块战场按顺序解锁，打败 BOSS 解锁下一块 */
+/* 藏宝图：战场按顺序解锁，打败 BOSS 解锁下一块。
+   BG_ORDER ＝ 第一章「一块战场贯穿三关」的战场（难度跟着它走 SCENES）；
+   MAP_ORDER ＝ 藏宝图上的格子顺序，第四格「丧尸山谷」是第二章入口——
+   第二章的背景跟着关卡一块块换（熔岩谷／白骨地／寒冰谷／合体山谷），
+   所以那四块只进 BG 绘制表，不进 BG_ORDER：难度由 STAGES 里写死的数值决定，
+   不再乘场景系数（否则同一关在山谷里会被 loopN 和 SCENES 二次加码）。 */
 const BG_ORDER=['forest','city','desert'];
-const BG_NAME={forest:'发光森林',city:'破破城市',desert:'太阳沙漠'};
-let mapN=loadInt('moday_map',1,1,3);           // 藏宝图已解锁几块
+const MAP_ORDER=['forest','city','desert','valley'];
+/* 藏宝图每一格对应的守关大王（点锁着的格子时，念出"该打赢谁"） */
+const MAP_BOSS=['boss_forest','boss_city','boss_desert','boss_furnace'];
+const BG_NAME={forest:'发光森林',city:'破破城市',desert:'太阳沙漠',
+               valley:'丧尸山谷',lava:'熔岩谷',bone:'白骨地',ice:'寒冰谷',rift:'合体山谷'};
+let mapN=loadInt('moday_map',1,1,4);           // 藏宝图已解锁几块
 let pickBG=LS.get('moday_bgcur','forest');   // 小朋友选的战场：一个场景贯穿三关＋BOSS
-if(BG_ORDER.indexOf(pickBG)<0||BG_ORDER.indexOf(pickBG)>=mapN)pickBG='forest';
+if(MAP_ORDER.indexOf(pickBG)<0||MAP_ORDER.indexOf(pickBG)>=mapN)pickBG='forest';
 let curBG='forest';                          // 当前画的战场
+function curStage(){return STAGES[Math.min(G.stage,STAGES.length)-1];}
 function applyStageBG(){
+  const d=curStage();
+  /* 第二章（关 4~7）：背景由关卡决定，一关一块，打完就换 */
+  if(d.ch===2){curBG=d.bg;return;}
   curBG=pickBG;                              // 选哪个场景，第 1~3 关＋BOSS 都在这个场景
   if(BG_ORDER.indexOf(curBG)>=mapN)curBG='forest';
 }
@@ -1231,8 +1744,29 @@ const VTEXT={
   mymd:'我的末日',tagline:'方块人大战方块僵尸，嵇焕宸和爸爸的第一个小游戏',
   char_thin:'迷彩小战士，焕宸',char_fat:'冲锋战士，焕宸爸爸',
   bg_forest:'发光森林',bg_city:'破破城市',bg_desert:'太阳沙漠',
+  bg_valley:'丧尸山谷',bg_lava:'熔岩谷',bg_bone:'白骨地',bg_ice:'寒冰谷',bg_rift:'合体山谷',
   boss_forest:'藤蔓僵王',boss_city:'铁皮僵王',boss_desert:'沙暴僵王',
+  boss_furnace:'背炉火柱王',boss_hammer:'骨锤独腿王',boss_drag:'拖地长臂王',boss_finale:'三王合体',
+  /* unite 只用设计记录 4.5 的定稿句＋一句「谁会开枪」，压在 20 字左右：
+     三只同场时登场串不能比单只大王（名字＋coming＋星星 ≈10 秒）更长，
+     否则火柱、震波、横扫全在这句话念完前砸下来，小朋友是挨着打听完的。
+     「现在是××王主攻」由接力轮换时的 zhugong 单独念，这里不重复。 */
+  unite:'三只大王合在一起啦！只有头顶光环的会开枪！',
+  allok:'丧尸山谷全部打完！你就是末日小英雄！',
+  choosewin:'选一个吧：回藏宝图，看看新的一块战场！',
   coming:'来啦！它会发射子弹，看到冒烟就赶紧换路躲开！',
+  /* 第二章三只大王的登场警告（文案见设计记录 4.2）：只讲它怎么打人、该怎么躲，
+     名字由 boss_xxx 那一句先念，所以这里不再重复「××王」。 */
+  warn_furnace:'它没有手，会朝你站的那条路喷火，看到地上发红就换路！',
+  warn_hammer:'它只会一跳一跳，锤子举高高就是要砸，赶紧跑远一点！',
+  warn_drag:'它的手拖在地上扫你，它只有一只眼睛看得见，换到它看不到的一边！',
+  zhugong:'现在是它主攻！盯住它头顶的光环！',
+  /* 五种丧尸兵种第一次上场时各报一次名（一只一句，念完就完，不刷屏） */
+  zb_fire:'会炸火的火焰丧尸，别站太近！',
+  zb_hole:'破了个洞的丧尸，走得慢，血多！',
+  zb_notch:'缺牙丧尸，走路扭来扭去会换路！',
+  zb_oneeye:'独眼丧尸，会突然加速冲过来！',
+  zb_ice:'冰封丧尸，血最厚，用寒冰球冻它！',
   rage1:'小心！',rage2:'狂暴啦！',unlock:'还没解锁，先打赢',
   di:'第',guanwin:'关打赢啦！马上进入第',guan:'关',next:'马上进入下一关',
   congrats:'恭喜你！打败了',choose:'选一个吧：回首页，或者进下一关！',
@@ -1404,8 +1938,29 @@ let loopN=1;          // 第几轮世界：每打败一个BOSS并进下一块战
 const STAGES=[
     {quota:20,v:48,gap:2.4,cap:6,p2:0.25,p3:0},     // 第 1 关：一局更短、出怪更勤，偶尔 2 路同来
     {quota:24,v:62,gap:2.0,cap:7,p2:0.30,p3:0.10},  // 第 2 关：更密更快，2~3 路同时来
-    {quota:28,v:78,gap:1.7,cap:8,p2:0.35,p3:0.18}   // 第 3 关：又快又挤、多路齐发，打完出大 BOSS
+    {quota:28,v:78,gap:1.7,cap:8,p2:0.35,p3:0.18,boss:true},  // 第 3 关：又快又挤、多路齐发，打完出大 BOSS
+    /* ── 第二章「丧尸来了」（关 4~7）：焕宸说前面的简单了点，所以整体难一档。
+       这一章的数值全部写死（ch:2 ⇒ stCfg 直接返回，不乘 SCENES、不按 loopN 加码），
+       背景随关卡换（bg），大王用 ZB 表（boss），小兵按 kind 权重混编。 */
+    {ch:2,bg:'lava', boss:'furnace',quota:26,v:66,gap:2.0,cap:8, p2:0.40,p3:0.12,kind:{fire:100}},
+    {ch:2,bg:'bone', boss:'hammer', quota:32,v:78,gap:1.75,cap:9,p2:0.45,p3:0.20,kind:{hole:50,fire:35,oneeye:15}},
+    {ch:2,bg:'ice',  boss:'drag',   quota:38,v:90,gap:1.55,cap:10,p2:0.50,p3:0.28,kind:{notch:45,hole:25,ice:15,fire:15}},
+    {ch:2,bg:'rift', boss:'finale',finale:true,quota:0,v:66,gap:9,cap:0,p2:0,p3:0,kind:{}}  // 终章：不出小怪，三只大王直接合体
   ];
+/* 第二章五种丧尸兵种（设计记录 4.1：外形给的暗示 → 只此一条机制）。
+   hp＝血量，vm＝本关基准移速的倍率，s＝体型（depthS 的基准值，第一章普通僵尸沿用 70）；
+   boom＝被打死时「啪」炸一小团火，只烧同路贴身范围（趁它在右边就打死）；
+   frzMul＝寒冰球打进胸口大洞／冰壳上，冻得更久（用寒冰球打它更划算）；
+   turnT＝每隔几秒随机换一条路（咬不动所以走位扭来扭去）；
+   dash＝进场蓄力几秒（这段时间速度用 vm0），然后猛地提速到 vm（独眼冲刺兵）。
+   第一章的僵尸没有 type，走原来「hp1 / v×1 / s70 / 只会直线走」这条路，数值一字不变。 */
+const KIND={
+  fire  :{name:'火焰丧尸',hp:1,s:58, vm:1.0,boom:150},
+  hole  :{name:'破洞丧尸',hp:3,s:70, vm:0.7,frzMul:2.0},
+  notch :{name:'缺牙丧尸',hp:1,s:54, vm:1.5,turn:1.4},
+  oneeye:{name:'独眼丧尸',hp:1,s:58, vm:2.0,vm0:0.9,dash:1.0},
+  ice   :{name:'冰封丧尸',hp:4,s:64, vm:0.6,frzMul:1.5}
+};
 /* 场景分级：森林最轻松，城市略难，沙漠最难。同一关在不同场景里按下面的增量整体加码，
    保证「一个场景比前一个场景更难一点」，但幅度温和，仍在能通关的范围内 */
 const SCENES=[
@@ -1416,22 +1971,57 @@ const SCENES=[
 /* BOSS 分级：能力逐场景叠加（A 定期子弹 / B 多路弹幕 / D 召唤小怪 / E 血厚＋半血狂暴）
    森林＝A+E，城市＝A+B+E，沙漠＝A+B+E+D。数字偏轻松：子弹有预警、按路飞、切路就能躲 */
 const BOSSCFG=[
-    {name:'藤蔓僵王',hp:10,fireT:2.6,lanes:1,bspd:200,v:34,p2Fire:2.0,p2Lanes:1,minions:false,minionT:99,minionCap:0},  // 森林
-    {name:'铁皮僵王',hp:12,fireT:2.4,lanes:1,bspd:210,v:30,p2Fire:1.8,p2Lanes:2,minions:false,minionT:99,minionCap:0},  // 城市：子弹和走速略降，简单一点点
-    {name:'沙暴僵王',hp:14,fireT:2.2,lanes:2,bspd:220,v:30,p2Fire:1.6,p2Lanes:2,minions:true, minionT:4.0,minionCap:2}  // 沙漠：子弹和走速略降，简单一点点
+    {name:'藤蔓僵王',warnKey:'coming',hp:10,fireT:2.6,lanes:1,bspd:200,v:34,p2Fire:2.0,p2Lanes:1,minions:false,minionT:99,minionCap:0},  // 森林
+    {name:'铁皮僵王',warnKey:'coming',hp:12,fireT:2.4,lanes:1,bspd:210,v:30,p2Fire:1.8,p2Lanes:2,minions:false,minionT:99,minionCap:0},  // 城市：子弹和走速略降，简单一点点
+    {name:'沙暴僵王',warnKey:'coming',hp:14,fireT:2.2,lanes:2,bspd:220,v:30,p2Fire:1.6,p2Lanes:2,minions:true, minionT:4.0,minionCap:2}  // 沙漠：子弹和走速略降，简单一点点
   ];
+/* 第二章三只大王（焕宸选的 1B 背炉火柱王 / 2B 骨锤独腿王 / 3B 拖地长臂王）。
+   血 18/20/22 ＝ 第一章的约 1.5~1.6 倍，但因为多了武器，实际时长差不多；
+   lanes 2/2/3 仍受 bossTargetLanes 约束（永远留 2 条安全路）。
+   finHp ＝ 终章合体时三只的血量（12/14/16，总 42）；合体后不再各自加血。 */
+/* mech ＝这只大王的招式分派键（stepBossMech 按它走对应那套），
+   atkT/atkT2 ＝这招隔几秒来一次（半血狂暴后），warn ＝地面预警秒数，
+   warnKey ＝登场那句警告的语音 key（名字由 boss_xxx 先念，这里只讲怎么躲）。 */
+const ZB={
+  furnace:{name:'背炉火柱王',warnKey:'warn_furnace',mech:'furnace',hp:18,fireT:2.2,lanes:2,bspd:230,v:66,p2Fire:1.6,p2Lanes:3,minions:false,minionT:99,minionCap:0,weak:'head',atkT:3.2,atkT2:2.2,warn:0.8},
+  hammer :{name:'骨锤独腿王',warnKey:'warn_hammer', mech:'hammer', hp:20,fireT:2.0,lanes:2,bspd:240,v:66,p2Fire:1.4,p2Lanes:3,minions:false,minionT:99,minionCap:0,weak:'hammer',atkT:3.6,atkT2:2.4,warn:0.8},
+  drag   :{name:'拖地长臂王',warnKey:'warn_drag',   mech:'drag',   hp:22,fireT:1.8,lanes:3,bspd:250,v:66,p2Fire:1.2,p2Lanes:3,minions:true, minionT:6.0,minionCap:2,weak:'eye',  atkT:4.2,atkT2:2.8,warn:1.0},
+  finale :{name:'三王合体',  hp:42,fireT:2.0,lanes:3,bspd:250,v:66,p2Fire:1.4,p2Lanes:3,minions:true, minionT:7.0,minionCap:2,
+           trio:['furnace','hammer','drag'],finHp:[12,14,16]}
+};
+const ZB_KEY={'背炉火柱王':'boss_furnace','骨锤独腿王':'boss_hammer','拖地长臂王':'boss_drag','三王合体':'boss_finale'};
+function bossVoiceKey(name){return BOSS_KEY[name]||ZB_KEY[name]||'boss_forest';}
 let zid=1;            // 僵尸编号：穿透弹/回旋镖靠它记住"打过谁"，一只只吃一次伤害
 const G={
   score:0, hearts:3, bonus:0, stage:1, kills:0, quota:20,
   zs:[], bls:[], ps:[], ebs:[], cs:[], bolts:[],
   spawnT:1.2, bossOut:false, bossDone:false, shake:0,
+  bossName:'',
   flash:0, laser:null,
+  /* gts＝地面威胁（大王招式落地的火柱/火苗坑/震波/横扫，全部「先预警后生效」）
+     bossHold/auraI/auraT/finRage＝终章：全场停手秒数／谁头顶光环当主攻／距上次轮换／三只总血是否已过半 */
+  gts:[], bossHold:0, auraI:-1, auraT:0, finRage:false,
+  /* seen＝这一局里已经用语音报过名的丧尸兵种（每种只报第一次，之后靠眼睛认） */
+  seen:{},
   hero:{x:230,y:laneY(2),tx:230,ty:laneY(2),lane:2,inv:0,cd:0.6,fire:0}
 };
 function sceneIdx(){const i=BG_ORDER.indexOf(curBG);return i<0?0:i;}
+function isBossStage(){return !!curStage().boss;}          // 本关结尾有大王（一章的关3／二章的关4~7）
+function isFinalStage(){return !!curStage().finale;}       // 终章：三王合体，打掉才算通关
+/* 要不要弹结算面板：第一章打完大王＝章末（解锁藏宝图下一块）；
+   第二章的关 4/5/6 打完大王只是过一关，只有终章三王合体全倒才通关 */
+function isChapterEnd(){const d=curStage();return !!d.finale||(d.ch!==2&&!!d.boss);}
+/* 本关大王配置：第二章查 ZB，第一章仍按当前战场查 BOSSCFG */
+function bossCfg(){
+  const d=curStage();
+  return (d.ch===2&&ZB[d.boss])||BOSSCFG[sceneIdx()]||BOSSCFG[0];
+}
 /* 本关实际配置＝关卡基准 × 场景增量（每次返回新对象，只读属性，安全） */
 function stCfg(){
-  const b=STAGES[Math.min(G.stage,STAGES.length)-1];
+  const b=curStage();
+  /* 第二章：数值按定稿 v1 写死，不再乘场景系数、不随轮次加码——
+     这一章的难度靠「血厚的小兵＋地面威胁＋大王招式」堆，不靠数字膨胀 */
+  if(b.ch===2)return {quota:b.quota,v:b.v,gap:b.gap,cap:b.cap,p2:b.p2,p3:b.p3,kind:b.kind,ch:2};
   const s=SCENES[sceneIdx()]||SCENES[0];
   const lv=Math.max(1,Math.min(10,loopN));      // 每进一块新战场只加一点点
   return {
@@ -1449,11 +2039,13 @@ function depthS(y,base,span){
 }
 function heroS(){return depthS(G.hero.y,86,30);}   // 远近大小差拉大＝更立体（人物画法不变）
 
-function resetGame(){
-  G.score=0;G.hearts=3;G.bonus=0;G.stage=1;G.kills=0;
+function resetGame(stage){
+  G.score=0;G.hearts=3;G.bonus=0;G.stage=stage||1;G.kills=0;
   G.zs.length=0;G.bls.length=0;G.ps.length=0;G.ebs.length=0;
   G.bolts.length=0;G.cs.length=0;G.flash=0;G.laser=null;
+  clearGts();
   G.bossOut=false;G.bossDone=false;G.spawnT=1.1;G.shake=0;
+  G.seen={};                                  // 重开一局＝丧尸兵种重新报一遍名
   const h=G.hero;
   h.x=h.tx=230;h.lane=2;h.y=h.ty=laneY(2);h.inv=0;h.cd=0.5;h.fire=0;
   applyStageBG();                             // 重新玩＝回第 1 关（用选好的那个场景）
@@ -1466,15 +2058,64 @@ function nextStage(){
   G.quota=stCfg().quota;
   G.zs.length=0;G.bls.length=0;G.ebs.length=0;G.spawnT=1.1;
   G.bolts.length=0;G.cs.length=0;G.flash=0;G.laser=null;
+  clearGts();
   G.hearts=Math.min(3,G.hearts+1);          // 过关奖励一颗心
   resetFlags();                             // 下一关旗子重新立满
 }
-function spawnZombie(lane){
+/* 出一只丧尸。type 不传＝第一章的普通绿僵尸（血 1、只走直线），传了＝第二章的五种兵种。
+   v 是「当前速度」：独眼丧尸进场先慢后快，靠 v0/v 两个值切换，不动公式。 */
+function spawnZombie(lane,type){
   const c=stCfg();
+  const k=type?KIND[type]:null;
   if(lane==null)lane=Math.floor(Math.random()*LANES);
-  const y=laneY(lane);
-  G.zs.push({x:GW+80,y,lane,s:depthS(y,70,30),ph:Math.random()*6,
-    boss:false,hp:1,hpMax:1,v:c.v*(0.92+Math.random()*0.16),die:0,dieT:0,sq:0,id:zid++,frz:0});
+  const y=laneY(lane),sB=k?k.s:70;
+  const vm=k?(k.dash?k.vm0:k.vm):1,j=0.92+Math.random()*0.16;
+  const z={x:GW+80,y,lane,sB,s:depthS(y,sB,30),ph:Math.random()*6,
+    boss:false,type:type||'',hp:k?k.hp:1,hpMax:k?k.hp:1,v:c.v*vm*j,
+    die:0,dieT:0,sq:0,id:zid++,frz:0};
+  if(k){
+    if(k.dash){z.v0=c.v*k.vm0*j;z.vH=c.v*k.vm*j;z.dashT=k.dash;}   // 冲刺兵：蓄力 k.dash 秒后猛地提速
+    if(k.turn)z.turnT=k.turn*(0.7+Math.random()*0.8);              // 扭来扭去：每隔一会儿换一条路
+  }
+  G.zs.push(z);
+  /* 每种新兵种这一局第一次上场时报一次名（小朋友不识字，靠耳朵认人；报过就交给眼睛） */
+  if(type&&!G.seen[type]){G.seen[type]=1;sayWhenFree(['zb_'+type],()=>mode==='play');}
+}
+/* 按本关 kind 权重抽一个兵种（第一章没有 kind，返回空＝老僵尸） */
+function pickType(){
+  const kd=curStage().kind;
+  if(!kd)return '';
+  let tot=0;for(const t in kd)tot+=kd[t];
+  if(!tot)return '';
+  let r=Math.random()*tot;
+  for(const t in kd){r-=kd[t];if(r<0)return t;}
+  return '';
+}
+/* 第二章兵种行为（见 KIND 表：每只只有「一条」机制，小朋友一眼看得懂）
+   独眼丧尸＝进场蓄力 1 秒后猛地提速；缺牙丧尸＝每隔一会儿随机换一条路（扭来扭去）。
+   第一章的僵尸两个计时器都不存在，这个函数直接什么都不做。 */
+function stepMinion(z,dt){
+  if(z.dashT>0){                                    // 独眼：蓄力中（先慢），时间到就蹿出去
+    z.dashT-=dt;
+    if(z.dashT<=0){
+      z.v=z.vH;z.sq=0.18;                           // 提速＋猛地缩一下＝看得见的「它冲了」
+      puffFX(G.ps,z.x+z.s*0.4,z.y-z.s*0.18,0.5);
+    }
+    return;
+  }
+  if(z.turnT>0){                                    // 缺牙：换路倒计时
+    z.turnT-=dt;
+    if(z.turnT<=0){
+      let nl;do{nl=Math.floor(Math.random()*LANES);}while(nl===z.lane);
+      z.tY=laneY(nl);z.turnT=KIND.notch.turn*(0.7+Math.random()*0.8);
+      puffFX(G.ps,z.x,z.y-z.s*0.4,0.5);             // 挪之前冒一团烟＝沿用大王「我要动了」那套预警语言
+    }
+  }
+  if(z.tY!=null&&z.y!==z.tY){                       // 横着挪过去（比走路快一点，看得清它换了哪条路）
+    const dy=z.tY-z.y,st=210*dt;
+    z.y=Math.abs(dy)<=st?z.tY:z.y+(dy>0?st:-st);
+    z.lane=laneOf(z.y);z.s=depthS(z.y,z.sB,30);     // 挪到哪条路就属于哪条路，体型跟着纵深变
+  }
 }
 /* 出一波怪：按本关概率决定 1~3 只，且分别落在互不相同的路上（不叠路），受同屏上限约束 */
 function spawnWave(){
@@ -1488,26 +2129,52 @@ function spawnWave(){
   if(n>room)n=room;
   const lanes=[];for(let i=0;i<LANES;i++)lanes.push(i);
   for(let i=lanes.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=lanes[i];lanes[i]=lanes[j];lanes[j]=t;}
-  for(let k=0;k<n;k++)spawnZombie(lanes[k]);
+  for(let k=0;k<n;k++)spawnZombie(lanes[k],pickType());
+}
+/* 生成一只大王（第一章每关 1 只；终章调三次，三只同场） */
+function makeBoss(cfg,hp,lane,xOff){
+  const y=laneY(lane);
+  const z={x:GW+xOff,y,lane,s:depthS(y,138,40),ph:0,boss:true,hp,hpMax:hp,
+    v:cfg.v||34,die:0,dieT:0,tY:y,swT:2.0,sq:0,lv:Math.max(1,Math.min(10,loopN)),id:zid++,frz:0,
+    minX:GW*0.68,                                 // 靠右站位的下限；终章三只各自再往后挪，站成阶梯
+    cfg,phase:1,fireT:1.6,tele:0,teleLanes:[],minionT:cfg.minionT,   // fireT＝几秒后开火，tele＝预警剩余
+    /* 第二章招式状态：weakT/weakMul＝破绽窗口；furnT/emberT＝炉子；hopT/slamSt/slamLeft＝骨锤；
+       swpSt＝长臂；aura/auraHp＝终章接力主攻。第一章大王没有 mech，这些字段只是躺着不动。 */
+    weakT:0,weakMul:1,weakHits:0,furnT:0,emberT:1.2,
+    atkT:(cfg.atkT||99)*0.7,hopT:1.6,slamSt:0,slamT:0,slamLeft:0,
+    swpSt:0,swpT:0,eyeLane:2,aura:0,auraHp:0,trioI:0};
+  G.zs.push(z);
+  return z;
 }
 function spawnBoss(){
-  const cfg=BOSSCFG[sceneIdx()]||BOSSCFG[0];   // 本场景的 BOSS 强度／能力
-  const lv=Math.max(1,Math.min(10,loopN));     // BOSS 也随新战场轮次略微加血、加速（封顶 10，和 stCfg 一致）
-  const hp=Math.min(99,Math.round(cfg.hp*(1+(lv-1)*0.05)));
-  const lane=1+Math.floor(Math.random()*(LANES-2));
-  const y=laneY(lane);
+  const d=curStage(),cfg=bossCfg();          // 第一章＝本战场 BOSSCFG；第二章＝ZB 里的大王
+  const lv=Math.max(1,Math.min(10,loopN));   // 第一章 BOSS 随轮次略微加血；第二章数值写死，不加成
   for(const z of G.zs){                       // 场上普通僵尸转身撤退，不硬清
     if(!z.boss&&!z.die){z.leave=true;z.ph=0;}   // 只标记转身撤退，不当场冒烟（烟留到走出屏幕后再冒）
   }
   G.ebs.length=0;
-  G.zs.push({x:GW+150,y,lane,s:depthS(y,138,40),ph:0,boss:true,hp,hpMax:hp,
-    v:cfg.v||34,die:0,dieT:0,tY:y,swT:2.0,sq:0,lv,id:zid++,frz:0,
-    cfg,phase:1,fireT:1.6,tele:0,teleLanes:[],minionT:cfg.minionT});   // fireT＝几秒后开火，tele＝预警剩余
-  G.bossOut=true;
-  /* BOSS 战礼物：第 1/2/3 个 BOSS 分别送 1/2/3 颗星星。
+  clearGts();                                 // 大王登场前把地面火苗/震波全部抹掉，进场那一下是干净的
+  /* BOSS 战礼物：第一章按战场送 1/2/3 颗星星；第二章大王送 2 颗，终章三只合体送 3 颗。
      星星＝多出来的命（挨打先扣星星，扣完才扣红心），
      小朋友输得起才敢练走位，不会一挨打就崩 */
-  const starN=sceneIdx()+1;
+  const starN=d.ch===2?(cfg.trio?3:2):sceneIdx()+1;
+  if(cfg.trio){
+    /* 终章：三只大王同场，上/中/下三路各一只，x 前后错开（谁当主攻由 stepFinale 轮换）。
+        最上面那排离三条血条最近（路 0 的 u=138/58≈2.38，火柱举到顶点会顶进血条），所以让最矮的独眼王走最上排，
+       火柱王、骨锤王这两个最高的走中排和下排——实测顶点分别落在 y=193／280／132，都够不着血条。 */
+    const lanes=[2,4,0];
+    for(let i=0;i<cfg.trio.length;i++){
+      const b=makeBoss(ZB[cfg.trio[i]],cfg.finHp[i],lanes[i%LANES],150);
+      b.trioI=i;                                 // 接力主攻按这个编号轮换（stepFinale 每 12 秒或打掉 5 血换人）
+      b.minX=GW*(0.68+i*0.07);                   // 越往下站得越靠右，三只错开成阶梯，一眼分得清谁是谁
+    }
+    G.bossName=cfg.name;
+  }else{
+    const hp=d.ch===2?cfg.hp:Math.min(99,Math.round(cfg.hp*(1+(lv-1)*0.05)));
+    makeBoss(cfg,hp,1+Math.floor(Math.random()*(LANES-2)),150);
+    G.bossName=cfg.name;
+  }
+  G.bossOut=true;
   G.bonus=starN;
   updateHUD();
   /* 星星从主角身上炸开一小圈，让小朋友一眼看到"来星星了" */
@@ -1523,7 +2190,8 @@ function spawnBoss(){
   banner('💀 '+cfg.name+' 来啦！⭐×'+starN,3.5);   // 比原来 1.5 秒长一倍，名字看得清；但打斗中大字不能久留，免得挡住子弹
   sfx('boss');
   /* 台词缩短：原来 34 字要读 9.5 秒，期间打到半血就会被"狂暴"那句顶掉，安全提示听不完 */
-  say([BOSS_KEY[cfg.name]||'boss_forest','coming','star'+starN]);
+  if(cfg.trio)say(['boss_finale','unite','star3']);
+  else say([bossVoiceKey(cfg.name),cfg.warnKey,'star'+starN]);
 }
 /* 选目标路：离主角最近的路优先，最多 count 条，且永远留至少 2 条安全路（可躲） */
 function bossTargetLanes(count){
@@ -1541,43 +2209,229 @@ function bossFire(z){
   puffFX(G.ps,z.x-z.s*0.34,z.y-z.s*0.5,z.s/70);
   sfx('bossShoot');
 }
+/* ========== 第二章：地面威胁 + 三只大王的招式 ==========
+   铁律（小朋友不识字，只能靠眼睛）：任何能伤到他的东西，都要先在路面「看得见地发红/变暗」够久。
+   所以 addGt 把预警时长一律抬到 ≥0.5 秒兜底，谁写招式都别想漏。
+   一条威胁的生命周期：warn（路面预警）→ dur（真的会伤人）→ 自己消失；hit 让它一次最多只扣一下。 */
+function clearGts(){G.gts.length=0;G.bossHold=0;G.auraI=-1;G.auraT=0;G.finRage=false;}
+function addGt(e){e.t=0;e.hit=0;e.warn=Math.max(0.5,e.warn||0.6);G.gts.push(e);return e;}
+function gWarn(z,w){return (isFinalStage()&&z.phase===2)?Math.max(1.2,w):w;}   // 合体狂暴：地面预警一律拉到 1.2 秒
+function quakeLanes(l){const a=[];for(const d of[-1,0,1]){const x=l+d;if(x>=0&&x<LANES)a.push(x);}return a;}
+function gtHit(e){
+  const h=G.hero,ls=e.lanes||[e.lane];
+  if(ls.indexOf(h.lane)<0)return false;
+  if(e.kind==='quake')return true;                       // 震波铺满三条路：只有离它两条路以上才绝对安全
+  if(e.kind==='sweep')return Math.abs(h.x-e.x)<=e.w;     // 长臂横扫：暗影扫到哪儿烧到哪儿，换路是唯一躲法
+  return Math.abs(h.x-e.x)<=(e.kind==='pool'?40:48);     // 火柱／火苗：挪开身子或换条路都躲得掉
+}
+function stepGts(dt){
+  const h=G.hero;
+  for(let i=G.gts.length-1;i>=0;i--){
+    const e=G.gts[i];e.t+=dt;
+    const a=e.t-e.warn;
+    if(e.kind==='sweep'&&a>0)e.x=GW+50-(GW+70-XMIN)*(a/e.dur);   // 手臂从右边一路拖到左边
+    if(a>=0&&a<=e.dur&&mode==='play'&&h.inv<=0&&!e.hit&&gtHit(e)){
+      e.hit=1;hurt();
+      if(mode!=='play')return;                          // 已经 gameOver
+    }
+    if(e.t>=e.warn+e.dur)G.gts.splice(i,1);
+  }
+}
+/* 弱点窗口＝招式打完露出的那 1~2 秒破绽，不是屏幕上某个像素。
+   为什么不用「打中头部坐标」判定：主角的子弹只认同一条路、而且一律打在路中心线上，
+   靠 y 偏移区分头/身子根本不可靠；规格原文本来也是时间语义（卡锤那 1.5 秒打头、收臂那一下打眼）。 */
+function openWeak(z,mul,secs){z.weakMul=mul;z.weakT=Math.max(z.weakT||0,secs);}
+function weakFx(z){
+  const k=z.s/52,w=weakPos(z),cx=w.x,cy=w.y;            // 金星从真正露出来的那个零件上炸开
+  for(let i=0;i<7;i++){
+    const an=Math.random()*Math.PI*2,v=110+Math.random()*140;
+    G.ps.push({kind:'star',x:cx,y:cy,vx:Math.cos(an)*v,vy:Math.sin(an)*v-50,
+      life:0.45,t:0,c:i%2?'#fff176':'#ffd740',r:4.5*k+2,rot:Math.random()*6,vr:(Math.random()-0.5)*14,g:1});
+  }
+  G.ps.push({kind:'ring',x:cx,y:cy,vx:0,vy:0,life:0.26,t:0,c:'#ffd740',r:8,gr:250,g:0});
+  sfx('coin');
+}
+/* 1B 背炉火柱王：往主角那条路吐火柱（地面先发红再窜火），走路一路掉火星。
+   破绽＝吐完火柱炉门开着，这 1.8 秒打它背后发红的炉膛 ×2，攒够四次炉子「哐」地塌、火柱停 2 秒。 */
+function mechFurnace(z,dt){
+  if(z.furnT>0){z.furnT-=dt;}                           // 炉子塌了：这两秒吐不出火柱
+  z.emberT-=dt;
+  if(z.emberT<=0){
+    z.emberT=(z.phase===2?0.7:1.25)*(0.8+Math.random()*0.5);
+    addGt({kind:'pool',lane:z.lane,x:z.x-z.s*0.34,warn:0.6,dur:3.0});   // 火星落地先烫红一下，再窜火苗烧 3 秒
+    for(let i=0;i<3;i++){
+      G.ps.push({kind:'smoke',x:z.x+z.s*0.26,y:z.y-z.s*0.95,vx:-40-Math.random()*46,vy:-16+Math.random()*26,  // 从背上炉顶冒
+        life:0.5,t:0,c:i%2?'#ffca28':'#ff7043',r:3+Math.random()*3,gr:10,g:1});
+    }
+  }
+  if(z.furnT>0)return;
+  z.atkT-=dt;
+  if(z.atkT>0)return;
+  z.atkT=(z.phase===2?z.cfg.atkT2:z.cfg.atkT)*(0.85+Math.random()*0.3);
+  for(const ln of bossTargetLanes(z.phase===2?2:1))     // 狂暴＝一次烧两条路
+    addGt({kind:'pillar',lane:ln,x:Math.max(XMIN+40,Math.min(GW-80,G.hero.x)),warn:gWarn(z,z.cfg.warn),dur:z.phase===2?0.85:0.6});
+  openWeak(z,2,1.8);
+  sfx('bossShoot');
+}
+function furnaceBreak(z){
+  z.furnT=2.0;z.weakHits=0;
+  banner('💥 炉子塌啦！',1.8);sfx('boom');G.shake=Math.max(G.shake,0.8);addHitStop(0.1);
+  const w=weakPos(z);                                       // 烟从背上那只炉子上冒，不是凭空冒
+  for(let i=0;i<14;i++){
+    G.ps.push({kind:'smoke',x:w.x+(Math.random()-0.5)*z.s*0.5,y:w.y-z.s*0.1,
+      vx:(Math.random()-0.5)*70,vy:-30-Math.random()*70,life:0.6+Math.random()*0.3,t:0,
+      c:i%3===0?'#ffca28':(i%3===1?'#ff7043':'#8d6e63'),r:5+Math.random()*6,gr:14,g:1});
+  }
+  G.ps.push({kind:'ring',x:w.x,y:w.y,vx:0,vy:0,life:0.32,t:0,c:'#ffb74d',r:10,gr:260,g:0});
+}
+/* 2B 骨锤独腿王：不换路，只单脚蹦到隔壁那条路（蹦前先把骨锤往那边歪）。
+   一式三步：举锤（地面发红 0.8 秒）→ 砸下（左右各一条路也吃震波）→ 锤子卡地 1.5 秒＝打头 ×3。 */
+function raiseHammer(z){
+  z.slamSt=1;z.slamT=gWarn(z,z.cfg.warn);
+  addGt({kind:'quake',lanes:quakeLanes(z.lane),warn:z.slamT,dur:0.36});
+}
+function mechHammer(z,dt){
+  if(z.slamSt===1){                                   // 举锤中：这一步它什么都不干，小朋友只看得到「要砸哪」
+    z.slamT-=dt;
+    if(z.slamT<=0){
+      z.slamSt=2;z.slamT=1.5;openWeak(z,3,1.5);       // 砸下去＝卡地 1.5 秒，打头 ×3 的窗口
+      G.shake=Math.max(G.shake,0.8);addHitStop(0.06);sfx('boom');
+      for(const ln of quakeLanes(z.lane))puffFX(G.ps,z.x-z.s*0.2,laneY(ln)-4,z.s/70);
+    }
+    return;
+  }
+  if(z.slamSt===2){                                   // 卡地：站着挨打
+    z.slamT-=dt;
+    if(z.slamT<=0){
+      z.slamSt=0;
+      if(z.slamLeft>0){z.slamLeft--;raiseHammer(z);}  // 半血狂暴＝连砸两下
+      else z.atkT=(z.phase===2?z.cfg.atkT2:z.cfg.atkT)*(0.9+Math.random()*0.25);
+    }
+    return;
+  }
+  z.atkT-=dt;
+  if(z.atkT<=0){z.slamLeft=z.phase===2?1:0;raiseHammer(z);return;}
+  z.hopT-=dt;
+  if(z.hopT<=0&&z.y===z.tY){                          // 只蹦隔壁一条路，不会满场乱跳
+    const nl=Math.max(0,Math.min(LANES-1,z.lane+(Math.random()<0.5?-1:1)));
+    if(nl!==z.lane){z.tY=laneY(nl);z.hopT=2.4+Math.random()*1.4;}
+    else z.hopT=0.6;
+  }
+}
+/* 3B 拖地长臂王：贴地横扫（地面先出现一条越来越长的暗影），手臂够得着两条路。
+   独眼＝它亮着眼睛照着的那几条路才会挨子弹，绕到盲侧它打的是你刚才站的地方。
+   破绽＝手臂扫完收回那一下，打独眼 ×2。 */
+function mechDrag(z,dt){
+  if(z.swpSt){                                        // 手臂甩出去＋收回来这段时间它腾不出手
+    z.swpT-=dt;
+    if(z.swpT<=0){
+      z.swpSt=0;openWeak(z,2,1.2);
+      z.atkT=(z.phase===2?z.cfg.atkT2:z.cfg.atkT)*(0.9+Math.random()*0.25);
+    }
+    return;
+  }
+  z.atkT-=dt;
+  if(z.atkT>0)return;
+  z.swpSt=1;
+  const w=gWarn(z,z.cfg.warn);
+  addGt({kind:'sweep',lanes:bossTargetLanes(2),x:GW+50,w:54,warn:w,dur:0.85});   // 铺两条路＝永远还剩三条能站
+  z.swpT=w+0.85+0.3;
+  sfx('bossShoot');
+}
+function stepBossMech(z,dt){
+  if(z.cfg.mech==='furnace')mechFurnace(z,dt);
+  else if(z.cfg.mech==='hammer')mechHammer(z,dt);
+  else if(z.cfg.mech==='drag')mechDrag(z,dt);
+}
+/* ---------- 终章：三只大王同场，接力当主攻；三只总血过半一起狂暴 ---------- */
+function pickAura(cur){
+  const bs=[];for(const z of G.zs)if(z.boss&&!z.die)bs.push(z);
+  if(!bs.length)return null;
+  if(!cur)return bs.reduce((a,b)=>b.trioI<a.trioI?b:a);          // 开场（或上一任刚被打倒）：轮次最靠前的先来
+  let next=null,best=9;
+  for(const z of bs){const d=(z.trioI-cur.trioI+3)%3;if(d>0&&d<best){best=d;next=z;}}
+  return next||cur;                                              // 只剩它一只＝不用再换
+}
+function setAura(next,cur){
+  if(cur)cur.aura=0;
+  next.aura=1;next.auraHp=next.hp;G.auraI=next.trioI;G.auraT=12;
+  if(!cur||!isFinalStage())return;
+  G.ebs.length=0;G.bossHold=1.5;                                 // 轮换那一下全场停手 1.5 秒：看得清是谁、听得清是谁
+  for(const z of G.zs)if(z.boss)z.tele=0;
+  banner('⭐ 现在是 '+next.cfg.name+' 主攻！',2.8);sfx('coin');
+  sayWhenFree([bossVoiceKey(next.cfg.name),'zhugong'],()=>mode==='play'||mode==='pause');
+}
+function stepFinale(dt){
+  if(G.bossHold>0)G.bossHold-=dt;
+  G.auraT-=dt;
+  let cur=null;const bs=[];
+  for(const z of G.zs)if(z.boss&&!z.die){bs.push(z);if(z.aura)cur=z;}
+  if(!bs.length)return;
+  let hp=0,mx=0;for(const z of bs){hp+=z.hp;mx+=z.hpMax;}
+  if(!G.finRage&&hp<=mx/2){                                      // 三只总血过半＝合体狂暴：三招连着来
+    G.finRage=true;
+    for(const z of bs){z.phase=2;z.fireT=Math.min(z.fireT,1.0);z.atkT=Math.min(z.atkT,1.2);}
+    banner('🔥 三王合体狂暴啦！',3.2);sfx('boss');
+    sayWhenFree(['rage1','boss_finale','rage2'],()=>mode==='play'||mode==='pause');
+  }
+  if(!cur){const n=pickAura(null);if(n)setAura(n,null);}          // 主攻刚被打倒：安静交棒，不重复播报
+  else if(G.auraT<=0||cur.auraHp-cur.hp>=5){                      // 12 秒到点，或它已被打掉 5 血＝换人
+    const next=pickAura(cur);
+    if(next!==cur)setAura(next,cur);
+    else{cur.auraHp=cur.hp;G.auraT=12;}                           // 只剩它一只＝再给它 12 秒
+  }
+}
+
 /* BOSS：走到场中就站住，随机换路；定期预警后发射子弹；半血狂暴；沙漠还会召唤小怪 */
 function stepBoss(z,dt){
   /* 冻住时不会走到这里：主循环是 if(z.frz>0){计时} else {走路; stepBoss()}，
      所以 BOSS 被冻住时既不挪路也不开火，计时也由主循环统一扣，这里不用再判一次。 */
-  z.x=Math.max(z.x,GW*0.68);                   // 靠右站位，贴脸时子弹也有反应时间
+  z.x=Math.max(z.x,z.minX);                    // 靠右站位，贴脸时子弹也有反应时间（终章三只各停各的线）
+  if(z.weakT>0)z.weakT-=dt;                    // 破绽窗口到点自己关上
+  /* 终章：只有头顶星星的「主攻」会出手；交接那 1.5 秒全场停手。
+     已经亮起的预警（tele）照旧兑现——小朋友看见烟了就一定要等到那发子弹，不能骗他。 */
+  const act=!isFinalStage()||(z.aura&&G.bossHold<=0);
   /* E：血量过半 → 狂暴（射得更快、路数更多） */
   if(z.phase===1&&z.hp<=z.hpMax/2){
     z.phase=2;z.fireT=Math.min(z.fireT,0.8);
-    banner('💢 '+z.cfg.name+' 狂暴啦！',3.5);sfx('boss');   // 同上：打斗中横幅不久留，语音才是主要提醒
-    /* 排队说，不顶掉登场那句：BOSS 只有 10 点血，几秒就打到半血，
-       硬顶会让小朋友永远听不完"看到冒烟就赶紧换路"这个安全提示 */
-    sayWhenFree(['rage1',BOSS_KEY[z.cfg.name]||'boss_forest','rage2'],()=>mode==='play'||mode==='pause');
+    /* 终章不在这儿喊：三只各喊一遍小朋友只听到一片吵，改由 stepFinale 播「三王合体狂暴」 */
+    if(!isFinalStage()){
+      banner('💢 '+z.cfg.name+' 狂暴啦！',3.5);sfx('boss');   // 同上：打斗中横幅不久留，语音才是主要提醒
+      /* 排队说，不顶掉登场那句：BOSS 只有 10 点血，几秒就打到半血，
+         硬顶会让小朋友永远听不完"看到冒烟就赶紧换路"这个安全提示 */
+      sayWhenFree(['rage1',bossVoiceKey(z.cfg.name),'rage2'],()=>mode==='play'||mode==='pause');
+    }
   }
   /* A/B：预警 0.5 秒（冒烟）后发射；间隔与路数取决于是否狂暴 */
   if(z.tele>0){
     z.tele-=dt;
     if(z.tele<=0)bossFire(z);
-  }else{
+  }else if(act){
     z.fireT-=dt;
     if(z.fireT<=0){
       z.fireT=(z.phase===2?z.cfg.p2Fire:z.cfg.fireT)*(0.85+Math.random()*0.3);
       z.teleLanes=bossTargetLanes(z.phase===2?z.cfg.p2Lanes:z.cfg.lanes);
+      if(z.cfg.mech==='drag'&&z.teleLanes.length)z.eyeLane=z.teleLanes[0];   // 独眼照哪条路＝它要射哪条路
       z.tele=0.5;
       puffFX(G.ps,z.x-z.s*0.30,z.y-z.s*0.5,z.s/60);   // 开火前冒烟预警，看得见
     }
   }
   /* D：沙漠 BOSS 定期召唤小怪（稀疏，同屏有上限，不至于压垮） */
-  if(z.cfg.minions){
+  if(act&&z.cfg.minions){
     z.minionT-=dt;
     let m=0;for(const o of G.zs)if(!o.boss&&!o.die)m++;
     if(z.minionT<=0){
       z.minionT=z.cfg.minionT;
-      if(m<z.cfg.minionCap)spawnZombie();
+      /* 终章三只同场：每只最多留 1 个小兵（会召唤的只有骨锤/长臂，加起来＝全场 2 只，淹不死人） */
+      if(m<(isFinalStage()?1:z.cfg.minionCap))spawnZombie(null,pickType());   // 第一章没有 kind 权重＝还是普通绿僵尸；第二章召的是本关兵种
     }
   }
+  /* 第二章：各走各的招式（地面威胁＋破绽窗口） */
+  if(act&&z.cfg.mech)stepBossMech(z,dt);
+  /* 骨锤靠「蹦到隔壁路」移动；任何一只正在出招时也不换路——出招和走位分开，小朋友才读得懂 */
+  const lock=z.cfg.mech==='hammer'||z.slamSt||z.swpSt;
   z.swT-=dt;
-  if(z.swT<=0&&z.y===z.tY){                    // 已经站稳了才换路
+  if(act&&!lock&&z.swT<=0&&z.y===z.tY){         // 已经站稳了才换路
     let nl;do{nl=Math.floor(Math.random()*LANES);}while(nl===z.lane);
     z.tY=laneY(nl);z.swT=2.2+Math.random()*1.8;
     puffFX(G.ps,z.x,z.y-z.s*0.4,z.s/60);       // 换路前冒一团烟，看得见它要动
@@ -1589,10 +2443,33 @@ function stepBoss(z,dt){
 }
 
 /* ---------- 打击 / 受伤 ---------- */
+/* 火焰丧尸的死法：原地炸一小团火，只烧「同一条路 + 贴身范围」的主角。
+   教的那件事：别等它走到脸上了才打死它——趁它还在右边就解决。 */
+function fireBoom(z){
+  const R=KIND.fire.boom;
+  G.ps.push({kind:'ring',x:z.x,y:z.y,vx:0,vy:0,life:0.22,t:0,c:'#ff8a65',r:8,gr:150,g:0});
+  for(let i=0;i<10;i++){                              // 贴地摊开的橙红火舌＋往上蹿的火星，不用白光
+    const c=i%3===0?'#ffca28':(i%3===1?'#ff7043':'#ff5722');
+    G.ps.push({kind:'smoke',x:z.x+(Math.random()-0.5)*R*0.7,y:z.y+(Math.random()-0.5)*10,
+      vx:(Math.random()-0.5)*50,vy:-50-Math.random()*80,life:0.28+Math.random()*0.2,t:0,
+      c,r:4+Math.random()*5,gr:14,g:0});
+  }
+  sfx('boom');
+  const h=G.hero;
+  if(mode==='play'&&h.inv<=0&&h.lane===z.lane&&Math.abs(z.x-h.x)<=R)hurt();
+}
 /* quiet＝爆炸类伤害专用开关。puffFX 是「一个白色光环＋9 团近白色烟雾」，单发子弹打一只僵尸时很好看；
    但爆炸一次能溅射到十来只，十来团白烟在同一帧一起炸开＝整屏白闪一下。爆炸自己有火光，不需要再配白烟。 */
 function hitZ(z,bx,by,dmg,quiet){
-  z.hp-=(dmg||1);
+  /* 破绽窗口（招式打完那 1~2 秒）：打身体照常，这期间伤害翻倍／三倍，还会冒金星＋叮一声。
+     火柱王额外累计：窗口里打够 4 下＝背后炉子「哐」地塌，火柱停 2 秒。 */
+  let d=dmg||1;
+  if(z.boss&&z.weakT>0){
+    d=Math.max(1,Math.round(d*z.weakMul));
+    weakFx(z);
+    if(z.cfg.mech==='furnace'&&++z.weakHits>=4){z.weakHits=0;furnaceBreak(z);}
+  }
+  z.hp-=d;
   z.sq=0.18;                                    // 命中即果冻抖一下（squash&stretch）
   if(z.hp>0){
     sfx('hit');
@@ -1603,7 +2480,9 @@ function hitZ(z,bx,by,dmg,quiet){
     return;
   }
   z.die=z.boss?1.6:0.34; z.dieT=0;   // BOSS 倒下慢一点，庆祝动画才看得清
-  coinBurst(z,z.boss?15:1);          // 掉金币：普通＋1、BOSS＋15（弹出后飞进 HUD 金币盘）
+  /* 掉金币（弹出后飞进 HUD 金币盘）：普通＋1、厚血兵＋2、第一章 BOSS＋15、第二章大王＋20、终章每倒一只＋15 */
+  coinBurst(z,z.boss?(curStage().ch===2&&!isFinalStage()?20:15):(z.hpMax>1?2:1));
+  if(!z.boss&&z.type==='fire')fireBoom(z);   // 火焰丧尸：死的时候「啪」炸一团火，站得近就烧到（所以趁它在右边打死）
   const k=z.s/52;
   if(!quiet)puffFX(G.ps,z.x,z.y-z.s*0.5,k);   // 噗！一团烟
   G.kills++;
@@ -1612,8 +2491,13 @@ function hitZ(z,bx,by,dmg,quiet){
       puffFX(G.ps,z.x-z.s*0.3,z.y-z.s*0.72,k*1.2);
       puffFX(G.ps,z.x+z.s*0.2,z.y-z.s*0.34,k*1.2);
     }
-    G.score+=10;G.bossDone=true;G.shake=1;
+    G.score+=10;G.shake=1;
+    /* 终章三只同场：要全部倒下才算打完（单大王关这个表达式的结果和原来写 true 一样） */
+    G.bossDone=G.zs.every(z=>!z.boss||z.die);
     G.ebs.length=0;                             // BOSS 一倒，它射出的子弹全部消失（松一口气）
+    /* 地上的火柱/震波也跟着停。注意这里只清地面威胁：终章打死一只时如果连 finRage 一起复位，
+       「三王合体狂暴」会重复播报；那些全局状态交给 clearGts（换关／大王登场时才用）。 */
+    G.gts.length=0;
     addHitStop(0.16);                         // BOSS 倒下：长顿帧＋震屏，庆祝打击感
     sfx('boss');
   }else{
@@ -1729,7 +2613,10 @@ function freezeAround(zc,ln,dur){               // dur＝武器表里的 frz（�
   for(const z of G.zs){                         // 冻住命中点周围：|路差|≤1 且 x 距离 ≤170 的僵尸
     if(z.die||z.leave)continue;
     if(Math.abs(z.lane-ln)>1||Math.abs(z.x-zc.x)>170||z.frz>0)continue;
-    z.frz=z.boss?1.0:d;any=true;                // BOSS 只冻 1.0s（普通冻满 d 秒）：寒冰球冷却 1.6s，冻得比冷却还久会把 BOSS 永久定住
+    // BOSS 只冻 1.0s（普通冻满 d 秒）：寒冰球冷却 1.6s，冻得比冷却还久会把 BOSS 永久定住
+    // 破洞丧尸（胸口大洞）/ 冰封丧尸（一身冰壳）吃寒冰球冻得更久＝用对武器更划算
+    const kf=KIND[z.type];
+    z.frz=z.boss?1.0:d*(kf&&kf.frzMul?kf.frzMul:1);any=true;
     for(let i=0;i<5;i++){                       // 冻住时冒几粒冰晶
       const an=Math.random()*Math.PI*2,v=40+Math.random()*70;
       G.ps.push({kind:'smoke',x:z.x+(Math.random()-0.5)*z.s*0.6,y:z.y-z.s*0.5+(Math.random()-0.5)*z.s*0.7,
@@ -1770,6 +2657,7 @@ function useOnce(id){
   OWN.oc[id]=n-1;saveOwn();renderWbar();
   if(id==='bomb'){
     G.ebs.length=0;                             // 魔法炸弹：清空敌方子弹
+    G.gts.length=0;                             // 连地上的火柱/震波一起炸灭（炸弹是「救命道具」，要真能救命）
     for(const z of G.zs){if(!z.die&&!z.leave)hitZ(z,z.x,z.y-z.s*0.5,3);}
     G.flash=0.3;                                // 全屏白闪一下
     sfx('boom');G.shake=1;addHitStop(0.08);
@@ -1811,12 +2699,13 @@ function stepFlags(dt){
 /* ---------- 关卡流程 ---------- */
 function stageClear(){
   if(G.score>best){best=G.score;LS.set('moday_best',String(best));}
-  const wasBoss=(G.stage>=STAGES.length);          // 三关全打通＝打完大 BOSS
+  const wasBoss=isChapterEnd();                    // 打完这一章的最后一战（第一章＝关3大王，第二章＝终章合体）
   if(!wasBoss){
     sfx('win');
     /* 普通关打赢：不弹任何页面，大字横幅＋语音，约 2 秒后自动进下一关（同一场景） */
     mode='inter';interT=2.2;
     G.zs.length=0;G.bls.length=0;G.ps.length=0;G.ebs.length=0;    // 清场，过渡画面干净
+    G.gts.length=0;
     banner('🎉 第 '+G.stage+' 关打赢啦！',2.6);   // 2.2 秒后就进下一关，字幕跟着收尾即可（语音不会被下一句顶掉）
     const c1=numClips(G.stage),c2=numClips(G.stage+1);
     say(c1&&c2?['di'].concat(c1,['guanwin'],c2,['guan']):['next']);
@@ -1829,36 +2718,40 @@ function stageClear(){
 function celebrate(){
   mode='win';winT=0;fwT=0.25;winPanelOn=false;freezeT=T;
   G.flash=0;G.laser=null;G.bolts.length=0;      // 定格画面不再推进 update，特效清干净别冻在屏上
+  G.gts.length=0;
   stopBgm();sfx('win');
   G.hero.inv=0;                                  // 防止定格时主角正处在受伤闪烁的"灭"帧
-  const bi=BG_ORDER.indexOf(curBG);              // 打败哪块战场的 BOSS，就解锁地图下一块
-  if(bi+2>mapN){mapN=Math.min(3,bi+2);LS.set('moday_map',String(mapN));}
+  const bi=MAP_ORDER.indexOf(curBG);             // 打败哪块战场的 BOSS，就解锁地图下一块
+  if(bi>=0&&bi+2>mapN){mapN=Math.min(MAP_ORDER.length,bi+2);LS.set('moday_map',String(mapN));}
   confetti(70);
-  const bb=G.zs.find(z=>z.boss);
-  const bname=(bb&&bb.cfg&&bb.cfg.name)||'大BOSS';
+  const bname=G.bossName||'大BOSS';              // 终章是三王合体，不能用 find(z=>z.boss) 只认一只
   banner('🎉 恭喜你打败了 '+bname+'！',5.5);   // 定格画面没有打斗，字幕陪着语音读完（实测 4.2 秒，慢引擎更久）
   winVoiceDone=false;
   /* 读完置位，stepWin 看到才弹结算面板：语音引擎有快有慢，猜秒数一定会被打断 */
-  say(['congrats',BOSS_KEY[bname]||'boss_forest'],()=>{winVoiceDone=true});
+  say(['congrats',bossVoiceKey(bname)],()=>{winVoiceDone=true});
+  /* 第二章全通关：恭喜那句读完再补一句"全部打完"，横幅不抢「恭喜你打败了」的字幕 */
+  if(isFinalStage())sayWhenFree(['allok'],()=>mode==='win');
 }
 /* 烟花继续放，结算面板浮现：回首页 或 进下一关 */
 function showWinPanel(){
   const ni=BG_ORDER[(BG_ORDER.indexOf(curBG)+1)%BG_ORDER.length];
   $('winSub').textContent='分数 '+G.score+' · 还剩 '+G.hearts+' 颗心'+(G.bonus>0?'、'+G.bonus+' 颗星':'')+' · 最高分 '+best;
-  $('btnWinNext').textContent='➡ 进下一关 · '+BG_NAME[ni];
+  /* 终章打完＝整个游戏通关，没有"下一块战场"可去，按钮回藏宝图 */
+  $('btnWinNext').textContent=isFinalStage()?'🏆 全通关啦 · 回藏宝图':'➡ 进下一关 · '+BG_NAME[ni];
   $('scrWin').classList.add('show');
-  say(['choose']);
+  say([isFinalStage()?'choosewin':'choose']);
 }
 function hideWinPanel(){$('scrWin').classList.remove('show');winPanelOn=false;}
 /* 定格庆祝期间：BOSS 仰倒冒烟、烟花先密后疏一直放、彩花飘，恭喜语音读完后面板浮现 */
 function stepWin(dt){
   winT+=dt;
-  const b=G.zs.find(z=>z.boss);
-  if(b){
+  for(let i=G.zs.length-1;i>=0;i--){              // 终章三只一起倒下：逐个冒烟、逐个消失
+    const b=G.zs[i];
+    if(!b.boss)continue;
     b.dieT+=dt;
     if(b.dieT<b.die&&Math.random()<0.4)              // 倒下过程不断冒烟
       puffFX(G.ps,b.x+(Math.random()-0.5)*b.s*0.8,b.y-Math.random()*b.s*0.9,b.s/56);
-    if(b.dieT>=b.die+0.6)G.zs.splice(G.zs.indexOf(b),1);   // 倒完淡出就消失
+    if(b.dieT>=b.die+0.6)G.zs.splice(i,1);   // 倒完淡出就消失
   }
   fwT-=dt;
   if(fwT<=0){                                    // 先密后疏，一直放
@@ -1893,12 +2786,19 @@ function startPlay(){
   banner('第 '+G.stage+' 关');
   startBgm();
 }
-function startRun(){loopN=1;resetGame();startPlay();}   // 从主菜单开始＝回到第 1 轮
+function startRun(){
+  loopN=1;
+  /* 藏宝图点在「丧尸山谷」＝从第二章第 4 关起步（山谷里的四块背景由关卡决定）；
+     点前三块战场仍是第一章：第 1 关起，一块战场贯穿三关＋BOSS */
+  resetGame(pickBG==='valley'?4:1);
+  startPlay();
+}
 function retryStage(){
-  const wasFacingBoss=(G.bossOut||G.bossDone)&&G.stage>=STAGES.length;   // 死在BOSS面前才直接重开BOSS
+  const wasFacingBoss=(G.bossOut||G.bossDone)&&isBossStage();   // 死在大王面前才直接重开大王
   G.score=0;G.hearts=3;G.bonus=0;G.kills=0;
   G.zs.length=0;G.bls.length=0;G.ps.length=0;G.ebs.length=0;
   G.bolts.length=0;G.cs.length=0;G.flash=0;G.laser=null;
+  clearGts();
   G.bossOut=false;G.bossDone=false;G.spawnT=1.1;G.shake=0;
   const h=G.hero;
   h.x=h.tx=230;h.lane=2;h.y=h.ty=laneY(2);h.inv=0;h.cd=0.5;h.fire=0;
@@ -1996,6 +2896,11 @@ function update(dt){
     if(dead)G.bls.splice(i,1);
   }
 
+  /* 终章先决定「这会儿谁是主攻」，再走地面威胁：交接那 1.5 秒三只都停手 */
+  if(G.bossOut&&isFinalStage())stepFinale(dt);
+  stepGts(dt);                                   // 地上的火柱/震波/横扫：到点才真的烫人
+  if(mode!=='play')return;                       // 被地上的火烧没了：这一帧不用再往下走
+
   const hs=heroS();
   for(let i=G.zs.length-1;i>=0;i--){
     const z=G.zs[i];
@@ -2009,6 +2914,7 @@ function update(dt){
     if(z.sq>0)z.sq=Math.max(0,z.sq-dt);         // 果冻抖动衰减
     if(z.frz>0){z.frz-=dt;}                     // 被寒冰球冻住：位置不前进、不开火、走路动画停，只留冰霜外观（BOSS 同样冻住）
     else{
+      if(!z.boss)stepMinion(z,dt);                // 兵种行为：独眼提速／缺牙换路（冻住时全停）
       z.x-=z.v*dt;z.ph+=dt*(z.boss?3.2:4.6);    // 走路：前进＋迈步动画（冻住时全停）
       if(z.boss)stepBoss(z,dt);                 // BOSS：站到场中＋随机换路
       else if(z.x-z.s*0.40<BASE_X){             // 走到最左边＝拔掉这条路的红旗！
@@ -2049,7 +2955,7 @@ function update(dt){
   G.flash=Math.max(0,G.flash-dt);
 
   /* 出怪 */
-  const bossStage=(G.stage>=STAGES.length);
+  const bossStage=isBossStage();
   if(bossStage&&G.kills>=G.quota&&!G.bossDone){
     if(!G.bossOut)spawnBoss();
   }else{
@@ -2084,7 +2990,13 @@ function drawZombie(z){
     ctx.scale(1+wob,1-wob);
   }
   if(z.leave)ctx.scale(-1,1);                   // 撤退中：水平镜像＝真的转身朝右走，而不是倒着滑
-  drawZombieV(ctx,0,0,z.s,z.boss?(BOSS_SK[curBG]||BOSS_SK.forest):ZK,T,z.ph);
+  if(z.boss){                                   // 第二章三只大王＝方块丧尸风；第一章没有 mech，照旧画圆角绿大王
+    const bzk=BOSS_ZK[z.cfg.mech];
+    if(bzk)drawBlockBoss(ctx,0,0,z.s,bzk,T,z.ph);
+    else drawZombieV(ctx,0,0,z.s,BOSS_SK[curBG]||BOSS_SK.forest,T,z.ph);
+  }
+  else if(KIND_SK[z.type])drawBlockZombie(ctx,0,0,z.s,KIND_SK[z.type],T,z.ph);  // 第二章：直角方块丧尸，五种各有记号
+  else drawZombieV(ctx,0,0,z.s,ZK,T,z.ph);                                     // 第一章：圆角绿僵尸，一字不变
   if(z.frz>0&&!z.die){                          // 被冻住：罩一层冰蓝＋一片雪花
     ctx.save();ctx.globalAlpha=.5;ctx.fillStyle='#81d4fa';
     rrect(ctx,-z.s*0.42,-z.s*0.98,z.s*0.84,z.s*1.02,8);ctx.fill();
@@ -2095,19 +3007,28 @@ function drawZombie(z){
   ctx.restore();
 }
 /* BOSS 血条：固定在屏幕顶部中央，不跟着 BOSS 走，避免挡住它的头 */
-function drawBossBar(){
-  const b=G.zs.find(z=>z.boss&&!z.die&&z.hp>0);
-  if(!b)return;
-  const w=Math.min(360,GW*0.42),h=16,x=(GW-w)/2,y=100;
-  ctx.save();
-  ctx.font='900 15px system-ui,-apple-system,"Microsoft YaHei",sans-serif';
+/* 一条大王血条（名字＋血量）：终章三只同场就并排画三条小的 */
+function oneBossBar(b,x,y,w,h,namePx){
+  ctx.font='900 '+namePx+'px system-ui,-apple-system,"Microsoft YaHei",sans-serif';
   ctx.textAlign='center';ctx.textBaseline='alphabetic';
   ctx.fillStyle='#ffd54f';ctx.shadowColor='rgba(0,0,0,.6)';ctx.shadowBlur=4;
-  ctx.fillText((b.cfg&&b.cfg.name)||'大 BOSS',GW/2,y-7);
+  ctx.fillText((b.cfg&&b.cfg.name)||'大 BOSS',x+w/2,y-7);
   ctx.shadowBlur=0;
   ctx.fillStyle='rgba(0,0,0,.55)';rrect(ctx,x,y,w,h,h/2);ctx.fill();
   ctx.fillStyle=b.phase===2?'#ff6f00':'#e53935';   // 狂暴时血条变橙，看得出不一样了
   rrect(ctx,x+2,y+2,Math.max(0,(w-4)*b.hp/b.hpMax),h-4,(h-4)/2);ctx.fill();
+}
+function drawBossBar(){
+  const bs=G.zs.filter(z=>z.boss&&!z.die&&z.hp>0);
+  if(!bs.length)return;
+  ctx.save();
+  if(bs.length===1){
+    const w=Math.min(360,GW*0.42);
+    oneBossBar(bs[0],(GW-w)/2,100,w,16,15);
+  }else{
+    const w=176,g=16,x0=(GW-(bs.length*w+(bs.length-1)*g))/2;
+    for(let i=0;i<bs.length;i++)oneBossBar(bs[i],x0+i*(w+g),92,w,12,12);
+  }
   ctx.restore();
 }
 function drawHero(){
@@ -2127,7 +3048,20 @@ const FIELD={
           haze:'rgba(185,205,255,.14)'},
   desert:{top:'rgba(60,40,24,0)',mid:'rgba(112,78,44,.20)',low:'rgba(88,60,34,.38)',
           strip:'rgba(255,236,190,.10)',line:'rgba(255,240,200,.32)',glow:'rgba(255,225,150,.15)',
-          haze:'rgba(255,238,196,.20)'}
+          haze:'rgba(255,238,196,.20)'},
+  /* 第二章四块路面：各自跟着场景的色温走，一眼分得清在哪一关 */
+  lava:{top:'rgba(28,8,4,0)',mid:'rgba(40,12,6,.26)',low:'rgba(22,6,4,.46)',
+        strip:'rgba(255,180,120,.09)',line:'rgba(255,170,110,.34)',glow:'rgba(255,140,80,.16)',
+        haze:'rgba(255,190,150,.18)'},
+  bone:{top:'rgba(30,34,28,0)',mid:'rgba(52,56,46,.22)',low:'rgba(30,34,26,.42)',
+        strip:'rgba(232,228,200,.10)',line:'rgba(240,236,210,.32)',glow:'rgba(226,222,180,.14)',
+        haze:'rgba(238,234,212,.16)'},
+  ice:{top:'rgba(12,32,52,0)',mid:'rgba(20,50,76,.22)',low:'rgba(10,28,46,.44)',
+        strip:'rgba(190,235,255,.10)',line:'rgba(205,242,255,.34)',glow:'rgba(150,220,255,.15)',
+        haze:'rgba(210,240,255,.18)'},
+  rift:{top:'rgba(40,8,40,0)',mid:'rgba(48,10,44,.24)',low:'rgba(26,4,26,.46)',
+        strip:'rgba(220,150,255,.09)',line:'rgba(235,170,255,.32)',glow:'rgba(255,110,160,.15)',
+        haze:'rgba(215,170,230,.16)'}
 };
 function drawField(){
   const f=FIELD[curBG]||FIELD.forest;
@@ -2201,6 +3135,128 @@ function drawFlags(){
   ctx.globalAlpha=1;
 }
 
+/* ========== 地面威胁画在地上（旗子之后、小人之前）：先看得见，才伤得到 ==========
+   预警期＝路面发红/压暗＋一条会爬的亮边；生效期＝真的有火、真的有冲击。
+   全部用压扁的椭圆和贴地的扁条，不立起来挡视线，小朋友随时看得见自己的小人。 */
+function groundEllipse(x,y,rx,ry,c){
+  ctx.save();ctx.beginPath();ctx.ellipse(x,y,Math.max(1,rx),Math.max(1,ry),0,0,Math.PI*2);
+  ctx.fillStyle=c;ctx.fill();ctx.restore();
+}
+/* 一簇火苗：底下宽、顶上尖，左右随时间晃（h＝高，w＝底宽） */
+function gtFlame(x,y,h,w,c1,c2){
+  const k=w*(0.92+0.12*Math.sin(T*13+x*0.7));
+  ctx.fillStyle=c1;
+  ctx.beginPath();
+  ctx.moveTo(x-k,y);
+  ctx.quadraticCurveTo(x-k*0.55,y-h*0.62,x-k*0.16,y-h*0.42);
+  ctx.quadraticCurveTo(x,y-h*1.02,x+k*0.2,y-h*0.46);
+  ctx.quadraticCurveTo(x+k*0.6,y-h*0.66,x+k,y);
+  ctx.closePath();ctx.fill();
+  ctx.fillStyle=c2;                                  // 芯子更亮，看着就烫
+  ctx.beginPath();
+  ctx.moveTo(x-k*0.45,y);ctx.quadraticCurveTo(x,y-h*0.68,x+k*0.45,y);
+  ctx.closePath();ctx.fill();
+}
+function gtPulse(){return 0.72+0.28*Math.sin(T*15);}   // 预警的"眨眼"节奏：快，看得出在倒计时
+function drawGts(){
+  for(const e of G.gts){
+    const a=e.t-e.warn,p=e.warn>0?Math.min(1,e.t/e.warn):1;   // a<0 预警中，0..dur 真会伤人
+    const ls=e.lanes||[e.lane];
+    if(a<0){                                        // 预警画在生效之前，两帧交接时不会重复叠色
+      if(e.kind==='pillar'||e.kind==='pool'){       // 火系：地上先烫出一圈红
+        const y=laneY(e.lane),r=e.kind==='pool'?20:32;
+        ctx.save();ctx.globalAlpha=0.24+0.42*p;
+        groundEllipse(e.x,y-6,r+8*p,11+4*p,'#ff5030');
+        ctx.globalAlpha=(0.3+0.45*p)*gtPulse();
+        groundEllipse(e.x,y-6,(r+8*p)*0.6,7,'#ffd54f');ctx.restore();
+      }else if(e.kind==='quake'){                   // 骨锤：三条整路压成暗红，越举越深
+        for(const ln of ls){const y=laneY(ln);
+          ctx.save();ctx.globalAlpha=0.10+0.30*p*gtPulse();
+          ctx.fillStyle='#8e1b12';ctx.fillRect(0,y-LANE_H*0.44,GW,LANE_H*0.88);
+          ctx.globalAlpha=0.22+0.35*p;ctx.fillStyle='#ff5252';
+          for(let x=GW-24;x>0;x-=44)ctx.fillRect(x,y-LANE_H*0.30,18,LANE_H*0.60);   // 斜着退的条纹＝"要塌了"
+          ctx.restore();}
+      }else{                                        // 长臂：两条路压暗，暗影从右边探进来一截
+        for(const ln of ls){const y=laneY(ln),tip=GW-(GW-XMIN)*0.30*p;
+          ctx.save();ctx.globalAlpha=0.13+0.28*p;
+          ctx.fillStyle='#150618';ctx.fillRect(tip,y-LANE_H*0.42,GW-tip,LANE_H*0.84);
+          ctx.globalAlpha=0.45+0.45*p;ctx.fillStyle='#b388ff';ctx.fillRect(tip,y-LANE_H*0.42,7,LANE_H*0.84);
+          ctx.restore();}
+      }
+      continue;
+    }
+    if(a>e.dur)continue;
+    const g=Math.max(0,Math.min(Math.min(1,a/0.1),Math.min(1,(e.dur-a)/0.18)));   // 起势→收势
+    if(e.kind==='pillar'){                          // 火柱：又高又亮，站这条路必挨一下
+      const y=laneY(e.lane),h=156*g;
+      ctx.save();ctx.globalAlpha=0.55*g;groundEllipse(e.x,y-4,30,12,'#ff7043');ctx.restore();
+      gtFlame(e.x,y-8,h,28,'#ff6d30','#ffd54f');
+      ctx.save();ctx.globalAlpha=0.85;gtFlame(e.x,y-8,h*0.6,15,'#fff59d','#ffffff');ctx.restore();
+    }else if(e.kind==='pool'){                       // 火星坑：一小片烫红的地，窜几苗小火，3 秒自己灭
+      const y=laneY(e.lane);
+      ctx.save();ctx.globalAlpha=0.5*g;groundEllipse(e.x,y-5,24,9,'#bf360c');ctx.restore();
+      for(let i=0;i<3;i++)gtFlame(e.x-14+i*14,y-4,(20+10*Math.sin(T*11+i*2.1))*g,9,'#ff8a50','#ffe082');
+    }else if(e.kind==='quake'){                      // 震波：三条路同时闪一道白光＋地面裂纹
+      for(const ln of ls){const y=laneY(ln);
+        ctx.save();ctx.globalAlpha=0.85*g;ctx.fillStyle='#ffab91';
+        ctx.fillRect(0,y-6,GW,12);ctx.restore();
+        ctx.save();ctx.globalAlpha=g;ctx.strokeStyle='#efebe9';ctx.lineWidth=3;
+        ctx.beginPath();
+        for(let x=GW;x>-10;x-=52){ctx.moveTo(x,y-LANE_H*0.34);ctx.lineTo(x-24,y+LANE_H*0.30);}
+        ctx.stroke();ctx.restore();}
+    }else{                                           // 横扫：身后一条暗痕，前爪发光，跟着 x 往左拖
+      for(const ln of ls){const y=laneY(ln);
+        ctx.save();ctx.globalAlpha=0.32*g;ctx.fillStyle='#0d0410';
+        ctx.fillRect(e.x,y-LANE_H*0.40,GW+40-e.x,LANE_H*0.80);ctx.restore();
+        const cy=y-8;
+        ctx.save();ctx.globalAlpha=g;
+        ctx.fillStyle='#4a148c';rrect(ctx,e.x-30,cy-19,60,38,12);ctx.fill();
+        ctx.fillStyle='#7b1fa2';rrect(ctx,e.x-78,cy-11,64,22,10);ctx.fill();   // 手臂本体，看得清是"拖"过来的
+        ctx.fillStyle='#ea80fc';rrect(ctx,e.x-20,cy-11,40,22,9);ctx.fill();
+        ctx.restore();}
+    }
+  }
+  for(const z of G.zs){                        // 长臂王独眼照路：光带画在实体之下，绝不挡住小朋友的小人
+    if(!z.boss||z.die||z.cfg.mech!=='drag'||z.tele<=0)continue;
+    const e=weakPos(z);
+    for(const ln of (z.teleLanes.length?z.teleLanes:[z.lane])){
+      const y=laneY(ln);
+      ctx.save();ctx.globalAlpha=0.30*gtPulse();
+      ctx.fillStyle='#ff4081';ctx.fillRect(0,y-9,e.x,18);ctx.restore();
+      ctx.save();ctx.globalAlpha=0.14;ctx.fillStyle='#ff80ab';ctx.fillRect(0,y-LANE_H*0.36,e.x,LANE_H*0.72);ctx.restore();
+    }
+  }
+}
+/* ========== 大王身上的状态标记 ==========
+   破绽圈＝招式打完的那 1~2 秒，打这里翻倍；星星＝终章轮到谁主攻。
+   （长臂王的独眼光带在 drawGts 里画——它铺满整条路，必须压在小人底下，不能挡住他） */
+function weakPos(z){
+  const k=BOSS_ZK[z.cfg.mech],u=z.s/58;       // 弱点位置只写在 BOSS_ZK.weak 一处（零件中心，跟着外形走）
+  return{x:z.x+k.weak[0]*u,y:z.y+k.weak[1]*u};
+}
+function drawWeak(z){
+  const w=weakPos(z),r=z.s*0.20,p=0.75+0.25*Math.sin(T*11);
+  ctx.save();
+  ctx.globalAlpha=0.9;ctx.strokeStyle='#ffd740';ctx.lineWidth=5;
+  ctx.beginPath();ctx.arc(w.x,w.y,r*1.5*p,0,7);ctx.stroke();
+  ctx.globalAlpha=0.55;ctx.strokeStyle='#fff176';ctx.lineWidth=2.5;
+  ctx.beginPath();ctx.arc(w.x,w.y,r*2.1*p,0,7);ctx.stroke();
+  ctx.restore();
+  for(let i=0;i<4;i++)                                        // 四颗转着的亮点：一眼认得出"这会儿打它有用"
+    spark4(ctx,w.x+Math.cos(T*4+i*1.57)*r*2.4,w.y+Math.sin(T*4+i*1.57)*r*2.4,r*0.55,T*2+i,'#fff59d');
+}
+function drawBossMarks(){
+  for(const z of G.zs){
+    if(!z.boss||z.die)continue;
+    if(z.weakT>0)drawWeak(z);
+    if(z.aura&&isFinalStage()){                         // 主攻头顶一颗转着的星：全屏幕只找得到这一只会出手
+      const s=z.s;
+      star(ctx,z.x-s*0.05,z.y-s*1.12,s*0.16+2*Math.sin(T*6),'#ffd740',T*1.4);
+      ctx.save();ctx.globalAlpha=0.25+0.12*Math.sin(T*7);groundEllipse(z.x,z.y-4,s*0.42,s*0.14,'#ffd740');ctx.restore();
+    }
+  }
+}
+
 function render(){
   ctx.save();ctx.setTransform(1,0,0,1,0,0);
   ctx.clearRect(0,0,cv.width,cv.height);
@@ -2211,6 +3267,7 @@ function render(){
   ctx.drawImage(bgc,BX,BY,W*BS,H*BS);
   drawField();
   drawFlags();
+  drawGts();          // 地面威胁压在小人底下：看得见火，也永远看得见自己
 
   ctx.save();
   if(G.shake>0)ctx.translate((Math.random()-0.5)*12*G.shake,(Math.random()-0.5)*12*G.shake);
@@ -2220,6 +3277,7 @@ function render(){
   list.push([G.hero.y,null]);
   list.sort((a,b)=>a[0]-b[0]);
   for(const it of list){ if(it[1])drawZombie(it[1]); else drawHero(); }
+  drawBossMarks();    // 破绽圈与主攻星星盖在实体之上，一眼找得到该打哪儿
 
   for(const b of G.bls){
     if(b.kind==='star'){                        // 星星飞镖：黄星星＋淡尾
@@ -2398,14 +3456,14 @@ function updateHUD(){
   $('uiStage').textContent=G.stage;
   const hv=Math.max(0,G.hearts);
   $('hearts').textContent='❤️'.repeat(hv)+'🖤'.repeat(Math.max(0,3-hv))+(G.bonus>0?' '+'⭐'.repeat(G.bonus):'');
-  const bossStage=(G.stage>=STAGES.length);
-  if(bossStage&&G.kills>=G.quota){const bn=(BOSSCFG[sceneIdx()]||BOSSCFG[0]).name;$('uiQuotaBox').innerHTML='💀 打 <b>'+bn+'</b>！';}
+  const bossStage=isBossStage();
+  if(bossStage&&G.kills>=G.quota){const bn=bossCfg().name;$('uiQuotaBox').innerHTML='💀 打 <b>'+bn+'</b>！';}
   else $('uiQuotaBox').innerHTML='还要打 <b>'+Math.max(0,G.quota-G.kills)+'</b> 只';
 }
 /* 藏宝图：没解锁的灰掉＋🔒，选中的挂⭐，最高已解锁块脉冲提示去探险 */
 function renderMap(){
   document.querySelectorAll('.spot').forEach(b=>{
-    const k=b.dataset.bg, idx=BG_ORDER.indexOf(k), lock=idx>=mapN;
+    const k=b.dataset.bg, idx=MAP_ORDER.indexOf(k), lock=idx>=mapN;
     /* 刻意不用 b.disabled：浏览器对 disabled 的按钮连 click 都不派发，
        小朋友去点灰着的「破破城市」会彻底没反应，还以为游戏坏了。
        改成照常可点，由 onclick 判断锁没锁，再用声音告诉他为什么打不开 */
@@ -2427,6 +3485,8 @@ $('btnStart').onclick=()=>{sfx('click');startRun();};
 $('btnWinHome').onclick=()=>{sfx('click');toMenu();};
 $('btnWinNext').onclick=()=>{                        // 打败BOSS＝去藏宝图下一块战场，新一轮略难点
   sfx('click');
+  /* 终章全通关：回藏宝图（给焕宸的新主角外观奖励以后接在这里） */
+  if(isFinalStage()){hideWinPanel();toMenu();return;}
   loopN=Math.min(10,loopN+1);
   pickBG=BG_ORDER[(BG_ORDER.indexOf(curBG)+1)%BG_ORDER.length];
   LS.set('moday_bgcur',pickBG);
@@ -2517,10 +3577,12 @@ $('btnDiagTts').onclick=()=>{
 };
 document.querySelectorAll('.spot').forEach(b=>{
   b.onclick=()=>{
-    if(BG_ORDER.indexOf(b.dataset.bg)>=mapN){
-      /* 锁着的战场也要出声：小朋友不识字，得靠耳朵知道「这块还打不开、该去打谁」 */
+    if(MAP_ORDER.indexOf(b.dataset.bg)>=mapN){
+      /* 锁着的战场也要出声：小朋友不识字，得靠耳朵知道「这块还打不开、该去打谁」
+         要打赢的大王＝已解锁最后一块战场的那只（第四格锁着时＝山谷第 4 关的背炉火柱王） */
       sfx('click');
-      say(['unlock',['boss_forest','boss_city','boss_desert'][Math.max(0,mapN-1)]]);
+      const ki=Math.max(0,Math.min(mapN-1,MAP_BOSS.length-1));
+      say(['unlock',MAP_BOSS[ki]]);
       return;
     }
     sfx('click');

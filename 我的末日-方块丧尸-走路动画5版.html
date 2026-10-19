@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>新小兵：方块丧尸 走路动画 · 5 版挑选</title>
+<style>
+  :root{
+    --bg:#141b22; --panel:#1c252e; --line:#2a3641;
+    --tx:#e8f0f2; --mut:#9fb0ba; --pick:#0fdc78; --pickTx:#04331c;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%}
+  body{
+    background:var(--bg); color:var(--tx);
+    font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    -webkit-tap-highlight-color:transparent;
+  }
+  header{
+    display:flex; flex-wrap:wrap; align-items:center; gap:12px;
+    padding:14px 18px; border-bottom:3px solid var(--line);
+  }
+  h1{margin:0; font-size:26px; font-weight:900; letter-spacing:1px}
+  .tip{margin:0; font-size:15px; font-weight:700; color:var(--mut)}
+  .sel{margin-left:auto; font-size:20px; font-weight:900; color:var(--pick)}
+  button{
+    font:inherit; font-weight:900; color:var(--tx);
+    background:#243139; border:3px solid var(--line); border-radius:12px;
+    padding:8px 14px; cursor:pointer;
+  }
+  button:active,button:hover{border-color:var(--pick)}
+  button[aria-pressed="true"]{background:var(--pick); color:var(--pickTx); border-color:var(--pick)}
+  .grid{
+    display:grid; grid-template-columns:repeat(6,minmax(0,1fr));
+    gap:14px; padding:16px 18px;
+  }
+  @media (max-width:1080px){ .grid{grid-template-columns:repeat(3,minmax(0,1fr))} }
+  @media (max-width:600px){ .grid{grid-template-columns:repeat(2,minmax(0,1fr))} }
+  .card{
+    background:var(--panel); border:4px solid var(--line); border-radius:16px;
+    overflow:hidden; display:flex; flex-direction:column; cursor:pointer;
+  }
+  .card.pick{border-color:var(--pick)}
+  .card canvas{width:100%; display:block}
+  .meta{display:flex; align-items:center; gap:8px; padding:6px 10px 0}
+  .no{min-width:28px; text-align:center; font-size:24px; font-weight:900; color:var(--mut)}
+  .card.pick .no{color:var(--pick)}
+  .nm{font-size:20px; font-weight:900; line-height:1.2}
+  .spk{margin-left:auto; font-size:16px; padding:4px 10px}
+  .role{padding:2px 10px 12px; font-size:13px; font-weight:700; color:var(--mut); line-height:1.45}
+  .card.old .nm,.card.old .no{color:var(--mut)}
+  footer{padding:4px 18px 24px; font-size:14px; font-weight:600; color:var(--mut); line-height:1.6}
+</style>
+</head>
+<body>
+<header>
+  <h1>新小兵 · 方块丧尸</h1>
+  <p class="tip">走路动画现场对比，点一下最喜欢的那只</p>
+  <button id="sayRule">听规则</button>
+  <button id="slow" aria-pressed="false">慢动作</button>
+  <button id="pause" aria-pressed="false">暂停</button>
+  <div class="sel" id="sel">还没选</div>
+</header>
+
+<div class="grid" id="grid"></div>
+
+<footer>
+  六只共用游戏里那一套步态公式：上下颠 bob = sin(ph)×1.4u、身子歪 rot = sin(ph)×0.05、抬腿 3.4u、摆臂 1.6u、节拍 ph += 时间×4.6，
+  所以选定哪一只都能直接接进现在的僵尸动画里，不用重做。<br>
+  最左边是最现在的僵尸（对照用，圆角、大白眼球、长舌头）；右边五只是新的方块丧尸（全直角、黑眼窝里发光方瞳、方块嘴不吐舌）。
+  点卡片 = 选中 + 念名字 + 挨一下抖，也可以按键盘 1 到 5 直接选。
+</footer>
+
+<script>
+/* ---------- 通用小工具 ---------- */
+function rrect(c, x, y, w, h, r){
+  r = Math.min(r, Math.abs(w)/2, Math.abs(h)/2);
+  c.beginPath();
+  c.moveTo(x+r, y);
+  c.arcTo(x+w, y, x+w, y+h, r);
+  c.arcTo(x+w, y+h, x, y+h, r);
+  c.arcTo(x, y+h, x, y, r);
+  c.arcTo(x, y, x+w, y, r);
+  c.closePath();
+}
+
+/* ---------- 现在这只僵尸（对照，圆角那套原样搬过来） ---------- */
+const OLD = {
+  skin:'#9ccc65', skinDark:'#7cb342', cloth:'#3f51b5',
+  pupil:'#e53935', patch:'#8d6e63', tongue:true
+};
+function drawOldZombie(c, x, y, s, zk, t, ph){
+  const u = s/58;
+  const bob = Math.sin(ph)*1.4*u, rot = Math.sin(ph)*0.05;
+  const liftL = Math.max(0, Math.sin(ph))*3.4*u, liftR = Math.max(0, -Math.sin(ph))*3.4*u;
+  c.save(); c.translate(x, y+bob); c.rotate(rot);
+  c.fillStyle = 'rgba(0,0,0,.25)';
+  c.beginPath(); c.ellipse(0, 1, 16*u, 3.6*u, 0, 0, 7); c.fill();
+  const bw = 13;
+  c.fillStyle = zk.cloth;
+  rrect(c, (-bw+2)*u, -18*u, 9*u, 18*u-liftL, 2*u); c.fill();
+  rrect(c, (bw-11)*u, -18*u, 9*u, 18*u-liftR, 2*u); c.fill();
+  c.fillStyle = zk.skinDark;
+  rrect(c, (-bw+1)*u, -4.5*u-liftL, 10*u, 4.5*u, 1.6*u); c.fill();
+  rrect(c, (bw-12)*u, -4.5*u-liftR, 10*u, 4.5*u, 1.6*u); c.fill();
+  c.fillStyle = zk.patch;
+  rrect(c, (-bw+2.6)*u, -13.5*u-liftL, 6.8*u, 6*u, 1.6*u); c.fill();
+  c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = 0.8*u;
+  c.beginPath();
+  c.moveTo((-bw+2.6)*u, -11.4*u-liftL); c.lineTo((-bw+9.4)*u, -11.4*u-liftL);
+  c.moveTo((-bw+2.6)*u, -9*u-liftL);   c.lineTo((-bw+9.4)*u, -9*u-liftL);
+  c.stroke();
+  const sw = Math.sin(ph)*1.6*u;
+  c.fillStyle = zk.skin;
+  rrect(c, (-bw-17)*u, -36*u+sw, 19*u, 7.5*u, 3.5*u); c.fill();
+  rrect(c, (-bw-15)*u, -28*u-sw, 17*u, 7.5*u, 3.5*u); c.fill();
+  c.fillStyle = zk.skinDark;
+  rrect(c, (-bw-21)*u, -37*u+sw, 6*u, 9*u, 2.4*u); c.fill();
+  rrect(c, (-bw-19)*u, -29*u-sw, 6*u, 9*u, 2.4*u); c.fill();
+  c.fillStyle = zk.skin;
+  rrect(c, -bw*u, -38*u, 2*bw*u, 21*u, 4.5*u); c.fill();
+  c.fillStyle = 'rgba(0,0,0,.12)';
+  rrect(c, -bw*u, -26*u, 2*bw*u, 9*u, 3.5*u); c.fill();
+  c.fillStyle = zk.skin;
+  rrect(c, -12*u, -56*u, 24*u, 19*u, 5*u); c.fill();
+  c.fillStyle = 'rgba(0,0,0,.1)';
+  rrect(c, 5*u, -55*u, 7*u, 18*u, 4*u); c.fill();
+  c.fillStyle = '#fff';
+  c.beginPath(); c.arc(-5.5*u, -49*u, 4.4*u, 0, 7); c.arc(4.5*u, -49.6*u, 3.6*u, 0, 7); c.fill();
+  c.fillStyle = zk.pupil;
+  c.beginPath(); c.arc(-6.6*u, -49*u, 2.2*u, 0, 7); c.arc(3.6*u, -49.6*u, 1.8*u, 0, 7); c.fill();
+  c.fillStyle = '#3a2b20';
+  rrect(c, -7*u, -43*u, 14*u, 5.5*u, 2*u); c.fill();
+  c.fillStyle = '#f1f8e9';
+  for(let i=0;i<4;i++) c.fillRect((-6+i*3.4)*u, -43*u, 2*u, 2.6*u);
+  if(zk.tongue){
+    const tl = 7*u + Math.sin(ph*1.3)*1.2*u, wag = Math.sin(ph*0.9)*0.16;
+    c.save(); c.translate(1.5*u, -38.5*u); c.rotate(wag);
+    c.fillStyle = '#ef9a9a';
+    rrect(c, -2.5*u, 0, 5*u, tl, 2.4*u); c.fill();
+    c.fillStyle = '#e57373';
+    rrect(c, -0.7*u, 1.6*u, 1.4*u, Math.max(1*u, tl-3.2*u), 0.7*u); c.fill();
+    c.restore();
+  }
+  c.restore();
+}
+
+/* ---------- 新的方块丧尸：全直角 + 黑眼窝发光方瞳 ---------- */
+const ZB = [
+  { no:'旧', name:'现在的僵尸', voice:'这是现在的僵尸', old:true,
+    role:'对照：全身圆角、两只大白眼球、伸出长舌头' },
+
+  { no:'①', name:'缺牙丧尸', voice:'缺牙丧尸', kind:'notch',
+    role:'建议当普通小兵：数量最多，头上被咬掉一个方块',
+    skin:'#689f38', skinDark:'#33691e', cloth:'#4e342e', clothDark:'#3b2420',
+    socket:'#1f1608', glow:'#e6ee9c', tooth:'#ece5d8', teeth:'gap' },
+
+  { no:'②', name:'独眼丧尸', voice:'独眼丧尸', kind:'stick',
+    role:'建议当快速小兵：一只超大眼窝，头顶斜插一根木棍',
+    skin:'#8d6e63', skinDark:'#5d4037', cloth:'#37474f', clothDark:'#263238',
+    socket:'#1f1608', glow:'#ffe0b2', tooth:'#ece5d8', teeth:'gap',
+    patch:'#455a64', stick:'#a1887f' },
+
+  { no:'③', name:'破洞丧尸', voice:'破洞丧尸', kind:'hole',
+    role:'建议当厚血小兵：胸口一个方大洞露骨头，一只手断成两截',
+    skin:'#a5d6a7', skinDark:'#81c784', cloth:'#455a64', clothDark:'#37474f',
+    socket:'#1f1608', glow:'#c5e1a5', tooth:'#ece5d8', teeth:'none' },
+
+  { no:'④', name:'冰封丧尸', voice:'冰封丧尸', kind:'ice',
+    role:'建议当特殊兵：全身贴白方冰晶，一排方块牙冻得发抖',
+    skin:'#90caf9', skinDark:'#42a5f5', cloth:'#1565c0', clothDark:'#0d47a1',
+    socket:'#0d2b45', glow:'#f8fdff', tooth:'#e1f5fe', teeth:'ice', brow:'#1565c0' },
+
+  { no:'⑤', name:'火焰丧尸', voice:'火焰丧尸', kind:'fire',
+    role:'建议当精英兵：炭灰身体，头顶三块阶梯火苗，走路掉火星',
+    skin:'#616161', skinDark:'#424242', cloth:'#3e2723', clothDark:'#2b1a16',
+    socket:'#1b1110', glow:'#ffee58', tooth:'#ff7043', teeth:'fire' }
+];
+
+function drawBlockZombie(c, x, y, s, zk, t, ph){
+  const u = s/58;
+  const bob = Math.sin(ph)*1.4*u, rot = Math.sin(ph)*0.05;
+  const liftL = Math.max(0, Math.sin(ph))*3.4*u, liftR = Math.max(0, -Math.sin(ph))*3.4*u;
+  const sw = Math.sin(ph)*1.6*u;
+  c.save(); c.translate(x, y+bob); c.rotate(rot);
+
+  /* 地面影子 */
+  c.fillStyle = 'rgba(0,0,0,.25)';
+  c.beginPath(); c.ellipse(0, 1, 16*u, 3.6*u, 0, 0, 7); c.fill();
+
+  /* 火星（只有火焰丧尸）：脚边两个小方块往下掉 */
+  if(zk.kind === 'fire'){
+    for(let i=0;i<2;i++){
+      const p = (t*0.7 + i*0.5) % 1;
+      c.globalAlpha = 1-p;
+      c.fillStyle = i ? '#ffb300' : '#ff8a65';
+      c.fillRect((13-i*26)*u, -1*u + p*9*u, 2.2*u, 2.2*u);
+    }
+    c.globalAlpha = 1;
+  }
+
+  /* 腿：后腿压暗一档，前腿亮；全是直角 */
+  c.fillStyle = zk.clothDark; c.fillRect(2*u, -18*u, 9*u, 18*u-liftR);
+  c.fillStyle = zk.skinDark;   c.fillRect(1*u, -5*u-liftR, 10*u, 5*u);
+  c.fillStyle = 'rgba(0,0,0,.15)'; c.fillRect(1*u, -5*u-liftR, 10*u, 5*u);
+  c.fillStyle = zk.cloth;      c.fillRect(-11*u, -18*u, 9*u, 18*u-liftL);
+  c.fillStyle = zk.skinDark;   c.fillRect(-12*u, -5*u-liftL, 10*u, 5*u);
+
+  /* 手臂：前平举（僵尸招牌姿势），断臂版留一道缝 */
+  if(zk.kind === 'hole'){
+    c.fillStyle = zk.skin;
+    c.fillRect(-28*u, -28*u-sw, 17*u, 7.5*u);
+    c.fillRect(-26*u, -36*u+sw, 14*u, 7.5*u);
+    c.fillStyle = zk.skinDark;
+    c.fillRect(-32*u, -29*u-sw, 6*u, 9*u);
+    c.fillRect(-35*u, -35.5*u+sw, 7*u, 7*u);      // 悬空的手方块
+  }else{
+    c.fillStyle = zk.skin;
+    c.fillRect(-28*u, -28*u-sw, 17*u, 7.5*u);
+    c.fillRect(-30*u, -36*u+sw, 19*u, 7.5*u);
+    c.fillStyle = zk.skinDark;
+    c.fillRect(-32*u, -29*u-sw, 6*u, 9*u);
+    c.fillRect(-34*u, -37*u+sw, 6*u, 9*u);
+  }
+
+  /* 身体 */
+  c.fillStyle = zk.skin; c.fillRect(-13*u, -38*u, 26*u, 21*u);
+  c.fillStyle = 'rgba(0,0,0,.12)'; c.fillRect(-13*u, -26*u, 26*u, 9*u);
+
+  /* 身体特征 */
+  if(zk.kind === 'stick' && zk.patch){               // 方形布补丁（无圆角、无缝线）
+    c.fillStyle = zk.patch; c.fillRect(-9.5*u, -32*u, 9*u, 7*u);
+    c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(-9.5*u, -32*u, 9*u, 1.4*u);
+  }
+  if(zk.kind === 'hole'){                             // 胸口方洞 + 三根骨头
+    c.fillStyle = '#2b332b'; c.fillRect(-4*u, -33*u, 10*u, 8*u);
+    c.fillStyle = '#eceff1';
+    c.fillRect(-3.4*u, -32.2*u, 8.8*u, 1.7*u);
+    c.fillRect(-3.4*u, -29.4*u, 8.8*u, 1.7*u);
+    c.fillRect(-3.4*u, -26.6*u, 8.8*u, 1.7*u);
+  }
+  if(zk.kind === 'ice'){                              // 白色方冰晶
+    c.fillStyle = zk.tooth;
+    c.fillRect(-11.5*u, -34*u, 4*u, 4*u);
+    c.fillRect(5*u, -23*u, 3.6*u, 3.6*u);
+    c.fillRect(-24*u, -33*u, 3.4*u, 3.4*u);
+  }
+
+  /* 头：三种方块缺口，全是直角 */
+  if(zk.kind === 'notch'){                            // 右上角被咬掉一块
+    c.fillStyle = zk.skin;
+    c.fillRect(-12*u, -56*u, 18*u, 19*u);
+    c.fillRect(6*u, -50*u, 6*u, 13*u);
+    c.fillStyle = 'rgba(0,0,0,.1)';  c.fillRect(6*u, -50*u, 6*u, 13*u);
+    c.fillStyle = 'rgba(0,0,0,.22)'; c.fillRect(6*u, -50*u, 6*u, 1.8*u);
+  }else if(zk.kind === 'hole'){                       // 左上角少一块
+    c.fillStyle = zk.skin;
+    c.fillRect(-12*u, -52*u, 24*u, 15*u);
+    c.fillRect(-5*u, -56*u, 17*u, 4*u);
+    c.fillStyle = 'rgba(0,0,0,.1)';
+    c.fillRect(5*u, -52*u, 7*u, 15*u);
+    c.fillRect(5*u, -56*u, 7*u, 4*u);
+  }else{
+    c.fillStyle = zk.skin; c.fillRect(-12*u, -56*u, 24*u, 19*u);
+    c.fillStyle = 'rgba(0,0,0,.1)'; c.fillRect(5*u, -55*u, 7*u, 18*u);
+  }
+
+  /* 眼睛：黑眼窝 + 发光方瞳（和旧僵尸的白眼球彻底分开） */
+  if(zk.kind === 'stick'){                            // 一只超大眼窝
+    c.fillStyle = zk.socket; c.fillRect(-11.5*u, -52*u, 12*u, 9.5*u);
+    c.fillStyle = zk.glow;   c.fillRect(-9*u, -49.6*u, 6*u, 4.6*u);
+    c.fillStyle = zk.socket; c.fillRect(3*u, -48.5*u, 4.6*u, 4.6*u);
+    c.fillStyle = zk.glow;   c.fillRect(4*u, -47.2*u, 2.4*u, 2.2*u);
+  }else if(zk.kind === 'fire'){                       // 整格发黄光的眼
+    c.fillStyle = zk.socket;
+    c.fillRect(-10.6*u, -51.6*u, 9.2*u, 8.2*u);
+    c.fillRect(1*u, -50*u, 7.5*u, 7*u);
+    c.fillStyle = zk.glow;
+    c.fillRect(-10*u, -51*u, 8*u, 7*u);
+    c.fillRect(1.5*u, -49.5*u, 6.5*u, 6*u);
+  }else{
+    c.fillStyle = zk.socket;
+    c.fillRect(-10*u, -51*u, 8*u, 7*u);
+    c.fillRect(1.5*u, -49.5*u, 6.5*u, 6*u);
+    c.fillStyle = zk.glow;
+    c.fillRect(-8.4*u, -49.4*u, 4*u, 3.4*u);
+    c.fillRect(2.6*u, -48*u, 3.2*u, 2.8*u);
+  }
+  if(zk.kind === 'ice'){                              // 冻紧的眉毛
+    c.fillStyle = zk.brow;
+    c.fillRect(-10.5*u, -53.6*u, 9*u, 2*u);
+    c.fillRect(1*u, -52.2*u, 7.5*u, 2*u);
+  }
+  if(zk.kind === 'ice'){
+    c.fillStyle = zk.tooth; c.fillRect(0, -55.5*u, 4*u, 3.2*u);
+  }
+
+  /* 嘴：一条方块嘴，绝对不吐舌头 */
+  c.fillStyle = zk.socket; c.fillRect(-6.5*u, -43*u, 13.5*u, 5.5*u);
+  if(zk.teeth === 'gap'){
+    c.fillStyle = zk.tooth;
+    c.fillRect(-5.6*u, -43*u, 3.2*u, 2.6*u);
+    c.fillRect(1.6*u, -43*u, 3.2*u, 2.6*u);           // 中间缺了一颗门牙
+  }else if(zk.teeth === 'ice'){
+    c.fillStyle = zk.tooth;
+    for(let i=0;i<3;i++) c.fillRect((-5.6+i*4.2)*u, -43*u, 2.8*u, 2.6*u);
+  }else if(zk.teeth === 'fire'){
+    c.fillStyle = '#ff7043'; c.fillRect(-5.6*u, -43*u, 3.2*u, 2.6*u);
+    c.fillStyle = '#ffca28'; c.fillRect(1.6*u, -43*u, 3.2*u, 2.6*u);
+  }
+
+  /* 头顶附件 */
+  if(zk.kind === 'stick'){                            // 斜插一根方块木棍
+    c.save(); c.translate(8.5*u, -56*u); c.rotate(0.22);
+    c.fillStyle = zk.stick; c.fillRect(-1.5*u, -17*u, 3.2*u, 17*u);
+    c.fillStyle = zk.skin;  c.fillRect(-2*u, -20*u, 4.2*u, 4.2*u);
+    c.restore();
+  }
+  if(zk.kind === 'fire'){                             // 三块阶梯火苗，随时间抖
+    const f1 = Math.sin(t*8)*0.9*u, f2 = Math.sin(t*8+2)*1.2*u, f3 = Math.sin(t*8+4)*0.8*u;
+    c.fillStyle = '#ffca28'; c.fillRect(-8*u, -68*u+f1, 5*u, 12*u);
+    c.fillStyle = '#ff7043'; c.fillRect(-2*u, -75*u+f2, 7*u, 19*u);
+    c.fillStyle = '#ffb300'; c.fillRect(6*u, -66*u+f3, 4.5*u, 10*u);
+  }
+
+  c.restore();
+}
+
+/* ---------- 六个格子 ---------- */
+const W = 210, H = 196, GY = 172, SZ = 118;
+const grid = document.getElementById('grid');
+const items = [];
+let picked = -1;
+
+ZB.forEach((zk, i) => {
+  const card = document.createElement('div');
+  card.className = 'card' + (zk.old ? ' old' : '');
+  const cnv = document.createElement('canvas');
+  card.appendChild(cnv);
+
+  const meta = document.createElement('div');
+  meta.className = 'meta';
+  const no = document.createElement('div');
+  no.className = 'no'; no.textContent = zk.no || '旧';
+  const nm = document.createElement('div');
+  nm.className = 'nm'; nm.textContent = zk.name;
+  const spk = document.createElement('button');
+  spk.className = 'spk'; spk.textContent = '听';
+  meta.appendChild(no); meta.appendChild(nm); meta.appendChild(spk);
+  card.appendChild(meta);
+
+  const role = document.createElement('div');
+  role.className = 'role'; role.textContent = zk.role;
+  card.appendChild(role);
+
+  grid.appendChild(card);
+
+  const dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
+  cnv.width = Math.round(W*dpr); cnv.height = Math.round(H*dpr);
+  cnv.style.aspectRatio = W + ' / ' + H;
+  const c = cnv.getContext('2d');
+
+  const it = { zk, c, dpr, card, ph: i*0.55, sq: 0, index: i };
+  items.push(it);
+
+  card.addEventListener('click', () => { select(i); });
+  spk.addEventListener('click', e => { e.stopPropagation(); speak(zk.voice); });
+});
+
+function select(i){
+  if(items[i].zk.old) { speak('这是现在的僵尸，新的在它右边'); return; }
+  picked = i;
+  items.forEach((it, j) => it.card.classList.toggle('pick', j === i));
+  items[i].sq = 0.18;                                  // 挨一下：果冻抖，和游戏里同一套
+  speak(items[i].zk.voice);
+  document.getElementById('sel').textContent = '选它：' + items[i].zk.no + ' ' + items[i].zk.name;
+}
+
+/* ---------- 语音：小朋友不识字，点一下就念出来 ---------- */
+function speak(text){
+  try{
+    if(!('speechSynthesis' in window)) return;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'zh-CN'; u.rate = 0.9; u.pitch = 1.15;
+    speechSynthesis.speak(u);
+  }catch(e){ /* 系统没装中文语音就算了，画面能选 */ }
+}
+document.getElementById('sayRule').addEventListener('click', () => {
+  speak('点一下你最喜欢的一个丧尸，我就把它放进游戏里');
+});
+
+/* ---------- 控制 ---------- */
+let slow = false, paused = false;
+const slowBtn = document.getElementById('slow');
+const pauseBtn = document.getElementById('pause');
+slowBtn.addEventListener('click', () => {
+  slow = !slow; slowBtn.setAttribute('aria-pressed', String(slow));
+});
+pauseBtn.addEventListener('click', () => {
+  paused = !paused; pauseBtn.setAttribute('aria-pressed', String(paused));
+});
+addEventListener('keydown', e => {
+  const n = parseInt(e.key, 10);
+  if(n >= 1 && n <= 5) select(n);
+});
+
+/* ---------- 主循环：一条 rAF 驱动六只，节拍和游戏一致 ---------- */
+let last = performance.now(), T = 0, scroll = 0;
+function frame(now){
+  let dt = (now - last) / 1000;
+  last = now;
+  if(dt > 0.1) dt = 0.1;
+  if(paused) dt = 0;
+  dt *= slow ? 0.3 : 1;
+  T += dt; scroll = (scroll + dt*26) % 26;
+
+  items.forEach(it => {
+    it.ph += dt * 4.6;                                 // 游戏里 z.ph += dt*4.6
+    if(it.sq > 0) it.sq = Math.max(0, it.sq - dt);
+    const c = it.c;
+    c.setTransform(it.dpr, 0, 0, it.dpr, 0, 0);
+    c.clearRect(0, 0, W, H);
+
+    /* 地面：一条横线 + 往后滚的方块虚线，做出正在前进的错觉 */
+    c.fillStyle = '#223038'; c.fillRect(0, GY, W, 3);
+    c.fillStyle = '#2c3d47';
+    for(let x = -scroll; x < W; x += 26) c.fillRect(x, GY + 9, 14, 4);
+
+    /* 挨打的果冻抖（只动视觉，和游戏 drawZombie 同一公式） */
+    c.save(); c.translate(W/2, GY);
+    if(it.sq > 0 && !it.zk.old){
+      const p = Math.min(1, 1 - it.sq/0.18);
+      const wob = Math.sin(p*Math.PI*2) * 0.22 * (1-p);
+      c.scale(1+wob, 1-wob);
+    }
+    c.translate(-W/2, -GY);
+    if(it.zk.old) drawOldZombie(c, W/2, GY, SZ, OLD, T, it.ph);
+    else drawBlockZombie(c, W/2, GY, SZ, it.zk, T, it.ph);
+    c.restore();
+  });
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
