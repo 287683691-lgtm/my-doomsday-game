@@ -1347,9 +1347,11 @@ function drawBlockZombie(ctx,x,y,s,zk,t,ph){
    weak = 弱点零件在身上的位置（u 单位，脚底 y=0）。weakPos／破绽粒子／炉子塌的烟都从这一处取，
    不再各写各的系数，改外形时只改一行。
    高度上限：火柱和高举的骨棒最高削到 72u，别长成一条烟烟囱。
-   够不够得着血条要看站位：路 0 最远（u=2.379）却离三条血条（底边 104）最近，
-   72u 往上只留 2px 会被切顶——所以终章让最矮的独眼王（61u）守路 0，
-   火柱王／骨锤王走路 2／路 4，实测顶点 y≈193／280，离血条远得很。 */
+   够不够得着血条要看站位：路 0 最远（s=depthS(282,138,40)=142 ⇒ u=2.45），
+   可它离三条血条（底边 104）最近——72u 折下来 176px，顶点只剩 2px，会被切顶。
+   所以终章让最矮的拖地长臂王（背上骨刃 60u，顶点≈135）守路 0，
+   火柱王／骨锤王这两个最高的走路 2／路 4（顶点≈198／290），离血条远得很。
+   （「独眼」是兵种独眼丧尸的名字，别按在这儿。） */
 const BOSS_ZK={
   furnace:{art:'furnace',skin:'#616161',skinDark:'#424242',cloth:'#3e2723',clothDark:'#2b1a16',
            socket:'#1b1110',glow:'#ffee58',tooth:'#ff7043',
@@ -1757,9 +1759,12 @@ const VTEXT={
   coming:'来啦！它会发射子弹，看到冒烟就赶紧换路躲开！',
   /* 第二章三只大王的登场警告（文案见设计记录 4.2）：只讲它怎么打人、该怎么躲，
      名字由 boss_xxx 那一句先念，所以这里不再重复「××王」。 */
-  warn_furnace:'它没有手，会朝你站的那条路喷火，看到地上发红就换路！',
+  /* 话只能说代码真做得到的事：
+     furnace 的常规子弹没关（用户拍板），所以「冒烟」和「地上发红」两件事都得提；
+     drag 只有一只眼窝是外形记号，代码里它的选路照样追最近的主角，绝不能承诺「绕到它看不见的一边」。 */
+  warn_furnace:'它没有手，靠背上的炉子喷火：看到冒烟和地上发红，马上换路！',
   warn_hammer:'它只会一跳一跳，锤子举高高就是要砸，赶紧跑远一点！',
-  warn_drag:'它的手拖在地上扫你，它只有一只眼睛看得见，换到它看不到的一边！',
+  warn_drag:'它的手拖在地上从右边扫到左边，看到路面压暗就换到没暗的那条路！',
   zhugong:'现在是它主攻！盯住它头顶的光环！',
   /* 五种丧尸兵种第一次上场时各报一次名（一只一句，念完就完，不刷屏） */
   zb_fire:'会炸火的火焰丧尸，别站太近！',
@@ -1945,7 +1950,10 @@ const STAGES=[
     {ch:2,bg:'lava', boss:'furnace',quota:26,v:66,gap:2.0,cap:8, p2:0.40,p3:0.12,kind:{fire:100}},
     {ch:2,bg:'bone', boss:'hammer', quota:32,v:78,gap:1.75,cap:9,p2:0.45,p3:0.20,kind:{hole:50,fire:35,oneeye:15}},
     {ch:2,bg:'ice',  boss:'drag',   quota:38,v:90,gap:1.55,cap:10,p2:0.50,p3:0.28,kind:{notch:45,hole:25,ice:15,fire:15}},
-    {ch:2,bg:'rift', boss:'finale',finale:true,quota:0,v:66,gap:9,cap:0,p2:0,p3:0,kind:{}}  // 终章：不出小怪，三只大王直接合体
+    /* 终章：关卡自己不发兵（quota:0、cap:0），小兵只由大王召唤。
+       kind 必须给权重：pickType 权重和为 0 会返回空串＝ spawning 第一章的普通绿僵尸。
+       不排独眼冲刺兵（vm 2.0）——三只大王同场已经够满，再加一道冲刺身影小朋友读不过来。 */
+    {ch:2,bg:'rift', boss:'finale',finale:true,quota:0,v:66,gap:9,cap:0,p2:0,p3:0,kind:{fire:25,hole:25,notch:25,ice:25}}
   ];
 /* 第二章五种丧尸兵种（设计记录 4.1：外形给的暗示 → 只此一条机制）。
    hp＝血量，vm＝本关基准移速的倍率，s＝体型（depthS 的基准值，第一章普通僵尸沿用 70）；
@@ -1999,8 +2007,8 @@ const G={
   bossName:'',
   flash:0, laser:null,
   /* gts＝地面威胁（大王招式落地的火柱/火苗坑/震波/横扫，全部「先预警后生效」）
-     bossHold/auraI/auraT/finRage＝终章：全场停手秒数／谁头顶光环当主攻／距上次轮换／三只总血是否已过半 */
-  gts:[], bossHold:0, auraI:-1, auraT:0, finRage:false,
+     bossHold/auraT/finRage/finTotal＝终章：全场停手秒数／距上次轮换／是否已狂暴／开局三只总血（狂暴分母） */
+  gts:[], bossHold:0, auraT:0, finRage:false, finTotal:0,
   /* seen＝这一局里已经用语音报过名的丧尸兵种（每种只报第一次，之后靠眼睛认） */
   seen:{},
   hero:{x:230,y:laneY(2),tx:230,ty:laneY(2),lane:2,inv:0,cd:0.6,fire:0}
@@ -2142,7 +2150,7 @@ function makeBoss(cfg,hp,lane,xOff){
        swpSt＝长臂；aura/auraHp＝终章接力主攻。第一章大王没有 mech，这些字段只是躺着不动。 */
     weakT:0,weakMul:1,weakHits:0,furnT:0,emberT:1.2,
     atkT:(cfg.atkT||99)*0.7,hopT:1.6,slamSt:0,slamT:0,slamLeft:0,
-    swpSt:0,swpT:0,eyeLane:2,aura:0,auraHp:0,trioI:0};
+    swpSt:0,swpT:0,aura:0,auraHp:0,trioI:0};
   G.zs.push(z);
   return z;
 }
@@ -2160,14 +2168,19 @@ function spawnBoss(){
   const starN=d.ch===2?(cfg.trio?3:2):sceneIdx()+1;
   if(cfg.trio){
     /* 终章：三只大王同场，上/中/下三路各一只，x 前后错开（谁当主攻由 stepFinale 轮换）。
-        最上面那排离三条血条最近（路 0 的 u=138/58≈2.38，火柱举到顶点会顶进血条），所以让最矮的独眼王走最上排，
-       火柱王、骨锤王这两个最高的走中排和下排——实测顶点分别落在 y=193／280／132，都够不着血条。 */
+       lanes 按 trio 的顺序取：火柱王→路 2、骨锤王→路 4、拖地长臂王→路 0。
+       最上面那条路（路 0）离三条血条最近，所以让最矮的长臂王守它，
+       最高的两只（背上骨件 72u）走中排和下排——站位与血条的算法见 BOSS_ZK 表头注释。 */
     const lanes=[2,4,0];
     for(let i=0;i<cfg.trio.length;i++){
       const b=makeBoss(ZB[cfg.trio[i]],cfg.finHp[i],lanes[i%LANES],150);
       b.trioI=i;                                 // 接力主攻按这个编号轮换（stepFinale 每 12 秒或打掉 5 血换人）
       b.minX=GW*(0.68+i*0.07);                   // 越往下站得越靠右，三只错开成阶梯，一眼分得清谁是谁
     }
+    /* 狂暴线用「开局三只的总血」当分母，不是「当前存活大王的总血」——
+       否则先打死一只，存活总血从 42 掉到 30，一进场就已经过半，第二只还没打就突然狂暴。 */
+    let finSum=0;for(const h of cfg.finHp)finSum+=h;
+    G.finTotal=finSum;
     G.bossName=cfg.name;
   }else{
     const hp=d.ch===2?cfg.hp:Math.min(99,Math.round(cfg.hp*(1+(lv-1)*0.05)));
@@ -2213,7 +2226,7 @@ function bossFire(z){
    铁律（小朋友不识字，只能靠眼睛）：任何能伤到他的东西，都要先在路面「看得见地发红/变暗」够久。
    所以 addGt 把预警时长一律抬到 ≥0.5 秒兜底，谁写招式都别想漏。
    一条威胁的生命周期：warn（路面预警）→ dur（真的会伤人）→ 自己消失；hit 让它一次最多只扣一下。 */
-function clearGts(){G.gts.length=0;G.bossHold=0;G.auraI=-1;G.auraT=0;G.finRage=false;}
+function clearGts(){G.gts.length=0;G.bossHold=0;G.auraT=0;G.finRage=false;G.finTotal=0;}
 function addGt(e){e.t=0;e.hit=0;e.warn=Math.max(0.5,e.warn||0.6);G.gts.push(e);return e;}
 function gWarn(z,w){return (isFinalStage()&&z.phase===2)?Math.max(1.2,w):w;}   // 合体狂暴：地面预警一律拉到 1.2 秒
 function quakeLanes(l){const a=[];for(const d of[-1,0,1]){const x=l+d;if(x>=0&&x<LANES)a.push(x);}return a;}
@@ -2268,8 +2281,8 @@ function mechFurnace(z,dt){
   z.atkT-=dt;
   if(z.atkT>0)return;
   z.atkT=(z.phase===2?z.cfg.atkT2:z.cfg.atkT)*(0.85+Math.random()*0.3);
-  for(const ln of bossTargetLanes(z.phase===2?2:1))     // 狂暴＝一次烧两条路
-    addGt({kind:'pillar',lane:ln,x:Math.max(XMIN+40,Math.min(GW-80,G.hero.x)),warn:gWarn(z,z.cfg.warn),dur:z.phase===2?0.85:0.6});
+  for(const ln of bossTargetLanes(z.phase===2?2:1))     // 狂暴＝一次烧两条路，而且柱更高（tall 交给绘制层定像素）
+    addGt({kind:'pillar',lane:ln,x:Math.max(XMIN+40,Math.min(GW-80,G.hero.x)),warn:gWarn(z,z.cfg.warn),dur:z.phase===2?0.85:0.6,tall:z.phase===2?1:0});
   openWeak(z,2,1.8);
   sfx('bossShoot');
 }
@@ -2318,8 +2331,10 @@ function mechHammer(z,dt){
     else z.hopT=0.6;
   }
 }
-/* 3B 拖地长臂王：贴地横扫（地面先出现一条越来越长的暗影），手臂够得着两条路。
-   独眼＝它亮着眼睛照着的那几条路才会挨子弹，绕到盲侧它打的是你刚才站的地方。
+/* 3B 拖地长臂王：贴地横扫（那条路整条压暗，右端一只越举越亮的臂爪标出起点和方向）。
+   横扫从 x=1010 一路拖到 70，主角能站的区间（90~499）全在里面 ⇒ 预警只能报整条路，
+   绝不允许"只画一截暗影"——那等于让小朋友站在一条看起来没危险、实际必挨打的路里。
+   弹幕＝先亮 0.5 秒粉色瞄准光带标明要打哪几条路，再照着那几条发（选路仍追最近的主角，没有盲侧）。
    破绽＝手臂扫完收回那一下，打独眼 ×2。 */
 function mechDrag(z,dt){
   if(z.swpSt){                                        // 手臂甩出去＋收回来这段时间它腾不出手
@@ -2334,7 +2349,8 @@ function mechDrag(z,dt){
   if(z.atkT>0)return;
   z.swpSt=1;
   const w=gWarn(z,z.cfg.warn);
-  addGt({kind:'sweep',lanes:bossTargetLanes(2),x:GW+50,w:54,warn:w,dur:0.85});   // 铺两条路＝永远还剩三条能站
+  /* 平时扫两条路；狂暴够得更远＝扫三条（bossTargetLanes 上限 LANES-2，仍稳剩两条能站） */
+  addGt({kind:'sweep',lanes:bossTargetLanes(z.phase===2?3:2),x:GW+50,w:54,warn:w,dur:0.85});
   z.swpT=w+0.85+0.3;
   sfx('bossShoot');
 }
@@ -2354,7 +2370,7 @@ function pickAura(cur){
 }
 function setAura(next,cur){
   if(cur)cur.aura=0;
-  next.aura=1;next.auraHp=next.hp;G.auraI=next.trioI;G.auraT=12;
+  next.aura=1;next.auraHp=next.hp;G.auraT=12;
   if(!cur||!isFinalStage())return;
   G.ebs.length=0;G.bossHold=1.5;                                 // 轮换那一下全场停手 1.5 秒：看得清是谁、听得清是谁
   for(const z of G.zs)if(z.boss)z.tele=0;
@@ -2367,8 +2383,8 @@ function stepFinale(dt){
   let cur=null;const bs=[];
   for(const z of G.zs)if(z.boss&&!z.die){bs.push(z);if(z.aura)cur=z;}
   if(!bs.length)return;
-  let hp=0,mx=0;for(const z of bs){hp+=z.hp;mx+=z.hpMax;}
-  if(!G.finRage&&hp<=mx/2){                                      // 三只总血过半＝合体狂暴：三招连着来
+  let hp=0;for(const z of bs)hp+=z.hp;
+  if(!G.finRage&&hp<=G.finTotal/2){                              // 三只总血过半＝合体狂暴：三招连着来
     G.finRage=true;
     for(const z of bs){z.phase=2;z.fireT=Math.min(z.fireT,1.0);z.atkT=Math.min(z.atkT,1.2);}
     banner('🔥 三王合体狂暴啦！',3.2);sfx('boss');
@@ -2411,7 +2427,6 @@ function stepBoss(z,dt){
     if(z.fireT<=0){
       z.fireT=(z.phase===2?z.cfg.p2Fire:z.cfg.fireT)*(0.85+Math.random()*0.3);
       z.teleLanes=bossTargetLanes(z.phase===2?z.cfg.p2Lanes:z.cfg.lanes);
-      if(z.cfg.mech==='drag'&&z.teleLanes.length)z.eyeLane=z.teleLanes[0];   // 独眼照哪条路＝它要射哪条路
       z.tele=0.5;
       puffFX(G.ps,z.x-z.s*0.30,z.y-z.s*0.5,z.s/60);   // 开火前冒烟预警，看得见
     }
@@ -2713,12 +2728,20 @@ function stageClear(){
   }
   celebrate();                                     // 打完 BOSS：定格＋烟花＋面板浮现
 }
-/* BOSS 被打倒：决斗画面定格（子弹和小怪全部停在原地）、BOSS 往后仰倒＋冒大烟、
+/* BOSS 被打倒：决斗画面定格（大王射出的子弹停在半空当作定格剪影）、BOSS 往后仰倒＋冒大烟、
    烟花持续升空炸开；等「恭喜你打败了XX」读完，结算面板边放烟花边浮现，等小朋友选 */
 function celebrate(){
   mode='win';winT=0;fwT=0.25;winPanelOn=false;freezeT=T;
   G.flash=0;G.laser=null;G.bolts.length=0;      // 定格画面不再推进 update，特效清干净别冻在屏上
   G.gts.length=0;
+  /* win 模式只跑 stepWin，小兵不会走路也不会倒下——留着就是几只僵在原地的木桩。
+     让它们「啪」冒一团烟退场，只留下正在仰倒的大王（stepWin 逐个冒烟收尾）。 */
+  for(let i=G.zs.length-1;i>=0;i--){
+    const z=G.zs[i];
+    if(z.boss)continue;
+    G.zs.splice(i,1);
+    puffFX(G.ps,z.x,z.y-z.s*0.4,z.s/60);
+  }
   stopBgm();sfx('win');
   G.hero.inv=0;                                  // 防止定格时主角正处在受伤闪烁的"灭"帧
   const bi=MAP_ORDER.indexOf(curBG);             // 打败哪块战场的 BOSS，就解锁地图下一块
@@ -2795,16 +2818,10 @@ function startRun(){
 }
 function retryStage(){
   const wasFacingBoss=(G.bossOut||G.bossDone)&&isBossStage();   // 死在大王面前才直接重开大王
-  G.score=0;G.hearts=3;G.bonus=0;G.kills=0;
-  G.zs.length=0;G.bls.length=0;G.ps.length=0;G.ebs.length=0;
-  G.bolts.length=0;G.cs.length=0;G.flash=0;G.laser=null;
-  clearGts();
-  G.bossOut=false;G.bossDone=false;G.spawnT=1.1;G.shake=0;
-  const h=G.hero;
-  h.x=h.tx=230;h.lane=2;h.y=h.ty=laneY(2);h.inv=0;h.cd=0.5;h.fire=0;
-  applyStageBG();                             // 留在当前关卡：场景和关卡号都不变
-  G.quota=stCfg().quota;                      // 按当前关卡重新算僵尸数量
-  resetFlags();                               // 5 面旗立回来
+  /* 重打这一关＝除关卡号以外和开一局完全一样，所以直接复用 resetGame 把关卡号原样递回去。
+     以前这里逐行抄了一遍 resetGame，抄漏了 G.seen={}：重试后丧尸兵种不再报名，
+     小朋友听不见「破洞丧尸／独眼丧尸」是谁，只能自己猜。 */
+  resetGame(G.stage);
   if(wasFacingBoss){                          // BOSS战输了：数量打满后直接重开BOSS
     G.kills=G.quota;
     startPlay();
@@ -3176,11 +3193,15 @@ function drawGts(){
           ctx.globalAlpha=0.22+0.35*p;ctx.fillStyle='#ff5252';
           for(let x=GW-24;x>0;x-=44)ctx.fillRect(x,y-LANE_H*0.30,18,LANE_H*0.60);   // 斜着退的条纹＝"要塌了"
           ctx.restore();}
-      }else{                                        // 长臂：两条路压暗，暗影从右边探进来一截
-        for(const ln of ls){const y=laneY(ln),tip=GW-(GW-XMIN)*0.30*p;
-          ctx.save();ctx.globalAlpha=0.13+0.28*p;
-          ctx.fillStyle='#150618';ctx.fillRect(tip,y-LANE_H*0.42,GW-tip,LANE_H*0.84);
-          ctx.globalAlpha=0.45+0.45*p;ctx.fillStyle='#b388ff';ctx.fillRect(tip,y-LANE_H*0.42,7,LANE_H*0.84);
+      }else{                                        // 长臂：整条路压暗——横扫会一路扫到最左边，预警只能报整条
+        for(const ln of ls){const y=laneY(ln);
+          ctx.save();
+          ctx.globalAlpha=0.11+0.24*p*gtPulse();ctx.fillStyle='#150618';
+          ctx.fillRect(0,y-LANE_H*0.42,GW,LANE_H*0.84);
+          /* 右端那只越举越亮的臂爪＝"手在这边、往左扫"，方向和起点一眼读得出 */
+          const k=(9+15*p);
+          ctx.globalAlpha=0.55+0.45*p;ctx.fillStyle='#b388ff';
+          rrect(ctx,GW-k+4,y-k,k*2,k*2,6);ctx.fill();
           ctx.restore();}
       }
       continue;
@@ -3188,18 +3209,23 @@ function drawGts(){
     if(a>e.dur)continue;
     const g=Math.max(0,Math.min(Math.min(1,a/0.1),Math.min(1,(e.dur-a)/0.18)));   // 起势→收势
     if(e.kind==='pillar'){                          // 火柱：又高又亮，站这条路必挨一下
-      const y=laneY(e.lane),h=156*g;
-      ctx.save();ctx.globalAlpha=0.55*g;groundEllipse(e.x,y-4,30,12,'#ff7043');ctx.restore();
-      gtFlame(e.x,y-8,h,28,'#ff6d30','#ffd54f');
-      ctx.save();ctx.globalAlpha=0.85;gtFlame(e.x,y-8,h*0.6,15,'#fff59d','#ffffff');ctx.restore();
+      /* 半血狂暴那版更高更粗（招式侧只给 tall 这个语义标记，像素留在绘制层）。
+         最坏情况是火柱落在最上面那条路（laneY(0)=282）：焰尖约在 0.73h 处，
+         282-8-190*0.73≈135，仍在单王血条底边 116 之下，不会被切顶。 */
+      const y=laneY(e.lane),h=(e.tall?190:156)*g,w=e.tall?34:28;
+      ctx.save();ctx.globalAlpha=0.55*g;groundEllipse(e.x,y-4,w+2,12,'#ff7043');ctx.restore();
+      gtFlame(e.x,y-8,h,w,'#ff6d30','#ffd54f');
+      ctx.save();ctx.globalAlpha=0.85;gtFlame(e.x,y-8,h*0.6,w*0.53,'#fff59d','#ffffff');ctx.restore();
     }else if(e.kind==='pool'){                       // 火星坑：一小片烫红的地，窜几苗小火，3 秒自己灭
       const y=laneY(e.lane);
       ctx.save();ctx.globalAlpha=0.5*g;groundEllipse(e.x,y-5,24,9,'#bf360c');ctx.restore();
       for(let i=0;i<3;i++)gtFlame(e.x-14+i*14,y-4,(20+10*Math.sin(T*11+i*2.1))*g,9,'#ff8a50','#ffe082');
-    }else if(e.kind==='quake'){                      // 震波：三条路同时闪一道白光＋地面裂纹
+    }else if(e.kind==='quake'){                      // 震波：三条路同时闪一道光＋地面裂纹
       for(const ln of ls){const y=laneY(ln);
-        ctx.save();ctx.globalAlpha=0.85*g;ctx.fillStyle='#ffab91';
-        ctx.fillRect(0,y-6,GW,12);ctx.restore();
+        /* 亮度克制：生效帧小朋友必须还能看见自己在哪条路、大王在哪——
+           0.85 的整路白条铺满三条路等于一记全屏白闪，既晃眼又把"我已经挨了一下"糊掉了 */
+        ctx.save();ctx.globalAlpha=0.34*g;ctx.fillStyle='#ffab91';
+        ctx.fillRect(0,y-4,GW,8);ctx.restore();
         ctx.save();ctx.globalAlpha=g;ctx.strokeStyle='#efebe9';ctx.lineWidth=3;
         ctx.beginPath();
         for(let x=GW;x>-10;x-=52){ctx.moveTo(x,y-LANE_H*0.34);ctx.lineTo(x-24,y+LANE_H*0.30);}
@@ -3216,7 +3242,7 @@ function drawGts(){
         ctx.restore();}
     }
   }
-  for(const z of G.zs){                        // 长臂王独眼照路：光带画在实体之下，绝不挡住小朋友的小人
+  for(const z of G.zs){                        // 长臂王开火前的瞄准光带：画在实体之下，绝不挡住小朋友的小人
     if(!z.boss||z.die||z.cfg.mech!=='drag'||z.tele<=0)continue;
     const e=weakPos(z);
     for(const ln of (z.teleLanes.length?z.teleLanes:[z.lane])){
