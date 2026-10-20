@@ -129,7 +129,7 @@ h1{margin:0;font-size:clamp(38px,8vw,86px);line-height:1;font-weight:900;letter-
   font-size:clamp(10px,1.15vw,13px);line-height:1.15}
 .spot i{font-style:normal;white-space:nowrap}
 .spot span{font-size:clamp(19px,2.4vw,26px)}
-/* 第二章一格＝一关，左上角挂关号；终章格紫框；第一行第四格只是羊皮纸上的宝藏涂鸦 */
+/* 第二章一格＝一关，左上角挂关号；终章格紫框；第一行第四格是第一章宝藏（打完发光，不能点） */
 .spot .no{position:absolute;top:-9px;left:-6px;background:#6d4c41;color:#fff8e1;font-size:9px;font-weight:900;
   border-radius:8px;padding:1px 5px;letter-spacing:0}
 .spot.fin{border-color:#7e57c2;background:#f3ecff}
@@ -140,6 +140,10 @@ h1{margin:0;font-size:clamp(38px,8vw,86px);line-height:1;font-weight:900;letter-
   line-height:1.15}
 .gift span{font-size:clamp(17px,2.2vw,24px)}
 .gift i{font-style:normal;white-space:nowrap}
+/* 宝藏开过箱（存档 moday_gift）：虚线涂鸦→金色实框＋一枚 ✔，让小朋友看出这块已经领过了 */
+.gift.opened{border-style:solid;border-color:#ffb300;background:rgba(255,244,214,.92);color:#6d4c41;
+  box-shadow:0 0 0 3px rgba(255,179,0,.22)}
+.gift.opened::after{content:'✔';position:absolute;top:-11px;right:-8px;font-size:15px;color:#2e7d32}
 .spot.sel{border-color:#e65100;background:#fff3cd}
 .spot.sel::before{content:'⭐';position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:16px}
 .spot.lock{filter:grayscale(1);opacity:.55}
@@ -155,6 +159,11 @@ h1{margin:0;font-size:clamp(38px,8vw,86px);line-height:1;font-weight:900;letter-
   padding:16px 34px 20px;display:flex;flex-direction:column;align-items:center;gap:8px;
   box-shadow:0 12px 40px rgba(0,0,0,.5)}
 .winCard .emo{font-size:clamp(44px,8vw,72px);line-height:1}
+/* 宝藏那一行只在「刚开箱」的那局出现。本文件没有通用 .hide 规则，
+   所以这行自带默认 display:none，靠 .show 显形（同 #scrWin 的写法）。 */
+.winGift{display:none;color:#ffe082;border:2px solid rgba(255,213,79,.5);border-radius:14px;
+  padding:3px 14px;background:rgba(255,213,79,.1)}
+.winGift.show{display:block}
 
 /* 关卡横幅 */
 #banner{position:fixed;left:0;right:0;top:34%;z-index:8;text-align:center;pointer-events:none;
@@ -281,7 +290,7 @@ h1{margin:0;font-size:clamp(38px,8vw,86px);line-height:1;font-weight:900;letter-
       <button class="spot" data-bg="forest" style="left:12.5%;top:27.5%"><b class="no">第1关</b><span>🌲</span><i>发光森林</i></button>
       <button class="spot" data-bg="city" style="left:37.5%;top:27.5%"><b class="no">第2关</b><span>🌃</span><i>破破城市</i></button>
       <button class="spot" data-bg="desert" style="left:62.5%;top:27.5%"><b class="no">第3关</b><span>🌵</span><i>太阳沙漠</i></button>
-      <div class="gift" style="left:87.5%;top:27.5%"><span>💰</span><i>打完有宝藏</i></div>
+      <div class="gift" id="mapGift" style="left:87.5%;top:27.5%"><span>💰</span><i>打完有宝藏</i></div>
       <button class="spot" data-bg="lava" style="left:12.5%;top:72.5%"><b class="no">第4关</b><span>🌋</span><i>熔岩谷</i></button>
       <button class="spot" data-bg="bone" style="left:37.5%;top:72.5%"><b class="no">第5关</b><span>💀</span><i>白骨地</i></button>
       <button class="spot" data-bg="ice" style="left:62.5%;top:72.5%"><b class="no">第6关</b><span>❄️</span><i>寒冰谷</i></button>
@@ -304,6 +313,7 @@ h1{margin:0;font-size:clamp(38px,8vw,86px);line-height:1;font-weight:900;letter-
     <div class="emo">👑</div>
     <p class="ttl">打败大 BOSS 啦！</p>
     <p class="subttl" id="winSub">分数 0 · 还剩 3 颗心 · 最高分 0</p>
+    <p class="subttl winGift" id="winGift">🎁 宝藏开箱：🪙×40 ＋ 🛡 防护盾</p>
     <div class="btnRow">
       <button class="big gray" id="btnWinHome">🏠 回首页</button>
       <button class="big" id="btnWinNext">➡ 进下一关</button>
@@ -1648,7 +1658,16 @@ const SFX={
              noise({dur:0.10,vol:0.05,f:2000,ftype:'highpass',delay:0.02});},
   /* 吐出那一下的"噗"：很轻的一声，只做收尾，不抢预警音 */
   spit(){tone({f:300,f2:110,dur:0.10,type:'sine',vol:0.13,atk:0.005});
-         noise({dur:0.07,vol:0.08,f:1400});}
+         noise({dur:0.07,vol:0.08,f:1400});},
+  /* 防护盾撑开：两颗上行的"嗡——"＋一层细碎闪光噪声，听着像罩子鼓起来 */
+  shield(){tone({f:330,f2:880,dur:0.30,type:'sine',vol:0.16,atk:0.02});
+           tone({f:495,f2:1320,dur:0.26,type:'triangle',vol:0.10,atk:0.02,delay:0.05});
+           noise({dur:0.18,vol:0.05,f:3000,ftype:'highpass',delay:0.04});},
+  /* 盾挡下一下：金属"叮！"的高亮脆响，和 hurt 那种低沉下行彻底分开，
+     小朋友一听就知道"这次没掉心" */
+  block(){tone({f:1568,dur:0.10,type:'square',vol:0.13,atk:0.003});
+          tone({f:2093,f2:1568,dur:0.16,type:'sine',vol:0.11,atk:0.003,delay:0.03});
+          noise({dur:0.06,vol:0.06,f:4200,ftype:'highpass'});}
 };
 const MELO={type:'triangle',vol:0.10,gap:300,notes:[196,0,262,0,196,0,294,262]};
 let bgmTimer=null;
@@ -1744,6 +1763,12 @@ function applyStageBG(){
    金币在武器库里买武器。存档：moday_coin / moday_own / moday_cur_thin·fat
    ========================================================= */
 let coins=loadInt('moday_coin',0,0,9999999);
+/* 第一章宝藏（藏宝图第一行第四格 💰）：打败太阳沙漠大王当场开箱，只开一次。
+   里面是 40 金币 ＋ 1 面防护盾——第一章打完能买齐武器库里的货，
+   再送一把已有武器等于没送，所以宝藏给的是武器库里买不到的新家伙。 */
+const GIFT_COIN=40,GIFT_SHIELD=1;
+let giftN=loadInt('moday_gift',0,0,1);        // 0＝没开过，1＝宝藏已到手（存档 moday_gift）
+let giftNow=false;                             // 这一局刚开箱？结算面板才展示宝藏那一行
 /* 武器表：switch＝买一次永久拥有、随时切换；once＝按个数买、战斗里点了立刻用。
    rate＝发射间隔(秒)、spd＝飞行速度、dmg＝单发伤害。
    弹速规范：常规 460、shot 560（一梭子排开的枪口初速）、fire 400、rocket 360；ice 620 和 fast 600 是唯二的快弹。
@@ -1775,15 +1800,18 @@ const WEAPONS=[
   {id:'fire',  icon:'🔥', name:'大火球',   type:'switch', price:25, rate:1.40, spd:400, dmg:3, blast:1},   // 命中即炸：三条路、爆心前后 110px 内全体挨烧
   {id:'rocket',icon:'🚀', name:'火箭弹',   type:'switch', price:35, rate:0.85, spd:360, dmg:3, splash:1},
   {id:'bomb',  icon:'💥', name:'魔法炸弹', type:'once',   price:5},
+  {id:'shield',icon:'🛡', name:'防护盾',   type:'once',   price:30, block:3},   // 用一次撑开一道盾，替焕宸挡掉 3 次攻击（同魔法炸弹一样要自己点才开）
   {id:'laser', icon:ICO_LASER, name:'超级激光', type:'switch', price:60, rate:1.10, dmg:3}   // 常驻光束：无弹体，开火沿本路贯穿、全体各 3 伤
 ];
 function weaponOf(id){for(const w of WEAPONS)if(w.id===id)return w;return null;}
-/* 拥有/持有存档：{sw:[买断的切换型 id], oc:{bomb:个数}}，坏档一律当空（防御性加载） */
-let OWN={sw:[],oc:{bomb:0}};
+/* 拥有/持有存档：{sw:[买断的切换型 id], oc:{一次性 id:个数}}，坏档一律当空（防御性加载） */
+let OWN={sw:[],oc:{}};
 (function loadOwn(){
+  /* 一次性武器（炸弹、防护盾…）全部按 WEAPONS 表建键，加新的一次性武器不用再改这里 */
+  for(const w of WEAPONS)if(w.type==='once')OWN.oc[w.id]=0;
   let o=null;try{o=JSON.parse(LS.get('moday_own',''));}catch(e){}
   if(o&&Array.isArray(o.sw))for(const id of o.sw){const w=weaponOf(id);if(w&&w.type==='switch'&&!OWN.sw.includes(id))OWN.sw.push(id);}
-  if(o&&o.oc&&typeof o.oc==='object')OWN.oc.bomb=Math.max(0,parseInt(o.oc.bomb,10)||0);
+  if(o&&o.oc&&typeof o.oc==='object')for(const id of Object.keys(OWN.oc)){const w=weaponOf(id);if(w&&w.type==='once')OWN.oc[id]=Math.max(0,parseInt(o.oc[id],10)||0);}
 })();
 function saveOwn(){LS.set('moday_own',JSON.stringify(OWN));}
 function hasWeapon(id){const w=weaponOf(id);if(!w||w.type!=='switch')return false;return w.price===0||OWN.sw.indexOf(id)>=0;}
@@ -1847,13 +1875,17 @@ const VTEXT={
   welcome:'欢迎来到武器库！',
   w_star:'星星飞镖',w_bullet:'小子弹',w_shot:'散弹枪',w_fast:'快快飞镖',
   w_triple:'二连飞镖',w_boomer:'回旋镖',w_ice:'寒冰球',w_bolt:'雷电球',
-  w_fire:'大火球',w_rocket:'火箭弹',w_bomb:'魔法炸弹',w_laser:'超级激光',
+  w_fire:'大火球',w_rocket:'火箭弹',w_bomb:'魔法炸弹',w_laser:'超级激光',w_shield:'防护盾',
+  /* 防护盾撑起的一句提醒（战斗中说短一点，太长小朋友只顾着躲） */
+  shieldup:'防护盾撑开啦，帮你挡三下！',
+  /* 第一章宝藏开箱（说清楚具体拿到了什么，别只说「有宝藏」） */
+  gift:'宝藏开箱啦！四十个金币，还有一面防护盾！',
   zaidian:'再点一下就买啦',maidaola:'买到啦',huancha:'还差',gejb:'个金币',jixu:'买好啦，继续加油！',
   n0:'零',n1:'一',n2:'二',n3:'三',n4:'四',n5:'五',n6:'六',n7:'七',n8:'八',n9:'九',
   n10:'十',n20:'二十',n30:'三十',n40:'四十',n50:'五十',n60:'六十',n70:'七十',
   n80:'八十',n90:'九十'};
 const BOSS_KEY={'藤蔓僵王':'boss_forest','铁皮僵王':'boss_city','沙暴僵王':'boss_desert'};
-const SFX_KEYS=['click','shoot','bossshoot','hit','boss','hurt','win','over','fw','coin','boom','laserz','freeze','spitwarn','spit'];
+const SFX_KEYS=['click','shoot','bossshoot','hit','boss','hurt','win','over','fw','coin','boom','laserz','freeze','spitwarn','spit','shield','block'];
 let VOICES={},bgmA=null;
 if(IN_APK){
   for(const k in VTEXT){const a=new Audio('voice/'+k+'.wav');a.preload='auto';VOICES[k]=a;}
@@ -2094,7 +2126,8 @@ const G={
   gts:[], bossHold:0, auraT:0, finRage:false, finTotal:0,
   /* seen＝这一局里已经用语音报过名的丧尸兵种（每种只报第一次，之后靠眼睛认） */
   seen:{},
-  hero:{x:230,y:laneY(2),tx:230,ty:laneY(2),lane:2,inv:0,cd:0.6,fire:0}
+  /* hero.shield＝防护盾还剩几下（点一次盾＝撑开 3 下），shFx＝刚挡下时的碎裂计时 */
+  hero:{x:230,y:laneY(2),tx:230,ty:laneY(2),lane:2,inv:0,cd:0.6,fire:0,shield:0,shFx:0}
 };
 function sceneIdx(){const i=BG_ORDER.indexOf(curBG);return i<0?0:i;}
 function isBossStage(){return !!curStage().boss;}          // 本关结尾有大王（一章的关3／二章的关4~7）
@@ -2139,6 +2172,7 @@ function resetGame(stage){
   G.seen={};                                  // 重开一局＝丧尸兵种重新报一遍名
   const h=G.hero;
   h.x=h.tx=230;h.lane=2;h.y=h.ty=laneY(2);h.inv=0;h.cd=0.5;h.fire=0;
+  h.shield=0;h.shFx=0;                          // 重开一局＝盾清零（撑开的那一下已经消耗掉了，和炸弹一样不返）
   applyStageBG();                             // 重新玩＝回第 1 关（用选好的那个场景）
   G.quota=stCfg().quota;                      // 场景定好后再按本场景算血量配额
   resetFlags();                               // 5 面旗全部立回来
@@ -2831,17 +2865,37 @@ function useOnce(id){
   if(mode!=='play')return;                     // 只有战斗中能用：庆祝/过渡/结算屏里点了无效（不然白闪会冻在定格画面上）
   const n=onceCnt(id);if(n<=0)return;
   OWN.oc[id]=n-1;saveOwn();renderWbar();
+  const w=weaponOf(id);
   if(id==='bomb'){
     G.ebs.length=0;                             // 魔法炸弹：清空敌方子弹
     G.gts.length=0;                             // 连地上的火柱/震波一起炸灭（炸弹是「救命道具」，要真能救命）
     for(const z of G.zs){if(!z.die&&!z.leave)hitZ(z,z.x,z.y-z.s*0.5,3);}
     G.flash=0.3;                                // 全屏白闪一下
     sfx('boom');G.shake=1;addHitStop(0.08);
+  }else if(w&&w.block){                         // 防护盾：撑开后由 hurt() 替焕宸挡掉 block 下攻击
+    const h=G.hero;
+    h.shield=Math.min(9,h.shield+w.block);      // 盾还残着就叠上去（封顶 9，免得 HUD 的🛡画满整条）
+    sfx('shield');G.flash=0.16;
+    banner('🛡 防护盾撑开啦！还能挡 '+h.shield+' 下');
+    sayWhenFree(['shieldup'],()=>mode==='play');
+    updateHUD();
   }
 }
 
 function hurt(flag){
   const h=G.hero;
+  /* 盾在最前面挡：挡一下只减盾的层数，星星红心都不动，红旗也不会被拔；
+     无敌时间比挨一下短（0.9s vs 1.3s）——盾能连挡三下，但站原地不动照样会被打完 */
+  if(h.shield>0){
+    h.shield--;h.shFx=0.45;                     // shFx＝护罩被砸裂的闪光计时
+    h.inv=0.9;G.shake=0.55;
+    addHitStop(0.05);
+    sfx('block');
+    banner(h.shield>0?(flag?'🛡 旗子保住了！还能挡 '+h.shield+' 下':'🛡 挡下啦！还能挡 '+h.shield+' 下')
+                     :(flag?'🛡 旗子保住了！防护盾碎啦':'💔 防护盾碎啦！'));
+    updateHUD();
+    return;
+  }
   /* BOSS 送的星星先挡伤害：星星扣完才扣红心，红心扣完才游戏结束 */
   if(G.bonus>0)G.bonus--;else G.hearts--;
   h.inv=1.3;G.shake=1;
@@ -2889,6 +2943,21 @@ function stageClear(){
   }
   celebrate();                                     // 打完 BOSS：定格＋烟花＋面板浮现
 }
+/* 第一章宝藏：打完第一章的大王当场开箱——40 金币飞进金币盘 ＋ 1 面防护盾进库存。
+   第一章打完把武器库的货全买得起，再送一把已有武器等于没送，
+   所以宝藏给的是库里买不到的防护盾；只开一次，moday_gift 落盘后再打第一章不重复发。 */
+function openChapterGift(){
+  /* STAGES 里第一章三关没写 ch（只有第二章写 ch:2），判断口径和 isChapterEnd 的 d.ch!==2 保持一致；
+     celebrate 只在章节最后一战触发，所以这里＝第一章打完 */
+  if(giftN||curStage().ch===2)return false;
+  giftN=1;LS.set('moday_gift','1');
+  OWN.oc.shield=onceCnt('shield')+GIFT_SHIELD;saveOwn();
+  const bz=G.zs.find(z=>z.boss);                 // 大王此刻还在仰倒动画里，金币就从它身上弹出
+  if(bz)coinBurst(bz,GIFT_COIN);                 // BOSS 大赏金分 5 枚错峰起飞：40÷5＝每枚 8
+  else{coins+=GIFT_COIN;LS.set('moday_coin',String(coins));}
+  renderMap();                                   // 藏宝图那格 💰 立刻从虚线涂鸦变成金色已开箱
+  return true;
+}
 /* BOSS 被打倒：决斗画面定格（大王射出的子弹停在半空当作定格剪影）、BOSS 往后仰倒＋冒大烟、
    烟花持续升空炸开；等「恭喜你打败了XX」读完，结算面板边放烟花边浮现，等小朋友选 */
 function celebrate(){
@@ -2907,6 +2976,7 @@ function celebrate(){
   G.hero.inv=0;                                  // 防止定格时主角正处在受伤闪烁的"灭"帧
   const bi=MAP_ORDER.indexOf(curBG);             // 打败哪块战场的 BOSS，就解锁地图下一块
   if(bi>=0&&bi+2>mapN){mapN=Math.min(MAP_ORDER.length,bi+2);LS.set('moday_map',String(mapN));}
+  giftNow=openChapterGift();                      // 第一章的大王倒下＝当场开宝藏（只开这一次）
   confetti(70);
   const bname=G.bossName||'大BOSS';              // 终章是三王合体，不能用 find(z=>z.boss) 只认一只
   banner('🎉 恭喜你打败了 '+bname+'！',5.5);   // 定格画面没有打斗，字幕陪着语音读完（实测 4.2 秒，慢引擎更久）
@@ -2920,11 +2990,16 @@ function celebrate(){
 function showWinPanel(){
   const ni=BG_ORDER[(BG_ORDER.indexOf(curBG)+1)%BG_ORDER.length];
   $('winSub').textContent='分数 '+G.score+' · 还剩 '+G.hearts+' 颗心'+(G.bonus>0?'、'+G.bonus+' 颗星':'')+' · 最高分 '+best;
+  /* 刚开过宝藏就补一行战利品，再撒一拨彩花；数字跟着常量走，以后改奖励不会说错 */
+  $('winGift').textContent='🎁 宝藏开箱：🪙×'+GIFT_COIN+' ＋ 🛡 防护盾×'+GIFT_SHIELD;
+  $('winGift').classList.toggle('show',giftNow);
+  if(giftNow)confetti(60);
   /* 终章打完＝整个游戏通关，没有"下一块战场"可去，按钮回藏宝图 */
   $('btnWinNext').textContent=isFinalStage()?'🏆 全通关啦 · 回藏宝图'
     :(curStage().ch===2?'🗺 回藏宝图 · 点下一块':'➡ 进下一关 · '+BG_NAME[ni]);
   $('scrWin').classList.add('show');
-  say([isFinalStage()?'choosewin':'choose']);
+  /* 开箱那句先念，再接「选一个吧」：say 会顶掉当前语音，所以一次把两句排进同一条队列 */
+  say(giftNow?['gift',isFinalStage()?'choosewin':'choose']:[isFinalStage()?'choosewin':'choose']);
 }
 function hideWinPanel(){$('scrWin').classList.remove('show');winPanelOn=false;}
 /* 定格庆祝期间：BOSS 仰倒冒烟、烟花先密后疏一直放、彩花飘，恭喜语音读完后面板浮现 */
@@ -3007,6 +3082,7 @@ function update(dt){
   const h=G.hero;
   h.fire=Math.max(0,h.fire-dt*2.6);
   h.inv=Math.max(0,h.inv-dt);
+  h.shFx=Math.max(0,h.shFx-dt);               // 护罩被砸裂的闪白计时
   const k=Math.min(1,dt*9);                    // 手指拖动，小人跟上
   h.x+=(h.tx-h.x)*k;
   h.y+=(h.ty-h.y)*k;
@@ -3097,7 +3173,8 @@ function update(dt){
       z.x-=z.v*dt;z.ph+=dt*(z.boss?3.2:4.6);    // 走路：前进＋迈步动画（冻住时全停）
       if(z.boss)stepBoss(z,dt);                 // BOSS：站到场中＋随机换路
       else if(z.x-z.s*0.40<BASE_X){             // 走到最左边＝拔掉这条路的红旗！
-        pullFlag(z.lane);                          // 旗倒下 → 星星落回来变成新旗
+        /* 盾撑着（且此刻没在无敌里）就把僵尸撞碎在旗外：旗子保住，判定口径和下面 hurt(true) 一致 */
+        if(!(h.inv<=0&&h.shield>0))pullFlag(z.lane);   // 旗倒下 → 星星落回来变成新旗
         if(h.inv<=0)hurt(true);                   // 同一帧多只拔旗也只掉一颗心
         z.die=0.28;z.dieT=0;
         puffFX(G.ps,BASE_X+14,z.y-z.s*0.5,z.s/52);
@@ -3227,6 +3304,31 @@ function drawHero(){
   if(h.inv>0&&Math.floor(h.inv*12)%2===0)return;   // 受伤闪烁
   const c=CHARS[curChar];
   c.draw(ctx,h.x,h.y,heroS(),c.sk,mode==='win'?freezeT:T,h.fire);   // 庆祝定格：主角姿势也停住
+  if(h.shield>0)drawShield(h);                     // 护罩画在人前面：一眼看清"这一下被盾吃了"
+}
+/* 防护盾护罩：一圈呼吸的淡蓝水泡，前面亮一道弧＝"盾朝敌人那边"。
+   刚挡下那 0.45 秒整圈变白变粗、外面甩一圈碎裂环，小朋友不用看数字也知道挡成功了。 */
+function drawShield(h){
+  const s=heroS(),t=(mode==='win'?freezeT:T),cy=h.y-s*0.42;
+  const br=Math.min(1,h.shield/3),rip=0.5+0.5*Math.sin(t*3.1);      // 层数越少泡越薄，呼吸幅度恒定
+  const white=h.shFx>0?Math.min(1,h.shFx/0.45):0;                   // 挡下瞬间闪白
+  ctx.save();
+  ctx.globalAlpha=(0.20+0.10*br+0.06*rip)*(1+0.5*white);
+  ctx.fillStyle=white>0?'#e1f5fe':'#7fd8ff';
+  ctx.beginPath();ctx.ellipse(h.x,cy,s*0.72+2*rip,s*0.66+2*rip,0,0,Math.PI*2);ctx.fill();
+  ctx.globalAlpha=0.85;
+  ctx.lineWidth=2.6+3*white;
+  ctx.strokeStyle=white>0?'#ffffff':'#b3e5fc';
+  ctx.beginPath();ctx.ellipse(h.x,cy,s*0.72,s*0.66,0,0,Math.PI*2);ctx.stroke();
+  /* 迎敌面（右侧）加一段高亮弧：看着像一面朝外竖着的盾 */
+  ctx.lineWidth=4+3*white;ctx.strokeStyle='rgba(255,255,255,.9)';
+  ctx.beginPath();ctx.ellipse(h.x,cy,s*0.72,s*0.66,0,-0.85,0.85);ctx.stroke();
+  if(white>0){                                                       // 碎裂环：从泡面甩出去的一圈白
+    const k=1-h.shFx/0.45;
+    ctx.globalAlpha=1-k;ctx.lineWidth=3*(1-k)+1;ctx.strokeStyle='#ffffff';
+    ctx.beginPath();ctx.ellipse(h.x,cy,s*(0.72+k*0.42),s*(0.66+k*0.38),0,0,Math.PI*2);ctx.stroke();
+  }
+  ctx.restore();
 }
 /* ---------- 5 条路的战场地面（跟着背景换色） ---------- */
 const FIELD={
@@ -3678,7 +3780,10 @@ function updateHUD(){
   $('uiCoin').textContent=coins;
   $('uiStage').textContent=G.stage;
   const hv=Math.max(0,G.hearts);
-  $('hearts').textContent='❤️'.repeat(hv)+'🖤'.repeat(Math.max(0,3-hv))+(G.bonus>0?' '+'⭐'.repeat(G.bonus):'');
+  /* 后面接的是 BOSS 送的星星和撑开的防护盾：盾最多 3 下就画 3 个🛡，叠更多时用 ×n 收着，别把这排放爆 */
+  const sd=G.hero.shield|0;
+  $('hearts').textContent='❤️'.repeat(hv)+'🖤'.repeat(Math.max(0,3-hv))+(G.bonus>0?' '+'⭐'.repeat(G.bonus):'')
+    +(sd>0?' '+(sd<=3?'🛡'.repeat(sd):'🛡×'+sd):'');
   const bossStage=isBossStage();
   if(bossStage&&G.kills>=G.quota){const bn=bossCfg().name;$('uiQuotaBox').innerHTML='💀 打 <b>'+bn+'</b>！';}
   else $('uiQuotaBox').innerHTML='还要打 <b>'+Math.max(0,G.quota-G.kills)+'</b> 只';
@@ -3694,6 +3799,9 @@ function renderMap(){
     b.classList.toggle('sel',k===pickBG);
     b.classList.toggle('next',idx===mapN-1&&k!==pickBG);
   });
+  /* 第一行第四格 💰：开过箱就换成金色实框，字也跟着改成「宝藏已开箱」 */
+  const gp=$('mapGift');
+  if(gp){gp.classList.toggle('opened',giftN>0);gp.querySelector('i').textContent=giftN>0?'宝藏已开箱':'打完有宝藏';}
 }
 function syncSound(){
   $('btnSound').textContent=SND_ON?'🔊':'🔇';
@@ -3822,7 +3930,7 @@ document.querySelectorAll('.spot').forEach(b=>{
   };
 });
 
-/* ---------- 战斗武器栏：左边已拥有的切换型（高亮＝装备中），右边一次性（魔法炸弹） ---------- */
+/* ---------- 战斗武器栏：左边已拥有的切换型（高亮＝装备中），右边一次性（魔法炸弹、防护盾…） ---------- */
 function renderWbar(){
   const bar=$('wbar');bar.innerHTML='';
   for(const w of WEAPONS){
@@ -3835,8 +3943,9 @@ function renderWbar(){
     bar.appendChild(b);
   }
   const sep=document.createElement('div');sep.className='wsep';bar.appendChild(sep);
-  for(const id of ['bomb']){                    // 一次性只剩魔法炸弹（超级激光已改成切换型，走上面通用分支）
-    const w=weaponOf(id),n=onceCnt(id);
+  for(const w of WEAPONS){                      // 一次性武器全走通用分支（魔法炸弹、防护盾…），加新的不用再改这里
+    if(w.type!=='once')continue;
+    const id=w.id,n=onceCnt(id);
     const b=document.createElement('button');
     b.className='wb'+(n<=0?' empty':'');       // 数量 0 置灰
     b.innerHTML=w.icon+(n>0?'<span class="cnt">'+n+'</span>':'');

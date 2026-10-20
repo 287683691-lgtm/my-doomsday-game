@@ -1,4 +1,4 @@
-﻿# gen-audio.ps1：预生成 APK 内置语音＋音效（voice/*.wav）
+﻿﻿﻿﻿# gen-audio.ps1：预生成 APK 内置语音＋音效（voice/*.wav）
 # 台词用 Windows 自带中文语音（SAPI）合成；音效/BGM 按游戏里 tone()/noise() 的同一套参数用数学渲染，
 # 保证 APK 里听到的和桌面浏览器完全同款。改台词后重跑本脚本，再跑 build-apk.ps1 即可。
 $ErrorActionPreference = 'Stop'
@@ -76,6 +76,9 @@ $lines = [ordered]@{
   'w_rocket'    = '火箭弹'
   'w_bomb'      = '魔法炸弹'
   'w_laser'     = '超级激光'
+  'w_shield'    = '防护盾'
+  'shieldup'    = '防护盾撑开啦，帮你挡三下！'
+  'gift'        = '宝藏开箱啦！四十个金币，还有一面防护盾！'
   'zaidian'     = '再点一下就买啦'
   'maidaola'    = '买到啦'
   'jixu'        = '买好啦，继续加油！'
@@ -236,6 +239,9 @@ Gen-Sfx 'freeze' 0.40 @(@{dur=0.18;f=988;f2=1976;type='sine';vol=0.13;atk=0.006}
 # 小兵吐弹：张嘴前的上行"呜——"预警 ＋ 吐出的"噗"
 Gen-Sfx 'spitwarn' 0.32 @(@{dur=0.20;f=430;f2=900;type='triangle';vol=0.12;atk=0.008}, @{noise=1;dur=0.10;vol=0.05;f=2000;ftype='highpass';delay=0.02})
 Gen-Sfx 'spit' 0.22 @(@{dur=0.10;f=300;f2=110;type='sine';vol=0.13;atk=0.005}, @{noise=1;dur=0.07;vol=0.08;f=1400})
+# 防护盾：撑开的上行"嗡——" ＋ 挡下那一下的金属"叮！"
+Gen-Sfx 'shield' 0.42 @(@{dur=0.30;f=330;f2=880;type='sine';vol=0.16;atk=0.02}, @{dur=0.26;f=495;f2=1320;type='triangle';vol=0.10;atk=0.02;delay=0.05}, @{noise=1;dur=0.18;vol=0.05;f=3000;ftype='highpass';delay=0.04})
+Gen-Sfx 'block' 0.28 @(@{dur=0.10;f=1568;type='square';vol=0.13;atk=0.003}, @{dur=0.16;f=2093;f2=1568;type='sine';vol=0.11;atk=0.003;delay=0.03}, @{noise=1;dur=0.06;vol=0.06;f=4200;ftype='highpass'})
 
 # BGM：8 步旋律循环（与 MELO 一致）。尾巴折回头部，保证 loop 拼接无断口
 $loopLen = [int](2.4 * $SR)
@@ -252,5 +258,5 @@ Write-Wav (Join-Path $out 'bgm.wav') $bgm $loopLen
 
 $files = Get-ChildItem $out -Filter *.wav
 $mb = [math]::Round(($files | Measure-Object Length -Sum).Sum / 1MB, 2)
-Write-Host ('音效/BGM：14 个已生成')
+Write-Host ('音效/BGM：' + (Get-ChildItem $out -Filter 's_*.wav').Count + ' 个音效 ＋ 1 个 BGM 已生成')
 Write-Host ('合计 ' + $files.Count + ' 个 wav，' + $mb + ' MB → ' + $out)
