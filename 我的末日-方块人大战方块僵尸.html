@@ -48,18 +48,50 @@ button{font-family:inherit;cursor:pointer;border:0}
   padding:calc(30px + env(safe-area-inset-top)) calc(18px + env(safe-area-inset-right)) calc(30px + env(safe-area-inset-bottom)) calc(18px + env(safe-area-inset-left));
   background:radial-gradient(circle at 50% 40%,rgba(16,28,52,.86),rgba(4,8,18,.96))}
 .scr.hide{display:none}
+/* 矮屏两档：菜单是 position:fixed + overflow:hidden + justify-content:center，
+   内容一旦超过视口高度，上下各切一半（标题被削顶、分数行看不见）。
+   藏宝图改成两行之后纵向更吃紧，所以矮屏把「头部三件套」一起压下来换空间。 */
 @media (max-height:760px){
-  #scrMenu{gap:8px;padding-top:calc(26px + env(safe-area-inset-top));padding-right:calc(10px + env(safe-area-inset-right));
-    padding-bottom:calc(26px + env(safe-area-inset-bottom));padding-left:calc(10px + env(safe-area-inset-left))}
-  #scrMenu h1{font-size:clamp(30px,6.5vw,52px);letter-spacing:3px}
-  #scrMenu .tagline{font-size:clamp(13px,2vw,17px);margin-top:-2px}
-  #scrMenu .chars{margin:2px 0}
-  #scrMenu .chc{width:clamp(118px,19vw,168px);padding:5px 9px 7px}
-  #scrMenu .cn{font-size:13px;margin-top:4px}
-  #scrMenu .mapWrap{height:96px;width:min(480px,72vw)}
-  #scrMenu .mapTitle{font-size:13px}
-  #scrMenu .big{height:56px;font-size:22px;padding:0 22px}
-  #scrMenu .menuRow{font-size:14px}
+  #scrMenu{gap:8px;padding-top:calc(22px + env(safe-area-inset-top));padding-right:calc(10px + env(safe-area-inset-right));
+    padding-bottom:calc(22px + env(safe-area-inset-bottom));padding-left:calc(10px + env(safe-area-inset-left))}
+  #scrMenu h1{font-size:clamp(28px,5.6vw,44px);letter-spacing:3px}
+  #scrMenu .tagline{font-size:clamp(12px,1.7vw,15px);margin-top:-2px}
+  #scrMenu .chars{margin:0}
+  #scrMenu .chc{width:clamp(112px,17vw,150px);padding:4px 8px 6px;border-radius:18px}
+  #scrMenu .cn{font-size:12px;margin-top:3px}
+  #scrMenu .mapTitle{font-size:12px}
+  #scrMenu .mapWrap{height:158px;width:min(560px,90vw)}
+  #scrMenu .spot{height:44px;font-size:10px;border-width:2.5px;border-radius:11px}
+  #scrMenu .spot span{font-size:18px}
+  #scrMenu .spot i{font-size:10px}
+  #scrMenu .spot .no{font-size:8px;padding:0 4px;top:-8px;left:-4px}
+  #scrMenu .spot.sel::before{top:-13px;font-size:14px}
+  #scrMenu .spot.lock::after{top:-9px;right:-7px;font-size:13px}
+  #scrMenu .gift{height:44px;font-size:9px;border-width:2.5px}
+  #scrMenu .gift span{font-size:17px}
+  #scrMenu .big{height:50px;font-size:20px;padding:0 20px}
+  #scrMenu .menuRow{font-size:13px}
+}
+/* 手机横屏（高 ≤520）：藏宝图两行放不下，人物卡压成「头像＋名字」横条，副标题让位。
+   头像仍是真实立绘 canvas（40×46＝200×230 的原比例，不拉伸），不是 emoji 占位。 */
+@media (max-height:520px){
+  #scrMenu{gap:5px;padding-top:calc(14px + env(safe-area-inset-top));padding-bottom:calc(14px + env(safe-area-inset-bottom))}
+  #scrMenu h1{font-size:24px;letter-spacing:2px}
+  #scrMenu .tagline{display:none}
+  #scrMenu .chars{gap:8px}
+  #scrMenu .chc{display:flex;align-items:center;gap:7px;width:auto;padding:3px 10px 3px 3px;border-radius:12px;border-width:3px}
+  #scrMenu .chc canvas{width:40px;height:46px;flex:0 0 auto;border-radius:8px}
+  #scrMenu .cn{margin-top:0;font-size:12px;white-space:nowrap}
+  #scrMenu .mapTitle{font-size:11px}
+  #scrMenu .mapWrap{height:132px;width:min(540px,94vw)}
+  #scrMenu .spot{height:42px;font-size:9px;padding:0 4px}
+  #scrMenu .spot i{font-size:9px}
+  #scrMenu .spot span{font-size:16px}
+  #scrMenu .gift{height:42px;font-size:8px}
+  #scrMenu .gift span{font-size:15px}
+  #scrMenu .big{height:44px;font-size:18px;padding:0 16px}
+  #scrMenu .menuRow{font-size:12px}
+  #scrMenu .best b{font-size:14px}
 }
 /* 标题和副标题也可点击发声：小朋友点哪儿都有声音 */
 #scrMenu h1,#scrMenu .tagline{cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .12s}
@@ -69,8 +101,8 @@ h1{margin:0;font-size:clamp(38px,8vw,86px);line-height:1;font-weight:900;letter-
   text-shadow:0 6px 0 rgba(0,0,0,.25)}
 .tagline{color:#a9c0e8;font-size:clamp(15px,2.2vw,22px);font-weight:700;margin-top:-4px}
 .chars{display:flex;gap:clamp(12px,3vw,34px);justify-content:center;margin:6px 0}
-.chc{background:rgba(255,255,255,.07);border:4px solid transparent;border-radius:24px;padding:8px 14px 10px;
-  width:clamp(150px,24vw,220px);cursor:pointer}
+.chc{background:rgba(255,255,255,.07);border:4px solid transparent;border-radius:20px;padding:6px 12px 8px;
+  width:clamp(126px,15vw,182px);cursor:pointer}
 .chc.sel{border-color:#ffca28;background:rgba(255,202,40,.14)}
 .chc canvas{width:100%;height:auto;display:block;border-radius:14px;background:#101a2e;touch-action:none}
 .cn{color:#fff;font-weight:900;font-size:clamp(14px,2vw,20px);margin-top:6px}
@@ -84,16 +116,30 @@ h1{margin:0;font-size:clamp(38px,8vw,86px);line-height:1;font-weight:900;letter-
 /* ---------- 藏宝图小地图：像探险一样选战场 ---------- */
 #mapBox{display:flex;flex-direction:column;gap:6px;align-items:center}
 .mapTitle{color:#ffe082;font-weight:900;font-size:clamp(14px,2vw,20px)}
-.mapWrap{position:relative;width:min(640px,80vw);height:112px;border-radius:16px;
+/* 藏宝图两行四格（B 版）：卡片扁长、格与格之间只留一小段连线。
+   flex:none 是刚需——.scr 是纵向 flex，地图超高时会被压缩，第二行直接溢出羊皮纸。 */
+.mapWrap{position:relative;flex:none;width:min(700px,92vw);height:212px;border-radius:16px;
   background:linear-gradient(160deg,#f0dfae,#dcc189 60%,#cfae74);
   border:3px dashed #8d6e63;box-shadow:inset 0 0 26px rgba(120,84,40,.35)}
 .mapWrap svg{position:absolute;inset:0;width:100%;height:100%}
-.mapWrap::after{content:'🧭';position:absolute;left:36%;bottom:3px;font-size:19px;opacity:.7}
+
 .spot{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;
-  gap:1px;padding:5px 10px 4px;border-radius:14px;background:rgba(255,251,235,.82);
-  border:3px solid #6d4c41;color:#4e342e;font-weight:900;font-size:12px;line-height:1.1}
-.spot i{font-style:normal}
-.spot span{font-size:26px}
+  justify-content:center;gap:0;width:clamp(96px,15.5vw,150px);height:58px;padding:0 6px;border-radius:14px;
+  background:rgba(255,251,235,.9);border:3px solid #6d4c41;color:#4e342e;font-weight:900;
+  font-size:clamp(10px,1.15vw,13px);line-height:1.15}
+.spot i{font-style:normal;white-space:nowrap}
+.spot span{font-size:clamp(19px,2.4vw,26px)}
+/* 第二章一格＝一关，左上角挂关号；终章格紫框；第一行第四格只是羊皮纸上的宝藏涂鸦 */
+.spot .no{position:absolute;top:-9px;left:-6px;background:#6d4c41;color:#fff8e1;font-size:9px;font-weight:900;
+  border-radius:8px;padding:1px 5px;letter-spacing:0}
+.spot.fin{border-color:#7e57c2;background:#f3ecff}
+.spot.fin .no{background:#7e57c2}
+.gift{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:0;width:clamp(96px,15.5vw,150px);height:58px;border-radius:14px;color:#8d6e63;
+  border:3px dashed #a1887f;background:rgba(255,251,235,.34);font-weight:900;font-size:clamp(9px,1.05vw,12px);
+  line-height:1.15}
+.gift span{font-size:clamp(17px,2.2vw,24px)}
+.gift i{font-style:normal;white-space:nowrap}
 .spot.sel{border-color:#e65100;background:#fff3cd}
 .spot.sel::before{content:'⭐';position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:16px}
 .spot.lock{filter:grayscale(1);opacity:.55}
@@ -224,17 +270,22 @@ h1{margin:0;font-size:clamp(38px,8vw,86px);line-height:1;font-weight:900;letter-
   <div id="mapBox">
     <div class="mapTitle">🗺 末日藏宝图 · 点一块去探险</div>
     <div class="mapWrap">
-      <svg viewBox="0 0 600 120" preserveAspectRatio="none" aria-hidden="true">
-        <path d="M70 66 C 150 22, 230 30, 300 44 S 470 70, 540 48" fill="none"
+      <svg viewBox="0 0 700 212" preserveAspectRatio="none" aria-hidden="true">
+        <!-- 第一行＝第一章三块战场（棕色路线），第二行＝第二章四关（紫色路线）；虚线只连到相邻卡片之间 -->
+        <path d="M162 58 H188 M337 58 H363 M512 58 H538" fill="none"
           stroke="#8d6e63" stroke-width="3.5" stroke-dasharray="7 8" stroke-linecap="round"/>
-        <path d="M540 48 C 520 82, 468 92, 400 84" fill="none"
+        <path d="M162 154 H188 M337 154 H363 M512 154 H538" fill="none"
           stroke="#7e57c2" stroke-width="3.5" stroke-dasharray="6 9" stroke-linecap="round"/>
-        <path d="M462 30 l14 14 M476 30 l-14 14" stroke="#c62828" stroke-width="4" stroke-linecap="round"/>
+        <path d="M636 192 l13 13 M649 192 l-13 13" stroke="#c62828" stroke-width="4" stroke-linecap="round"/>
       </svg>
-      <button class="spot" data-bg="forest" style="left:11%;top:55%"><span>🌲</span><i>发光森林</i></button>
-      <button class="spot" data-bg="city" style="left:50%;top:36%"><span>🌃</span><i>破破城市</i></button>
-      <button class="spot" data-bg="desert" style="left:90%;top:40%"><span>🌵</span><i>太阳沙漠</i></button>
-      <button class="spot" data-bg="valley" style="left:66%;top:70%"><span>🧟</span><i>丧尸山谷</i></button>
+      <button class="spot" data-bg="forest" style="left:12.5%;top:27.5%"><b class="no">第1关</b><span>🌲</span><i>发光森林</i></button>
+      <button class="spot" data-bg="city" style="left:37.5%;top:27.5%"><b class="no">第2关</b><span>🌃</span><i>破破城市</i></button>
+      <button class="spot" data-bg="desert" style="left:62.5%;top:27.5%"><b class="no">第3关</b><span>🌵</span><i>太阳沙漠</i></button>
+      <div class="gift" style="left:87.5%;top:27.5%"><span>💰</span><i>打完有宝藏</i></div>
+      <button class="spot" data-bg="lava" style="left:12.5%;top:72.5%"><b class="no">第4关</b><span>🌋</span><i>熔岩谷</i></button>
+      <button class="spot" data-bg="bone" style="left:37.5%;top:72.5%"><b class="no">第5关</b><span>💀</span><i>白骨地</i></button>
+      <button class="spot" data-bg="ice" style="left:62.5%;top:72.5%"><b class="no">第6关</b><span>❄️</span><i>寒冰谷</i></button>
+      <button class="spot fin" data-bg="rift" style="left:87.5%;top:72.5%"><b class="no">终章</b><span>👑</span><i>合体山谷</i></button>
     </div>
   </div>
   <div class="btnRow">
@@ -1629,7 +1680,7 @@ const LS={
   get(k,d){try{const v=localStorage.getItem(k);return v==null?d:v;}catch(e){return d;}},
   set(k,v){try{localStorage.setItem(k,v);}catch(e){}}
 };
-const SAVE_VER=1;                       // 存档结构变更时 +1，并在 migrateSave 里补一步
+const SAVE_VER=2;                       // 存档结构变更时 +1，并在 migrateSave 里补一步
 /* 迁移链：把旧存档逐步升级到当前版本。每步幂等，重复执行安全 */
 function migrateSave(){
   let v=parseInt(LS.get('moday_ver','0'),10)||0;
@@ -1637,6 +1688,13 @@ function migrateSave(){
     /* v0 → v1：旧版用 moday_unlock=1 表示全解锁，统一并入 moday_map=3 */
     if(LS.get('moday_unlock','0')==='1')LS.set('moday_map','3');
     v=1;
+  }
+  if(v<2){
+    /* v1 → v2：藏宝图第二章由一格「丧尸山谷」拆成四格（熔岩谷／白骨地／寒冰谷／合体山谷）。
+       moday_map 存的是"已解锁到第几格"，旧第 4 格＝新第 4 格，数值不用换算；
+       只有当前选中的战场要换个名字继续：valley → lava */
+    if(LS.get('moday_bgcur','')==='valley')LS.set('moday_bgcur','lava');
+    v=2;
   }
   /* 迁移完成后无条件写回当前版本号，保证下次启动不再重复迁移 */
   LS.set('moday_ver',String(SAVE_VER));
@@ -1647,19 +1705,21 @@ function loadInt(k,d,lo,hi){const n=parseInt(LS.get(k,String(d)),10);return isNa
 let SND_ON=LS.get('moday_snd','1')==='1';
 let best=loadInt('moday_best',0,0,9999999);
 let curChar=LS.get('moday_char','thin')==='fat'?'fat':'thin';
-/* 藏宝图：战场按顺序解锁，打败 BOSS 解锁下一块。
+/* 藏宝图：格子按顺序解锁，打败本格 BOSS 解锁下一格。
    BG_ORDER ＝ 第一章「一块战场贯穿三关」的战场（难度跟着它走 SCENES）；
-   MAP_ORDER ＝ 藏宝图上的格子顺序，第四格「丧尸山谷」是第二章入口——
-   第二章的背景跟着关卡一块块换（熔岩谷／白骨地／寒冰谷／合体山谷），
-   所以那四块只进 BG 绘制表，不进 BG_ORDER：难度由 STAGES 里写死的数值决定，
-   不再乘场景系数（否则同一关在山谷里会被 loopN 和 SCENES 二次加码）。 */
+   MAP_ORDER ＝ 藏宝图上的格子顺序＝第一章三格＋第二章四格。
+   第二章一格就是一关（熔岩谷 4／白骨地 5／寒冰谷 6／合体山谷 7），
+   背景跟关卡走、数值由 STAGES 写死，所以这四块不进 BG_ORDER：
+   难度不乘场景系数、也不按 loopN 二次加码。 */
 const BG_ORDER=['forest','city','desert'];
-const MAP_ORDER=['forest','city','desert','valley'];
+const MAP_ORDER=['forest','city','desert','lava','bone','ice','rift'];
 /* 藏宝图每一格对应的守关大王（点锁着的格子时，念出"该打赢谁"） */
-const MAP_BOSS=['boss_forest','boss_city','boss_desert','boss_furnace'];
+const MAP_BOSS=['boss_forest','boss_city','boss_desert','boss_furnace','boss_hammer','boss_drag','boss_finale'];
+/* 点这一格从第几关打起：第一章三格都从第 1 关起（一块贯穿三关＋BOSS） */
+const MAP_STAGE={forest:1,city:1,desert:1,lava:4,bone:5,ice:6,rift:7};
 const BG_NAME={forest:'发光森林',city:'破破城市',desert:'太阳沙漠',
                valley:'丧尸山谷',lava:'熔岩谷',bone:'白骨地',ice:'寒冰谷',rift:'合体山谷'};
-let mapN=loadInt('moday_map',1,1,4);           // 藏宝图已解锁几块
+let mapN=loadInt('moday_map',1,1,MAP_ORDER.length);   // 藏宝图已解锁几格
 let pickBG=LS.get('moday_bgcur','forest');   // 小朋友选的战场：一个场景贯穿三关＋BOSS
 if(MAP_ORDER.indexOf(pickBG)<0||MAP_ORDER.indexOf(pickBG)>=mapN)pickBG='forest';
 let curBG='forest';                          // 当前画的战场
@@ -2761,7 +2821,8 @@ function showWinPanel(){
   const ni=BG_ORDER[(BG_ORDER.indexOf(curBG)+1)%BG_ORDER.length];
   $('winSub').textContent='分数 '+G.score+' · 还剩 '+G.hearts+' 颗心'+(G.bonus>0?'、'+G.bonus+' 颗星':'')+' · 最高分 '+best;
   /* 终章打完＝整个游戏通关，没有"下一块战场"可去，按钮回藏宝图 */
-  $('btnWinNext').textContent=isFinalStage()?'🏆 全通关啦 · 回藏宝图':'➡ 进下一关 · '+BG_NAME[ni];
+  $('btnWinNext').textContent=isFinalStage()?'🏆 全通关啦 · 回藏宝图'
+    :(curStage().ch===2?'🗺 回藏宝图 · 点下一块':'➡ 进下一关 · '+BG_NAME[ni]);
   $('scrWin').classList.add('show');
   say([isFinalStage()?'choosewin':'choose']);
 }
@@ -2814,7 +2875,7 @@ function startRun(){
   loopN=1;
   /* 藏宝图点在「丧尸山谷」＝从第二章第 4 关起步（山谷里的四块背景由关卡决定）；
      点前三块战场仍是第一章：第 1 关起，一块战场贯穿三关＋BOSS */
-  resetGame(pickBG==='valley'?4:1);
+  resetGame(MAP_STAGE[pickBG]||1);   // 第一章三格都从第 1 关起，第二章一格一关
   startPlay();
 }
 function retryStage(){
@@ -3514,6 +3575,12 @@ $('btnWinNext').onclick=()=>{                        // 打败BOSS＝去藏宝�
   sfx('click');
   /* 终章全通关：回藏宝图（给焕宸的新主角外观奖励以后接在这里） */
   if(isFinalStage()){hideWinPanel();toMenu();return;}
+  /* 第二章＝藏宝图上一格一关：打完本格大王不自动串关（下一格是地图上的另一块战场，
+     得让小朋友自己点）。回地图前把⭐挪到刚解锁的那一格，指针和"点下一块"说的是同一块。 */
+  if(curStage().ch===2){
+    const ni=MAP_ORDER[Math.min(MAP_ORDER.length-1,MAP_ORDER.indexOf(curBG)+1)];
+    if(MAP_ORDER.indexOf(ni)<mapN){pickBG=ni;LS.set('moday_bgcur',pickBG);}
+    hideWinPanel();toMenu();return;}
   loopN=Math.min(10,loopN+1);
   pickBG=BG_ORDER[(BG_ORDER.indexOf(curBG)+1)%BG_ORDER.length];
   LS.set('moday_bgcur',pickBG);
