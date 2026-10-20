@@ -1622,7 +1622,7 @@ const SFX={
   shoot(){noise({dur:0.06,vol:0.075,f:2600,ftype:'highpass'});
           tone({f:220,f2:120,dur:0.09,type:'triangle',vol:0.11});},
   /* BOSS 子弹：低沉下行的"咻——"，锯齿＋低通噪声，有压迫感但音量克制，不吓到小朋友 */
-  bossShoot(){tone({f:200,f2:62,dur:0.26,type:'sawtooth',vol:0.15,atk:0.01});
+  bossshoot(){tone({f:200,f2:62,dur:0.26,type:'sawtooth',vol:0.15,atk:0.01});
               noise({dur:0.20,vol:0.11,f:600});},
   hit(){tone({f:190,f2:60,dur:0.22,type:'sine',vol:0.26,atk:0.006});
         noise({dur:0.10,vol:0.15,f:900});},
@@ -1653,7 +1653,7 @@ const SFX={
   freeze(){tone({f:988,f2:1976,dur:0.18,type:'sine',vol:0.13,atk:0.006});
            tone({f:1480,f2:2349,dur:0.22,type:'sine',vol:0.10,atk:0.006,delay:0.06});},
   /* 小兵张嘴前的"呜——"：上行的短哨（和大王那种下行锯齿彻底分开），
-     一听见就该挪路了；音量压在 bossShoot 之下，屏幕上十几只同叫也不刺耳 */
+     一听见就该挪路了；音量压在 bossshoot 之下，屏幕上十几只同叫也不刺耳 */
   spitwarn(){tone({f:430,f2:900,dur:0.20,type:'triangle',vol:0.12,atk:0.008});
              noise({dur:0.10,vol:0.05,f:2000,ftype:'highpass',delay:0.02});},
   /* 吐出那一下的"噗"：很轻的一声，只做收尾，不抢预警音 */
@@ -1885,6 +1885,8 @@ const VTEXT={
   n10:'十',n20:'二十',n30:'三十',n40:'四十',n50:'五十',n60:'六十',n70:'七十',
   n80:'八十',n90:'九十'};
 const BOSS_KEY={'藤蔓僵王':'boss_forest','铁皮僵王':'boss_city','沙暴僵王':'boss_desert'};
+/* 这里的 key 必须与 SFX 对象的方法名一字不差（全小写）：APK 用 voice/s_<key>.wav，
+   拼错只会静悄悄掉回 WebAudio 合成器，声音不丢但内置通路白做。 */
 const SFX_KEYS=['click','shoot','bossshoot','hit','boss','hurt','win','over','fw','coin','boom','laserz','freeze','spitwarn','spit','shield','block'];
 let VOICES={},bgmA=null;
 if(IN_APK){
@@ -2405,7 +2407,7 @@ function bossFire(z){
     G.ebs.push({x:z.x-z.s*0.30,y:laneY(ln)-8,lane:ln,vx:-bspd,rot:0});
   }
   puffFX(G.ps,z.x-z.s*0.34,z.y-z.s*0.5,z.s/70);
-  sfx('bossShoot');
+  sfx('bossshoot');
 }
 /* ========== 第二章：地面威胁 + 三只大王的招式 ==========
    铁律（小朋友不识字，只能靠眼睛）：任何能伤到他的东西，都要先在路面「看得见地发红/变暗」够久。
@@ -2471,7 +2473,7 @@ function mechFurnace(z,dt){
   for(const ln of bossTargetLanes(z.phase===2?2:1))     // 狂暴＝一次烧两条路，而且柱更高（tall 交给绘制层定像素）
     addGt({kind:'pillar',lane:ln,x:Math.max(XMIN+40,Math.min(GW-80,G.hero.x)),warn:gWarn(z,z.cfg.warn),dur:z.phase===2?0.85:0.6,tall:z.phase===2?1:0});
   openWeak(z,2,1.8);
-  sfx('bossShoot');
+  sfx('bossshoot');
 }
 function furnaceBreak(z){
   z.furnT=2.0;z.weakHits=0;
@@ -2548,7 +2550,7 @@ function mechDrag(z,dt){
      狂暴体现在扫得更快（atkT2）和臂爪更亮，不体现在多封一条路。 */
   addGt({kind:'sweep',lanes:bossTargetLanes(2),x:GW+50,w:54,warn:w,dur:0.85});
   z.swpT=w+0.85+0.3;
-  sfx('bossShoot');
+  sfx('bossshoot');
 }
 function stepBossMech(z,dt){
   if(z.cfg.mech==='furnace')mechFurnace(z,dt);
