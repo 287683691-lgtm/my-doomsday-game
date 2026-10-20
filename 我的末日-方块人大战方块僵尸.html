@@ -1641,7 +1641,14 @@ const SFX={
            noise({dur:0.16,vol:0.07,f:3200,ftype:'highpass'});},
   /* 寒冰球冻住：两颗上行的玻璃叮 */
   freeze(){tone({f:988,f2:1976,dur:0.18,type:'sine',vol:0.13,atk:0.006});
-           tone({f:1480,f2:2349,dur:0.22,type:'sine',vol:0.10,atk:0.006,delay:0.06});}
+           tone({f:1480,f2:2349,dur:0.22,type:'sine',vol:0.10,atk:0.006,delay:0.06});},
+  /* 小兵张嘴前的"呜——"：上行的短哨（和大王那种下行锯齿彻底分开），
+     一听见就该挪路了；音量压在 bossShoot 之下，屏幕上十几只同叫也不刺耳 */
+  spitwarn(){tone({f:430,f2:900,dur:0.20,type:'triangle',vol:0.12,atk:0.008});
+             noise({dur:0.10,vol:0.05,f:2000,ftype:'highpass',delay:0.02});},
+  /* 吐出那一下的"噗"：很轻的一声，只做收尾，不抢预警音 */
+  spit(){tone({f:300,f2:110,dur:0.10,type:'sine',vol:0.13,atk:0.005});
+         noise({dur:0.07,vol:0.08,f:1400});}
 };
 const MELO={type:'triangle',vol:0.10,gap:300,notes:[196,0,262,0,196,0,294,262]};
 let bgmTimer=null;
@@ -1846,7 +1853,7 @@ const VTEXT={
   n10:'十',n20:'二十',n30:'三十',n40:'四十',n50:'五十',n60:'六十',n70:'七十',
   n80:'八十',n90:'九十'};
 const BOSS_KEY={'藤蔓僵王':'boss_forest','铁皮僵王':'boss_city','沙暴僵王':'boss_desert'};
-const SFX_KEYS=['click','shoot','bossshoot','hit','boss','hurt','win','over','fw','coin','boom','laserz','freeze'];
+const SFX_KEYS=['click','shoot','bossshoot','hit','boss','hurt','win','over','fw','coin','boom','laserz','freeze','spitwarn','spit'];
 let VOICES={},bgmA=null;
 if(IN_APK){
   for(const k in VTEXT){const a=new Audio('voice/'+k+'.wav');a.preload='auto';VOICES[k]=a;}
@@ -2029,6 +2036,18 @@ const KIND={
   oneeye:{name:'独眼丧尸',hp:1,s:58, vm:2.0,vm0:0.9,dash:1.0},
   ice   :{name:'冰封丧尸',hp:4,s:64, vm:0.6,frzMul:1.5}
 };
+/* 小兵的特殊攻击（焕宸：「每一关的小兵反而太简单了，发出一点特殊攻击，比如火焰等等，
+   需要发出后有音效提醒」）。三条铁律：
+   ① 不是每只都会——按 p 概率在 spawn 时抽，抽中才挂吐弹（缺牙／独眼不挂，它们各自已有机制）；
+   ② 出手前一定有预警——先"呜"一声 + 缩身张嘴发红 warn 秒，才吐出来；
+   ③ 吐出来的东西沿它自己那条路直线飞 ⇒ 躲法和大王子弹完全一样：换条路。
+   距离闸门（见 stepSpit）保证永远不会贴脸吐；预算闸门保证小兵不跟大王抢封路。 */
+const SPIT={
+  fire:{shot:'fireball',p:0.45,warn:0.50,v:170,gap:[5.0,8.0]},   // 火焰丧尸：吐小火球
+  hole:{shot:'bone',    p:0.40,warn:0.55,v:150,gap:[6.0,9.0]},   // 破洞丧尸：从胸口那个洞里扔骨头
+  ice :{shot:'icicle',  p:0.40,warn:0.55,v:175,gap:[6.0,9.0]},   // 冰封丧尸：吐冰棱
+  green:{shot:'slobber',p:0.12,warn:0.60,v:120,gap:[9.0,13.0]}   // 第一章普通僵尸：很低概率吐一口口水
+};
 /* 场景分级：森林最轻松，城市略难，沙漠最难。同一关在不同场景里按下面的增量整体加码，
    保证「一个场景比前一个场景更难一点」，但幅度温和，仍在能通关的范围内 */
 const SCENES=[
@@ -2039,13 +2058,16 @@ const SCENES=[
 /* BOSS 分级：能力逐场景叠加（A 定期子弹 / B 多路弹幕 / D 召唤小怪 / E 血厚＋半血狂暴）
    森林＝A+E，城市＝A+B+E，沙漠＝A+B+E+D。数字偏轻松：子弹有预警、按路飞、切路就能躲 */
 const BOSSCFG=[
-    {name:'藤蔓僵王',warnKey:'coming',hp:10,fireT:2.6,lanes:1,bspd:200,v:34,p2Fire:2.0,p2Lanes:1,minions:false,minionT:99,minionCap:0},  // 森林
-    {name:'铁皮僵王',warnKey:'coming',hp:12,fireT:2.4,lanes:1,bspd:210,v:30,p2Fire:1.8,p2Lanes:2,minions:false,minionT:99,minionCap:0},  // 城市：子弹和走速略降，简单一点点
-    {name:'沙暴僵王',warnKey:'coming',hp:14,fireT:2.2,lanes:2,bspd:220,v:30,p2Fire:1.6,p2Lanes:2,minions:true, minionT:4.0,minionCap:2}  // 沙漠：子弹和走速略降，简单一点点
+    {name:'藤蔓僵王',warnKey:'coming',hp:10,fireT:3.0,lanes:1,bspd:180,v:34,p2Fire:2.4,p2Lanes:1,minions:false,minionT:99,minionCap:0},  // 森林
+    {name:'铁皮僵王',warnKey:'coming',hp:12,fireT:2.9,lanes:1,bspd:185,v:30,p2Fire:2.3,p2Lanes:2,minions:false,minionT:99,minionCap:0},  // 城市：弹幕更稀、弹速更慢
+    {name:'沙暴僵王',warnKey:'coming',hp:14,fireT:2.7,lanes:2,bspd:190,v:30,p2Fire:2.1,p2Lanes:2,minions:true, minionT:5.0,minionCap:2}  // 沙漠：同上，召兵也慢一档
   ];
 /* 第二章三只大王（焕宸选的 1B 背炉火柱王 / 2B 骨锤独腿王 / 3B 拖地长臂王）。
-   血 18/20/22 ＝ 第一章的约 1.5~1.6 倍，但因为多了武器，实际时长差不多；
-   lanes 2/2/3 仍受 bossTargetLanes 约束（永远留 2 条安全路）。
+   血 18/20/22 ＝ 第一章的约 1.5~1.6 倍，但因为多了武器，实际时长差不多。
+   2026-10-20 整体削一档（焕宸：「骨锤有点难了，之前之后的 boss 也有点难了」）：
+   lanes/p2Lanes 一律收到 2/2、弹幕与招式间隔放慢、弹速回收、地面预警加长。
+   另外"能封几条路"不再由这里说了算——bossTargetLanes 上面压着一层安全路预算
+   （平时 2 条 / 狂暴 3 条），弹幕和地面招式加起来的红路永远不会超过这个数。
    finHp ＝ 终章合体时三只的血量（12/14/16，总 42）；合体后不再各自加血。
    finale 只提供名单 trio 与三只的血 finHp，招式/弹速/召唤全按上面三只各自的 cfg 走。
    弱点位置也不写在这儿，只有 BOSS_ZK.weak 一处（跟着外形零件走）。 */
@@ -2053,9 +2075,9 @@ const BOSSCFG=[
    atkT/atkT2 ＝这招隔几秒来一次（半血狂暴后），warn ＝地面预警秒数，
    warnKey ＝登场那句警告的语音 key（名字由 boss_xxx 先念，这里只讲怎么躲）。 */
 const ZB={
-  furnace:{name:'背炉火柱王',warnKey:'warn_furnace',mech:'furnace',hp:18,fireT:2.2,lanes:2,bspd:230,v:66,p2Fire:1.6,p2Lanes:3,minions:false,minionT:99,minionCap:0,atkT:3.2,atkT2:2.2,warn:0.8},
-  hammer :{name:'骨锤独腿王',warnKey:'warn_hammer', mech:'hammer', hp:20,fireT:2.0,lanes:2,bspd:240,v:66,p2Fire:1.4,p2Lanes:3,minions:false,minionT:99,minionCap:0,atkT:3.6,atkT2:2.4,warn:0.8},
-  drag   :{name:'拖地长臂王',warnKey:'warn_drag',   mech:'drag',   hp:22,fireT:1.8,lanes:3,bspd:250,v:66,p2Fire:1.2,p2Lanes:3,minions:true, minionT:6.0,minionCap:2,atkT:4.2,atkT2:2.8,warn:1.0},
+  furnace:{name:'背炉火柱王',warnKey:'warn_furnace',mech:'furnace',hp:18,fireT:2.7,lanes:2,bspd:200,v:66,p2Fire:2.1,p2Lanes:2,minions:false,minionT:99,minionCap:0,atkT:4.0,atkT2:2.8,warn:1.0},
+  hammer :{name:'骨锤独腿王',warnKey:'warn_hammer', mech:'hammer', hp:20,fireT:2.6,lanes:2,bspd:205,v:66,p2Fire:1.9,p2Lanes:2,minions:false,minionT:99,minionCap:0,atkT:4.5,atkT2:3.2,warn:1.05},
+  drag   :{name:'拖地长臂王',warnKey:'warn_drag',   mech:'drag',   hp:22,fireT:2.4,lanes:2,bspd:210,v:66,p2Fire:1.7,p2Lanes:2,minions:true, minionT:6.0,minionCap:2,atkT:5.0,atkT2:3.6,warn:1.15},
   finale :{name:'三王合体',trio:['furnace','hammer','drag'],finHp:[12,14,16]}
 };
 const ZB_KEY={'背炉火柱王':'boss_furnace','骨锤独腿王':'boss_hammer','拖地长臂王':'boss_drag','三王合体':'boss_finale'};
@@ -2146,6 +2168,10 @@ function spawnZombie(lane,type){
     if(k.dash){z.v0=c.v*k.vm0*j;z.vH=c.v*k.vm*j;z.dashT=k.dash;}   // 冲刺兵：蓄力 k.dash 秒后猛地提速
     if(k.turn)z.turnT=k.turn*(0.7+Math.random()*0.8);              // 扭来扭去：每隔一会儿换一条路
   }
+  /* 会吐的小兵不是每只都有：抽中才挂 SPIT（焕宸原话「小兵不是每个都吐，就有些小兵会吐」）。
+     首发留 1.6~3.4 秒提前量——进场先走两步再吐，不至于落地就开炮。 */
+  const sp=SPIT[type||'green'];
+  if(sp&&Math.random()<sp.p){z.spit=type||'green';z.spitW=0;z.spitCd=1.6+Math.random()*1.8;}
   G.zs.push(z);
   /* 每种新兵种这一局第一次上场时报一次名（小朋友不识字，靠耳朵认人；报过就交给眼睛） */
   if(type&&!G.seen[type]){G.seen[type]=1;sayWhenFree(['zb_'+type],()=>mode==='play');}
@@ -2164,6 +2190,7 @@ function pickType(){
    独眼丧尸＝进场蓄力 1 秒后猛地提速；缺牙丧尸＝每隔一会儿随机换一条路（扭来扭去）。
    第一章的僵尸两个计时器都不存在，这个函数直接什么都不做。 */
 function stepMinion(z,dt){
+  if(z.spit)stepSpit(z,dt);                         // 会吐的小兵：先走「张嘴预警 → 吐」的计时
   if(z.dashT>0){                                    // 独眼：蓄力中（先慢），时间到就蹿出去
     z.dashT-=dt;
     if(z.dashT<=0){
@@ -2185,6 +2212,33 @@ function stepMinion(z,dt){
     z.y=Math.abs(dy)<=st?z.tY:z.y+(dy>0?st:-st);
     z.lane=laneOf(z.y);z.s=depthS(z.y,z.sB,30);     // 挪到哪条路就属于哪条路，体型跟着纵深变
   }
+}
+/* ---------- 小兵吐弹（见 SPIT 表）----------
+   两道闸门是这套东西能不能给小朋友用的关键：
+   · 距离闸门：离主角不足 260px 不吐（否则弹飞过来只有 0.2 秒反应＝欺负人）；
+   · 预算闸门：场上红路已达安全路预算不吐（大王在封路时，小兵绝不再加一层）。
+   预警那 0.5~0.6 秒里它一边张嘴发红一边"呜"一声，声音和画面都给足，听不见也能看见。 */
+function stepSpit(z,dt){
+  const c=SPIT[z.spit];
+  if(z.spitW>0){                                      // 预警中：时间到就吐出去
+    z.spitW-=dt;
+    if(z.spitW<=0)minionSpit(z,c);
+    return;
+  }
+  z.spitCd-=dt;
+  if(z.spitCd>0)return;
+  if(z.x-G.hero.x<260){z.spitCd=0.6;return;}            // 太近了：等它再往前走两步
+  if(claimCount()>=laneBudget()){z.spitCd=0.9;return;}  // 路已经够红了：不跟大王抢
+  z.spitW=c.warn;z.sq=0.16;
+  puffFX(G.ps,z.x-z.s*0.24,z.y-z.s*0.30,z.s/80);
+  sfx('spitwarn');
+}
+function minionSpit(z,c){
+  const y=laneY(z.lane)-8;
+  G.ebs.push({x:z.x-z.s*0.30,y,lane:z.lane,vx:-c.v,rot:0,shot:c.shot});
+  z.spitCd=c.gap[0]+Math.random()*(c.gap[1]-c.gap[0]);
+  puffFX(G.ps,z.x-z.s*0.34,y-2,z.s/90);
+  sfx('spit');
 }
 /* 出一波怪：按本关概率决定 1~3 只，且分别落在互不相同的路上（不叠路），受同屏上限约束 */
 function spawnWave(){
@@ -2267,16 +2321,51 @@ function spawnBoss(){
   if(cfg.trio)say(['boss_finale','unite','star3']);
   else say([bossVoiceKey(cfg.name),cfg.warnKey,'star'+starN]);
 }
-/* 选目标路：离主角最近的路优先，最多 count 条，且永远留至少 2 条安全路（可躲） */
+/* ========== 安全路预算（2026-10-20 削弱大王的总闸）==========
+   焕宸原话：「子弹是三个，而且还会三条路同时发出特殊攻击，没有躲避的空间」。
+   病因不是哪个数字太大，而是两套系统互不知情：弹幕（stepBoss 的 fireT → bossFire）
+   和地面招式（stepBossMech 的 atkT → 火柱/震波/横扫）各自计时、各自选路，
+   而老版"留 2 条安全路"只约束自己出手的那一次——两边各占 3 条，并集就是 5 条全红。
+   现在改成一个全局预算：同一瞬间最多只有 laneBudget() 条路是红的，
+   谁要封路都得先来查一遍"哪些路已经红了"；预算用不完就挑干净路，
+   用完了就借用已经红着的那条（那条路本来就站不了人，多压一颗子弹不多坑他一次）。
+   大王弹幕、火柱、震波、横扫、小兵吐弹全走这一个口径，没有谁可以绕过去。 */
+function laneBudget(){
+  for(const z of G.zs)if(z.boss&&!z.die&&z.phase===2)return 3;  // 半血狂暴（含三王合体狂暴）也只封 3 条
+  return 2;                          // 平时封 2 条＝场上始终有 3 条干净路可站
+}
+/* 此刻哪些路＝"站上去必挨打"。火星坑（pool）只在大王脚边那一小块、主角够不着，不算封路。 */
+function laneClaimMask(){
+  const mark=[];for(let i=0;i<LANES;i++)mark.push(0);
+  for(const e of G.gts){
+    if(e.kind==='pool')continue;
+    for(const ln of (e.lanes||[e.lane]))if(ln>=0&&ln<LANES)mark[ln]=1;
+  }
+  for(const z of G.zs){
+    if(z.die)continue;
+    if(z.boss){if(z.tele>0)for(const ln of (z.teleLanes||[]))if(ln>=0&&ln<LANES)mark[ln]=1;}
+    else if(z.spitW>0)mark[z.lane]=1;                    // 正在张嘴的小兵：这条路已经算红了
+  }
+  const hx=G.hero.x;
+  for(const b of G.ebs)if(b.x>hx-10)mark[b.lane]=1;      // 还在主角右边、真追得到他的弹；飞过去的早不算
+  return mark;
+}
+function claimCount(){const m=laneClaimMask();let n=0;for(let i=0;i<LANES;i++)n+=m[i];return n;}
+/* 选目标路：先在预算内挑干净路，不够再借用已经红着的路；两种都是离主角近的优先。 */
 function bossTargetLanes(count){
-  const hl=G.hero.lane,all=[];
-  for(let i=0;i<LANES;i++)all.push(i);
-  all.sort((a,b)=>Math.abs(a-hl)-Math.abs(b-hl));
-  return all.slice(0,Math.max(1,Math.min(count,LANES-2)));
+  const hl=G.hero.lane,mark=laneClaimMask(),free=[],hot=[];
+  for(let i=0;i<LANES;i++)(mark[i]?hot:free).push(i);
+  const byDist=(a,b)=>Math.abs(a-hl)-Math.abs(b-hl);
+  free.sort(byDist);hot.sort(byDist);
+  const n=Math.max(1,Math.min(count,LANES-2));
+  const room=Math.max(0,laneBudget()-claimCount());      // 还允许新涂红几条路
+  const pick=free.slice(0,Math.min(n,room));
+  for(let i=0;pick.length<n&&i<hot.length;i++)pick.push(hot[i]);
+  return pick;
 }
 /* BOSS 开火：在选定的路上各生成一颗向左飞的子弹（按路飞，切路就能躲） */
 function bossFire(z){
-  const bspd=z.cfg.bspd*(z.phase===2?1.12:1)*(1+Math.min(0.35,(z.lv||1)-1)*0.03);
+  const bspd=z.cfg.bspd*(z.phase===2?1.05:1)*(1+Math.min(0.35,(z.lv||1)-1)*0.03);   // 狂暴只略微提速：变的是"多快"，不是"几条路"
   for(const ln of z.teleLanes){
     G.ebs.push({x:z.x-z.s*0.30,y:laneY(ln)-8,lane:ln,vx:-bspd,rot:0});
   }
@@ -2290,11 +2379,13 @@ function bossFire(z){
 function clearGts(){G.gts.length=0;G.bossHold=0;G.auraT=0;G.finRage=false;G.finTotal=0;}
 function addGt(e){e.t=0;e.hit=0;e.warn=Math.max(0.5,e.warn||0.6);G.gts.push(e);return e;}
 function gWarn(z,w){return (isFinalStage()&&z.phase===2)?Math.max(1.2,w):w;}   // 合体狂暴：地面预警一律拉到 1.2 秒
-function quakeLanes(l){const a=[];for(const d of[-1,0,1]){const x=l+d;if(x>=0&&x<LANES)a.push(x);}return a;}
+/* 骨锤震波：只砸它自己脚底下那 1 条路。
+   原来是 ±1 共三条，而且判定是"铺满整条路即中"＝一次招封死三条必死路，
+   再叠上同一时刻的弹幕，小朋友除了原地没地方可去——这是"骨锤最难"的真正原因。 */
 function gtHit(e){
   const h=G.hero,ls=e.lanes||[e.lane];
   if(ls.indexOf(h.lane)<0)return false;
-  if(e.kind==='quake')return true;                       // 震波铺满三条路：只有离它两条路以上才绝对安全
+  if(e.kind==='quake')return true;                       // 震波：整条路裂开，只有换路才躲得掉
   if(e.kind==='sweep')return Math.abs(h.x-e.x)<=e.w;     // 长臂横扫：暗影扫到哪儿烧到哪儿，换路是唯一躲法
   return Math.abs(h.x-e.x)<=(e.kind==='pool'?40:48);     // 火柱／火苗：挪开身子或换条路都躲得掉
 }
@@ -2359,10 +2450,17 @@ function furnaceBreak(z){
   G.ps.push({kind:'ring',x:w.x,y:w.y,vx:0,vy:0,life:0.32,t:0,c:'#ffb74d',r:10,gr:260,g:0});
 }
 /* 2B 骨锤独腿王：不换路，只单脚蹦到隔壁那条路（蹦前先把骨锤往那边歪）。
-   一式三步：举锤（地面发红 0.8 秒）→ 砸下（左右各一条路也吃震波）→ 锤子卡地 1.5 秒＝打头 ×3。 */
+   一式三步：举锤（它脚下那条路整条发红 1 秒）→ 砸下（只砸那 1 条路）→ 锤子卡地 1.5 秒＝打头 ×3。 */
 function raiseHammer(z){
+  /* 举锤前也得查安全路预算——震波判定是"整条路即中"，比谁都狠，绝不能偷偷多封一条。
+     脚下这条路本来就红着（别人的火柱／弹幕压着）＝借用，不新增封路，照砸；
+     路是干净的而红路已经占满预算＝砸不了，让 mechHammer 过一会儿再来问一次。
+     终章三王同场最容易撞车，少了这道闸门就会出现实测到的"三条路一起红"。 */
+  const m=laneClaimMask();
+  if(m[z.lane]===0&&claimCount()>=laneBudget())return false;
   z.slamSt=1;z.slamT=gWarn(z,z.cfg.warn);
-  addGt({kind:'quake',lanes:quakeLanes(z.lane),warn:z.slamT,dur:0.36});
+  addGt({kind:'quake',lanes:[z.lane],warn:z.slamT,dur:0.36});
+  return true;
 }
 function mechHammer(z,dt){
   if(z.slamSt===1){                                   // 举锤中：这一步它什么都不干，小朋友只看得到「要砸哪」
@@ -2370,7 +2468,7 @@ function mechHammer(z,dt){
     if(z.slamT<=0){
       z.slamSt=2;z.slamT=1.5;openWeak(z,3,1.5);       // 砸下去＝卡地 1.5 秒，打头 ×3 的窗口
       G.shake=Math.max(G.shake,0.8);addHitStop(0.06);sfx('boom');
-      for(const ln of quakeLanes(z.lane))puffFX(G.ps,z.x-z.s*0.2,laneY(ln)-4,z.s/70);
+      puffFX(G.ps,z.x-z.s*0.2,laneY(z.lane)-4,z.s/70);   // 碎烟只从砸下去那 1 条路上蹿
     }
     return;
   }
@@ -2378,13 +2476,14 @@ function mechHammer(z,dt){
     z.slamT-=dt;
     if(z.slamT<=0){
       z.slamSt=0;
-      if(z.slamLeft>0){z.slamLeft--;raiseHammer(z);}  // 半血狂暴＝连砸两下
+      /* 半血狂暴＝连砸两下；第二锤要是赶上红路满了，就留着这一下、0.3 秒后再来问 */
+      if(z.slamLeft>0){if(raiseHammer(z))z.slamLeft--;else z.atkT=0.3;}
       else z.atkT=(z.phase===2?z.cfg.atkT2:z.cfg.atkT)*(0.9+Math.random()*0.25);
     }
     return;
   }
   z.atkT-=dt;
-  if(z.atkT<=0){z.slamLeft=z.phase===2?1:0;raiseHammer(z);return;}
+  if(z.atkT<=0){if(raiseHammer(z))z.slamLeft=z.phase===2?1:0;else z.atkT=0.3;return;}
   z.hopT-=dt;
   if(z.hopT<=0&&z.y===z.tY){                          // 只蹦隔壁一条路，不会满场乱跳
     const nl=Math.max(0,Math.min(LANES-1,z.lane+(Math.random()<0.5?-1:1)));
@@ -2410,8 +2509,9 @@ function mechDrag(z,dt){
   if(z.atkT>0)return;
   z.swpSt=1;
   const w=gWarn(z,z.cfg.warn);
-  /* 平时扫两条路；狂暴够得更远＝扫三条（bossTargetLanes 上限 LANES-2，仍稳剩两条能站） */
-  addGt({kind:'sweep',lanes:bossTargetLanes(z.phase===2?3:2),x:GW+50,w:54,warn:w,dur:0.85});
+  /* 平时和狂暴都只扫 2 条：横扫是"整条路都不能站"，封 3 条再叠弹幕就又是死局。
+     狂暴体现在扫得更快（atkT2）和臂爪更亮，不体现在多封一条路。 */
+  addGt({kind:'sweep',lanes:bossTargetLanes(2),x:GW+50,w:54,warn:w,dur:0.85});
   z.swpT=w+0.85+0.3;
   sfx('bossShoot');
 }
@@ -3083,6 +3183,18 @@ function drawZombie(z){
     ctx.textAlign='center';ctx.fillText('❄',0,-z.s*0.32);
     ctx.restore();
   }
+  /* 张嘴要吐了：整只微微泛红 ＋ 嘴边那颗越来越亮的水球。
+     和「呜——」的预警音同时出现，眼睛没盯上也来得及换一条路。 */
+  if(z.spitW>0&&!z.die){
+    const wn=(SPIT[z.spit]||{warn:0.5}).warn;
+    const p=Math.max(0,Math.min(1,1-z.spitW/wn)), u=z.s/58;
+    ctx.save();
+    ctx.globalAlpha=.14+p*.20;ctx.fillStyle='#ff7043';
+    rrect(ctx,-z.s*0.42,-z.s*0.98,z.s*0.84,z.s*1.02,8);ctx.fill();
+    ctx.globalAlpha=.9;ctx.fillStyle=p>0.55?'#ffee58':'#ffab40';
+    ctx.beginPath();ctx.arc(-13*u,-42*u,(2.2+p*4.6)*u,0,7);ctx.fill();
+    ctx.restore();
+  }
   ctx.restore();
 }
 /* BOSS 血条：固定在屏幕顶部中央，不跟着 BOSS 走，避免挡住它的头 */
@@ -3248,7 +3360,7 @@ function drawGts(){
         groundEllipse(e.x,y-6,r+8*p,11+4*p,'#ff5030');
         ctx.globalAlpha=(0.3+0.45*p)*gtPulse();
         groundEllipse(e.x,y-6,(r+8*p)*0.6,7,'#ffd54f');ctx.restore();
-      }else if(e.kind==='quake'){                   // 骨锤：三条整路压成暗红，越举越深
+      }else if(e.kind==='quake'){                   // 骨锤：它脚下那 1 条整路压成暗红，越举越深
         for(const ln of ls){const y=laneY(ln);
           ctx.save();ctx.globalAlpha=0.10+0.30*p*gtPulse();
           ctx.fillStyle='#8e1b12';ctx.fillRect(0,y-LANE_H*0.44,GW,LANE_H*0.88);
@@ -3282,7 +3394,7 @@ function drawGts(){
       const y=laneY(e.lane);
       ctx.save();ctx.globalAlpha=0.5*g;groundEllipse(e.x,y-5,24,9,'#bf360c');ctx.restore();
       for(let i=0;i<3;i++)gtFlame(e.x-14+i*14,y-4,(20+10*Math.sin(T*11+i*2.1))*g,9,'#ff8a50','#ffe082');
-    }else if(e.kind==='quake'){                      // 震波：三条路同时闪一道光＋地面裂纹
+    }else if(e.kind==='quake'){                      // 震波：那一条路闪一道光＋地面裂纹
       for(const ln of ls){const y=laneY(ln);
         /* 亮度克制：生效帧小朋友必须还能看见自己在哪条路、大王在哪——
            0.85 的整路白条铺满三条路等于一记全屏白闪，既晃眼又把"我已经挨了一下"糊掉了 */
@@ -3428,11 +3540,34 @@ function render(){
       ctx.restore();
     }
   }
-  for(const b of G.ebs){                        // BOSS 子弹：橙红色，向左飞，和主角黄子弹区分
-    ctx.save();ctx.globalAlpha=.35;
-    star(ctx,b.x+15,b.y,7,'#ff8a65',b.rot);
-    ctx.restore();
-    star(ctx,b.x,b.y,11,'#ff5722',b.rot);
+  for(const b of G.ebs){                        // 空中飞来的东西：大王弹＝橙红大星；小兵吐的按弹种各画各的、都小一圈
+    if(!b.shot){
+      ctx.save();ctx.globalAlpha=.35;
+      star(ctx,b.x+15,b.y,7,'#ff8a65',b.rot);
+      ctx.restore();
+      star(ctx,b.x,b.y,11,'#ff5722',b.rot);
+    }else if(b.shot==='fireball'){              // 火焰丧尸的小火球：橙核黄心，尾巴一跳一跳
+      const f=Math.sin(T*16+b.x*0.06)*1.6;
+      ctx.save();ctx.globalAlpha=.45;ctx.fillStyle='#ff8a65';
+      ctx.beginPath();ctx.arc(b.x+7,b.y,5.6+f*0.3,0,7);ctx.fill();ctx.restore();
+      ctx.fillStyle='#ff7043';ctx.beginPath();ctx.arc(b.x,b.y,7,0,7);ctx.fill();
+      ctx.fillStyle='#ffd54f';ctx.beginPath();ctx.arc(b.x-1.4,b.y-1.2,3.6,0,7);ctx.fill();
+    }else if(b.shot==='bone'){                  // 破洞丧尸扔的骨头：白条条两头圆球，一边飞一边转
+      ctx.save();ctx.translate(b.x,b.y);ctx.rotate(b.rot);
+      ctx.fillStyle='#eceff1';rrect(ctx,-6,-1.9,12,3.8,1.9);ctx.fill();
+      [[-6,-2.6],[-6,2.6],[6,-2.6],[6,2.6]].forEach(p=>{ctx.beginPath();ctx.arc(p[0],p[1],2.2,0,7);ctx.fill();});
+      ctx.fillStyle='#b0bec5';ctx.fillRect(-1.2,-1.4,2.4,2.8);
+      ctx.restore();
+    }else if(b.shot==='icicle'){                // 冰封丧尸的冰棱：尖头朝左的淡蓝锥子
+      ctx.fillStyle='#81d4fa';
+      ctx.beginPath();ctx.moveTo(b.x-9,b.y);ctx.lineTo(b.x+4,b.y-4.6);ctx.lineTo(b.x+4,b.y+4.6);ctx.closePath();ctx.fill();
+      ctx.fillStyle='#e1f5fe';ctx.fillRect(b.x+2,b.y-3.4,4.2,6.8);
+    }else{                                      // 第一章僵尸的绿口水：晃悠的黏液滴
+      ctx.save();ctx.globalAlpha=.45;ctx.fillStyle='#aed581';
+      ctx.beginPath();ctx.arc(b.x+6,b.y,5.2,0,7);ctx.fill();ctx.restore();
+      ctx.fillStyle='#7cb342';ctx.beginPath();ctx.ellipse(b.x,b.y,6.6,5,0,0,7);ctx.fill();
+      ctx.fillStyle='#dcedc8';ctx.beginPath();ctx.arc(b.x-1.8,b.y-1.4,1.7,0,7);ctx.fill();
+    }
   }
   for(const b of G.bolts){                      // 雷电链：亮黄折线，中点抖一下更像闪电
     ctx.save();ctx.globalAlpha=Math.max(0,Math.min(1,b.t/0.16));

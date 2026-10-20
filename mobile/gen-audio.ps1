@@ -233,6 +233,9 @@ Gen-Sfx 'coin' 0.32 @(@{dur=0.09;f=1319;type='sine';vol=0.13;atk=0.004}, @{dur=0
 Gen-Sfx 'boom' 0.62 @(@{dur=0.50;f=130;f2=32;type='sine';vol=0.32;atk=0.006}, @{noise=1;dur=0.34;vol=0.22;f=700})
 Gen-Sfx 'laserz' 0.42 @(@{dur=0.30;f=1800;f2=240;type='sawtooth';vol=0.12;atk=0.008}, @{noise=1;dur=0.16;vol=0.07;f=3200;ftype='highpass'})
 Gen-Sfx 'freeze' 0.40 @(@{dur=0.18;f=988;f2=1976;type='sine';vol=0.13;atk=0.006}, @{dur=0.22;f=1480;f2=2349;type='sine';vol=0.10;atk=0.006;delay=0.06})
+# 小兵吐弹：张嘴前的上行"呜——"预警 ＋ 吐出的"噗"
+Gen-Sfx 'spitwarn' 0.32 @(@{dur=0.20;f=430;f2=900;type='triangle';vol=0.12;atk=0.008}, @{noise=1;dur=0.10;vol=0.05;f=2000;ftype='highpass';delay=0.02})
+Gen-Sfx 'spit' 0.22 @(@{dur=0.10;f=300;f2=110;type='sine';vol=0.13;atk=0.005}, @{noise=1;dur=0.07;vol=0.08;f=1400})
 
 # BGM：8 步旋律循环（与 MELO 一致）。尾巴折回头部，保证 loop 拼接无断口
 $loopLen = [int](2.4 * $SR)
