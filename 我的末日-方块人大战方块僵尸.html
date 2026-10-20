@@ -1986,16 +1986,17 @@ const BOSSCFG=[
 /* 第二章三只大王（焕宸选的 1B 背炉火柱王 / 2B 骨锤独腿王 / 3B 拖地长臂王）。
    血 18/20/22 ＝ 第一章的约 1.5~1.6 倍，但因为多了武器，实际时长差不多；
    lanes 2/2/3 仍受 bossTargetLanes 约束（永远留 2 条安全路）。
-   finHp ＝ 终章合体时三只的血量（12/14/16，总 42）；合体后不再各自加血。 */
+   finHp ＝ 终章合体时三只的血量（12/14/16，总 42）；合体后不再各自加血。
+   finale 只提供名单 trio 与三只的血 finHp，招式/弹速/召唤全按上面三只各自的 cfg 走。
+   弱点位置也不写在这儿，只有 BOSS_ZK.weak 一处（跟着外形零件走）。 */
 /* mech ＝这只大王的招式分派键（stepBossMech 按它走对应那套），
    atkT/atkT2 ＝这招隔几秒来一次（半血狂暴后），warn ＝地面预警秒数，
    warnKey ＝登场那句警告的语音 key（名字由 boss_xxx 先念，这里只讲怎么躲）。 */
 const ZB={
-  furnace:{name:'背炉火柱王',warnKey:'warn_furnace',mech:'furnace',hp:18,fireT:2.2,lanes:2,bspd:230,v:66,p2Fire:1.6,p2Lanes:3,minions:false,minionT:99,minionCap:0,weak:'head',atkT:3.2,atkT2:2.2,warn:0.8},
-  hammer :{name:'骨锤独腿王',warnKey:'warn_hammer', mech:'hammer', hp:20,fireT:2.0,lanes:2,bspd:240,v:66,p2Fire:1.4,p2Lanes:3,minions:false,minionT:99,minionCap:0,weak:'hammer',atkT:3.6,atkT2:2.4,warn:0.8},
-  drag   :{name:'拖地长臂王',warnKey:'warn_drag',   mech:'drag',   hp:22,fireT:1.8,lanes:3,bspd:250,v:66,p2Fire:1.2,p2Lanes:3,minions:true, minionT:6.0,minionCap:2,weak:'eye',  atkT:4.2,atkT2:2.8,warn:1.0},
-  finale :{name:'三王合体',  hp:42,fireT:2.0,lanes:3,bspd:250,v:66,p2Fire:1.4,p2Lanes:3,minions:true, minionT:7.0,minionCap:2,
-           trio:['furnace','hammer','drag'],finHp:[12,14,16]}
+  furnace:{name:'背炉火柱王',warnKey:'warn_furnace',mech:'furnace',hp:18,fireT:2.2,lanes:2,bspd:230,v:66,p2Fire:1.6,p2Lanes:3,minions:false,minionT:99,minionCap:0,atkT:3.2,atkT2:2.2,warn:0.8},
+  hammer :{name:'骨锤独腿王',warnKey:'warn_hammer', mech:'hammer', hp:20,fireT:2.0,lanes:2,bspd:240,v:66,p2Fire:1.4,p2Lanes:3,minions:false,minionT:99,minionCap:0,atkT:3.6,atkT2:2.4,warn:0.8},
+  drag   :{name:'拖地长臂王',warnKey:'warn_drag',   mech:'drag',   hp:22,fireT:1.8,lanes:3,bspd:250,v:66,p2Fire:1.2,p2Lanes:3,minions:true, minionT:6.0,minionCap:2,atkT:4.2,atkT2:2.8,warn:1.0},
+  finale :{name:'三王合体',trio:['furnace','hammer','drag'],finHp:[12,14,16]}
 };
 const ZB_KEY={'背炉火柱王':'boss_furnace','骨锤独腿王':'boss_hammer','拖地长臂王':'boss_drag','三王合体':'boss_finale'};
 function bossVoiceKey(name){return BOSS_KEY[name]||ZB_KEY[name]||'boss_forest';}
@@ -2335,7 +2336,7 @@ function mechHammer(z,dt){
    横扫从 x=1010 一路拖到 70，主角能站的区间（90~499）全在里面 ⇒ 预警只能报整条路，
    绝不允许"只画一截暗影"——那等于让小朋友站在一条看起来没危险、实际必挨打的路里。
    弹幕＝先亮 0.5 秒粉色瞄准光带标明要打哪几条路，再照着那几条发（选路仍追最近的主角，没有盲侧）。
-   破绽＝手臂扫完收回那一下，打独眼 ×2。 */
+   破绽＝手臂扫完收回那一下，打它头上唯一亮着的那只眼窝 ×2。 */
 function mechDrag(z,dt){
   if(z.swpSt){                                        // 手臂甩出去＋收回来这段时间它腾不出手
     z.swpT-=dt;
@@ -3255,7 +3256,7 @@ function drawGts(){
 }
 /* ========== 大王身上的状态标记 ==========
    破绽圈＝招式打完的那 1~2 秒，打这里翻倍；星星＝终章轮到谁主攻。
-   （长臂王的独眼光带在 drawGts 里画——它铺满整条路，必须压在小人底下，不能挡住他） */
+   （长臂王的瞄准光带在 drawGts 里画——弹幕那几条路的粉色提示，必须压在小人底下，不能挡住他） */
 function weakPos(z){
   const k=BOSS_ZK[z.cfg.mech],u=z.s/58;       // 弱点位置只写在 BOSS_ZK.weak 一处（零件中心，跟着外形走）
   return{x:z.x+k.weak[0]*u,y:z.y+k.weak[1]*u};
