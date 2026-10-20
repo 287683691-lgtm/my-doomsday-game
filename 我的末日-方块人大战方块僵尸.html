@@ -2126,8 +2126,9 @@ const G={
   gts:[], bossHold:0, auraT:0, finRage:false, finTotal:0,
   /* seen＝这一局里已经用语音报过名的丧尸兵种（每种只报第一次，之后靠眼睛认） */
   seen:{},
-  /* hero.shield＝防护盾还剩几下（点一次盾＝撑开 3 下），shFx＝刚挡下时的碎裂计时 */
-  hero:{x:230,y:laneY(2),tx:230,ty:laneY(2),lane:2,inv:0,cd:0.6,fire:0,shield:0,shFx:0}
+  /* hero.shield＝防护盾还剩几下（点一次盾＝撑开 3 下），shFx＝刚挡下时的闪白计时，
+     shBr＝三下用完那一瞬间的"整面盾炸开"动画计时（盾归零后还要接着画，不然碎屑看不见） */
+  hero:{x:230,y:laneY(2),tx:230,ty:laneY(2),lane:2,inv:0,cd:0.6,fire:0,shield:0,shFx:0,shBr:0}
 };
 function sceneIdx(){const i=BG_ORDER.indexOf(curBG);return i<0?0:i;}
 function isBossStage(){return !!curStage().boss;}          // 本关结尾有大王（一章的关3／二章的关4~7）
@@ -2172,7 +2173,7 @@ function resetGame(stage){
   G.seen={};                                  // 重开一局＝丧尸兵种重新报一遍名
   const h=G.hero;
   h.x=h.tx=230;h.lane=2;h.y=h.ty=laneY(2);h.inv=0;h.cd=0.5;h.fire=0;
-  h.shield=0;h.shFx=0;                          // 重开一局＝盾清零（撑开的那一下已经消耗掉了，和炸弹一样不返）
+  h.shield=0;h.shFx=0;h.shBr=0;                 // 重开一局＝盾清零（撑开的那一下已经消耗掉了，和炸弹一样不返）
   applyStageBG();                             // 重新玩＝回第 1 关（用选好的那个场景）
   G.quota=stCfg().quota;                      // 场景定好后再按本场景算血量配额
   resetFlags();                               // 5 面旗全部立回来
@@ -2874,7 +2875,8 @@ function useOnce(id){
     sfx('boom');G.shake=1;addHitStop(0.08);
   }else if(w&&w.block){                         // 防护盾：撑开后由 hurt() 替焕宸挡掉 block 下攻击
     const h=G.hero;
-    h.shield=Math.min(9,h.shield+w.block);      // 盾还残着就叠上去（封顶 9，免得 HUD 的🛡画满整条）
+    h.shield=Math.min(9,h.shield+w.block);      // 盾还残着就叠上去（封顶 9，盾面只有三颗铆钉，再多就只能靠金边表示）
+    h.shBr=0;                                   // 新一面盾撑开＝把上一面的碎屑动画抹掉，别新旧叠在一起
     sfx('shield');G.flash=0.16;
     banner('🛡 防护盾撑开啦！还能挡 '+h.shield+' 下');
     sayWhenFree(['shieldup'],()=>mode==='play');
@@ -2887,7 +2889,8 @@ function hurt(flag){
   /* 盾在最前面挡：挡一下只减盾的层数，星星红心都不动，红旗也不会被拔；
      无敌时间比挨一下短（0.9s vs 1.3s）——盾能连挡三下，但站原地不动照样会被打完 */
   if(h.shield>0){
-    h.shield--;h.shFx=0.45;                     // shFx＝护罩被砸裂的闪光计时
+    h.shield--;h.shFx=0.45;                     // shFx＝盾面被砸裂的闪白计时
+    if(h.shield<=0)h.shBr=SH_BREAK;             // 最后一下打完＝整面盾炸开（碎片动画接着放，见 drawShield）
     h.inv=0.9;G.shake=0.55;
     addHitStop(0.05);
     sfx('block');
@@ -3082,7 +3085,8 @@ function update(dt){
   const h=G.hero;
   h.fire=Math.max(0,h.fire-dt*2.6);
   h.inv=Math.max(0,h.inv-dt);
-  h.shFx=Math.max(0,h.shFx-dt);               // 护罩被砸裂的闪白计时
+  h.shFx=Math.max(0,h.shFx-dt);               // 盾面被砸裂的闪白计时
+  h.shBr=Math.max(0,h.shBr-dt);               // 盾炸开的碎片动画计时
   const k=Math.min(1,dt*9);                    // 手指拖动，小人跟上
   h.x+=(h.tx-h.x)*k;
   h.y+=(h.ty-h.y)*k;
@@ -3301,32 +3305,139 @@ function drawBossBar(){
 }
 function drawHero(){
   const h=G.hero;
-  if(h.inv>0&&Math.floor(h.inv*12)%2===0)return;   // 受伤闪烁
-  const c=CHARS[curChar];
-  c.draw(ctx,h.x,h.y,heroS(),c.sk,mode==='win'?freezeT:T,h.fire);   // 庆祝定格：主角姿势也停住
-  if(h.shield>0)drawShield(h);                     // 护罩画在人前面：一眼看清"这一下被盾吃了"
+  if(!(h.inv>0&&Math.floor(h.inv*12)%2===0)){   // 受伤闪烁只闪小人本身
+    const c=CHARS[curChar];
+    c.draw(ctx,h.x,h.y,heroS(),c.sk,mode==='win'?freezeT:T,h.fire);   // 庆祝定格：主角姿势也停住
+  }
+  /* 盾是立在身前的一件实物，不跟着小人一块儿闪：
+     不然最后一下挡完那 0.9 秒里人一闪一闪，整面盾炸开的动画会被闪没 */
+  if(h.shield>0||h.shBr>0)drawShield(h);
 }
-/* 防护盾护罩：一圈呼吸的淡蓝水泡，前面亮一道弧＝"盾朝敌人那边"。
-   刚挡下那 0.45 秒整圈变白变粗、外面甩一圈碎裂环，小朋友不用看数字也知道挡成功了。 */
+/* ---------- 防护盾：一面立在焕宸身前的盾板 ----------
+   样子：上平下尖的纹章盾，蓝面＋浅色金属框＋一道斜高光，底边贴地、地上带淡投影；
+   读数：盾面竖排三颗金铆钉＝还能挡几下，挡一下灭一颗、盾面多一道裂纹、整面往回震一下；
+   用完：三下打完整面盾先原样裂到底，再崩成六片朝敌人那边飞散落地，SH_BREAK 秒里一直画，
+        小朋友不用看数字也知道"盾是怎么没的"。 */
+const SH_BREAK=0.5;                        // 整面盾炸开的动画时长（秒）
+const SH_HW=15,SH_HH=30;                   // 盾的半宽/半高，单位同人物（人高 84u），比人矮一大截不挡视线
+/* 裂纹折线：从迎敌的右边缘往盾内裂，归一化到（半宽，半高）；剩 2 下画第 1 条，剩 1 下画前 2 条 */
+const SH_CRACKS=[
+  [[1,.5],[.42,.26],[.06,.02],[-.28,-.16]],
+  [[1,-.22],[.5,-.06],[.16,.28]],
+  [[.92,-.86],[.34,-.62],[-.1,-.52]]
+];
+/* 炸开的六块盾片：起点就是它在盾面上的位置（3 列 2 行），方向统一偏右——盾是被从正面砸碎的，
+   碎片该朝敌人那边崩出去、同时往下坠，不能往小人身上一片一片糊；
+   大小、自转一次性算死，每帧现随机会让碎屑跳成一片噪点，小朋友只看得见闪 */
+/* 三种茬口形状（归一化到碎片自己的半宽/半高）：全是带尖角的不规则片，
+   六块一块样会崩成一堆复制粘贴的卡片，换着来才像一面盾被砸碎 */
+const SH_SHAPES=[
+  [[-.5,-.42],[.44,-.16],[-.02,.5]],
+  [[.06,-.5],[.5,.1],[-.3,.48],[-.5,-.06]],
+  [[-.46,-.24],[.12,-.5],[.48,.14],[-.16,.44]]
+];
+const SHARDS=(()=>{const out=[];
+  for(let r=0;r<2;r++)for(let c=0;c<3;c++){
+    const gx=(c-1)*0.62,gy=-0.55+r*1.1;
+    out.push({gx,gy,a:Math.atan2(gy,gx)*0.45+0.25,
+              sp:0.85+0.35*Math.abs(gx)+(c===1?0.25:0),
+              rot:(r+c)%2?4.4:-3.6,sc:0.5+0.07*((r*3+c)%3),b:(r+c)%3===0,
+              v:SH_SHAPES[(r*3+c)%3]});
+  }
+  return out;})();
 function drawShield(h){
-  const s=heroS(),t=(mode==='win'?freezeT:T),cy=h.y-s*0.42;
-  const br=Math.min(1,h.shield/3),rip=0.5+0.5*Math.sin(t*3.1);      // 层数越少泡越薄，呼吸幅度恒定
-  const white=h.shFx>0?Math.min(1,h.shFx/0.45):0;                   // 挡下瞬间闪白
+  const s=heroS(),u=s/84,t=(mode==='win'?freezeT:T);
+  const hw=SH_HW*u,hh=SH_HH*u;
+  const sx=h.x+24*u,sy=h.y-34*u+Math.sin(t*2.4)*1.2*u;   // 立在身前偏右（敌人那边），微微呼吸
+  const dead=h.shield<=0;                                // 三下用完，正在演炸开的动画
+  const k=dead?Math.max(0,1-h.shBr/SH_BREAK):0;          // 炸开进度 0→1
+  const white=h.shFx>0?Math.min(1,h.shFx/0.45):0;        // 刚挡下那一下的闪白
   ctx.save();
-  ctx.globalAlpha=(0.20+0.10*br+0.06*rip)*(1+0.5*white);
-  ctx.fillStyle=white>0?'#e1f5fe':'#7fd8ff';
-  ctx.beginPath();ctx.ellipse(h.x,cy,s*0.72+2*rip,s*0.66+2*rip,0,0,Math.PI*2);ctx.fill();
-  ctx.globalAlpha=0.85;
-  ctx.lineWidth=2.6+3*white;
-  ctx.strokeStyle=white>0?'#ffffff':'#b3e5fc';
-  ctx.beginPath();ctx.ellipse(h.x,cy,s*0.72,s*0.66,0,0,Math.PI*2);ctx.stroke();
-  /* 迎敌面（右侧）加一段高亮弧：看着像一面朝外竖着的盾 */
-  ctx.lineWidth=4+3*white;ctx.strokeStyle='rgba(255,255,255,.9)';
-  ctx.beginPath();ctx.ellipse(h.x,cy,s*0.72,s*0.66,0,-0.85,0.85);ctx.stroke();
-  if(white>0){                                                       // 碎裂环：从泡面甩出去的一圈白
-    const k=1-h.shFx/0.45;
-    ctx.globalAlpha=1-k;ctx.lineWidth=3*(1-k)+1;ctx.strokeStyle='#ffffff';
-    ctx.beginPath();ctx.ellipse(h.x,cy,s*(0.72+k*0.42),s*(0.66+k*0.38),0,0,Math.PI*2);ctx.stroke();
+  ctx.globalAlpha=0.2*(dead?Math.max(0,1-k*2.5):1);ctx.fillStyle='#000';   // 落地投影：让盾"站"在地上而不是飘着
+  ctx.beginPath();ctx.ellipse(sx,h.y-u,hw*0.78,3.2*u,0,0,Math.PI*2);ctx.fill();
+  ctx.globalAlpha=1;
+  ctx.translate(sx,sy);                                    // 之后一律用盾自己的坐标系：原点＝盾面中心
+  const path=(sc)=>{                                       // 盾面轮廓（上平下尖），sc>1 是往外扩的那道影子
+    const w=hw*sc,h2=hh*sc,rp=Math.min(4*u,w*0.3);
+    ctx.beginPath();
+    ctx.moveTo(-w+rp,-h2);ctx.lineTo(w-rp,-h2);ctx.quadraticCurveTo(w,-h2,w,-h2+rp);
+    ctx.lineTo(w*0.96,h2*0.12);
+    ctx.quadraticCurveTo(w*0.6,h2*0.9,0,h2);
+    ctx.quadraticCurveTo(-w*0.6,h2*0.9,-w*0.96,h2*0.12);
+    ctx.lineTo(-w,-h2+rp);ctx.quadraticCurveTo(-w,-h2,-w+rp,-h2);ctx.closePath();
+  };
+  const face=(sc,fl)=>{                            // 盾面本体：竖向渐变＋描边＋一道斜高光（sc 胀大，fl 是叠在上面的白光）
+    const w=hw*sc,h2=hh*sc,g=ctx.createLinearGradient(0,-h2,0,h2);
+    g.addColorStop(0,'rgba(179,229,252,.90)');g.addColorStop(.5,'rgba(79,195,247,.78)');g.addColorStop(1,'rgba(2,119,189,.70)');
+    path(sc);ctx.fillStyle=g;ctx.fill();
+    if(fl>0){path(sc);ctx.fillStyle='rgba(255,255,255,'+(0.72*fl).toFixed(3)+')';ctx.fill();}
+    ctx.strokeStyle=fl>0?'#ffffff':'#e0f7fa';ctx.lineWidth=Math.max(1.6,2.3*u);path(sc);ctx.stroke();
+    ctx.fillStyle='rgba(255,255,255,.18)';
+    ctx.beginPath();ctx.moveTo(-w*0.5,-h2*0.66);ctx.lineTo(-w*0.16,-h2*0.66);ctx.lineTo(w*0.4,h2*0.5);ctx.lineTo(w*0.14,h2*0.5);ctx.closePath();ctx.fill();
+  };
+  const cracks=(n,fl)=>{                           // 从迎敌的右边缘往盾内裂，挡掉几下就裂几条
+    ctx.strokeStyle='rgba(255,255,255,'+(0.5+0.45*fl).toFixed(3)+')';ctx.lineWidth=Math.max(1,1.3*u);
+    for(let i=0;i<n;i++){
+      const cr=SH_CRACKS[i];ctx.beginPath();
+      ctx.moveTo(cr[0][0]*hw,cr[0][1]*hh);
+      for(let j=1;j<cr.length;j++)ctx.lineTo(cr[j][0]*hw,cr[j][1]*hh);
+      ctx.stroke();
+    }
+  };
+  if(white>0)ctx.rotate(-0.06*white*Math.sin((1-h.shFx/0.45)*Math.PI*2));  // 被砸得往回一顿
+  if(dead){                                       // 用完：整面盾先原样裂到底，再崩成六片朝敌人那边飞散落地
+    const e=Math.min(1,k/0.3);                    // 前 30% 还看得见"这面盾"，小朋友才知道碎屑是从哪儿崩出来的
+    const fl=k<0.12?1-k/0.12:0;                   // 炸开头一瞬的白光：先亮一下再碎，比直接消失有劲儿
+    ctx.globalAlpha=(1-e)*(1-e);face(1+0.12*e,fl);cracks(SH_CRACKS.length,fl);   // 盾面褪得比轮廓快，中间那几帧才不会糊成一块脏灰
+    ctx.globalAlpha=(1-e)*0.9;ctx.strokeStyle='#e0f7fa';ctx.lineWidth=Math.max(1.5,4.5*u*(1-e));
+    path(1+0.45*e);ctx.stroke();                  // 沿盾形轮廓往外扩的一道浅青白影，比一圈细椭圆环贴题
+    ctx.globalAlpha=1;
+    for(const q of SHARDS){
+      const d=(0.15+1.6*k)*hw*q.sp,w=hw*q.sc,h2=hh*q.sc;
+      ctx.save();
+      ctx.globalAlpha=Math.max(0,1-k*k);
+      ctx.translate(q.gx*hw+Math.cos(q.a)*d,q.gy*hh+Math.sin(q.a)*d*0.8+3.2*hh*k*k*(q.b?1.25:0.85));   // 往前崩＋往下坠
+      ctx.rotate(q.rot*k);
+      const g=ctx.createLinearGradient(-w*0.5,-h2*0.5,w*0.5,h2*0.5);   // 断口亮、背面深，一片下来就是玻璃碴的层次
+      g.addColorStop(0,'rgba(255,255,255,.95)');
+      g.addColorStop(.42,q.b?'rgba(2,136,209,.95)':'rgba(129,212,250,.95)');
+      g.addColorStop(1,'rgba(2,119,189,.92)');
+      ctx.beginPath();ctx.moveTo(q.v[0][0]*w,q.v[0][1]*h2);
+      for(let i=1;i<q.v.length;i++)ctx.lineTo(q.v[i][0]*w,q.v[i][1]*h2);
+      ctx.closePath();
+      ctx.fillStyle=g;ctx.fill();
+      ctx.strokeStyle='rgba(224,247,250,.6)';ctx.lineWidth=Math.max(0.8,0.9*u);ctx.stroke();
+      ctx.restore();
+    }
+    for(let i=0;i<4;i++){                         // 几点火星窜得快、灭得也快
+      const a=-0.95+i*0.62,d=(1+4.6*k)*hw;
+      ctx.globalAlpha=Math.max(0,1-k*2.8);ctx.fillStyle='#fffde7';
+      ctx.beginPath();ctx.arc(Math.cos(a)*d,Math.sin(a)*d*0.55-6*u,Math.max(1,2.2*u*(1-k)),0,6.283);ctx.fill();
+    }
+    ctx.restore();return;
+  }
+  face(1,white);
+  if(h.shield>3){                                          // 叠了第二面盾：外面再描一道金圈表示更厚
+    ctx.strokeStyle='rgba(255,213,79,.85)';ctx.lineWidth=Math.max(1.2,1.6*u);
+    ctx.beginPath();ctx.ellipse(0,0,hw*1.18,hh*1.1,0,0,Math.PI*2);ctx.stroke();
+  }
+  for(let i=0;i<3;i++){                                    // 三颗铆钉＝还剩三下，用完一颗暗一颗
+    const on=i<Math.min(3,h.shield),ry=-hh*0.5+hh*0.5*i;
+    ctx.beginPath();ctx.arc(0,ry,3.1*u,0,Math.PI*2);
+    ctx.fillStyle=on?'#ffd54f':'rgba(0,20,40,.32)';ctx.fill();
+    ctx.strokeStyle=on?'#fff8e1':'rgba(255,255,255,.25)';ctx.lineWidth=Math.max(1,1.1*u);ctx.stroke();
+    if(on){ctx.beginPath();ctx.arc(-1*u,ry-1*u,1.1*u,0,Math.PI*2);ctx.fillStyle='#fffde7';ctx.fill();}
+  }
+  cracks(Math.min(SH_CRACKS.length,3-h.shield),white);   // 裂纹：挡掉几下就裂几条
+  if(white>0){                                             // 受击点：右边缘一弧白光＋几点火星往外崩
+    const hk=1-h.shFx/0.45;
+    ctx.globalAlpha=white;ctx.strokeStyle='#fff';ctx.lineWidth=Math.max(1.6,3*u*(1-hk));
+    ctx.beginPath();ctx.ellipse(hw*0.9,0,hw*(0.3+hk*0.5),hh*(0.42+hk*0.4),0,-1.1,1.1);ctx.stroke();
+    ctx.fillStyle='#fffde7';
+    for(let i=0;i<3;i++){
+      const oy=(i-1)*hh*0.42;
+      ctx.beginPath();ctx.arc(hw*(1.05+hk*1.1),oy-hk*hh*0.2,Math.max(1,1.8*u*(1-hk)),0,Math.PI*2);ctx.fill();
+    }
   }
   ctx.restore();
 }
@@ -3780,10 +3891,9 @@ function updateHUD(){
   $('uiCoin').textContent=coins;
   $('uiStage').textContent=G.stage;
   const hv=Math.max(0,G.hearts);
-  /* 后面接的是 BOSS 送的星星和撑开的防护盾：盾最多 3 下就画 3 个🛡，叠更多时用 ×n 收着，别把这排放爆 */
-  const sd=G.hero.shield|0;
-  $('hearts').textContent='❤️'.repeat(hv)+'🖤'.repeat(Math.max(0,3-hv))+(G.bonus>0?' '+'⭐'.repeat(G.bonus):'')
-    +(sd>0?' '+(sd<=3?'🛡'.repeat(sd):'🛡×'+sd):'');
+  /* 心心后面只接 BOSS 送的星星：防护盾不再画在这儿，改成立在小人身前的一面盾
+     （盾面三颗铆钉＝还剩几下，人眼前一看就比角落里的图标好数） */
+  $('hearts').textContent='❤️'.repeat(hv)+'🖤'.repeat(Math.max(0,3-hv))+(G.bonus>0?' '+'⭐'.repeat(G.bonus):'');
   const bossStage=isBossStage();
   if(bossStage&&G.kills>=G.quota){const bn=bossCfg().name;$('uiQuotaBox').innerHTML='💀 打 <b>'+bn+'</b>！';}
   else $('uiQuotaBox').innerHTML='还要打 <b>'+Math.max(0,G.quota-G.kills)+'</b> 只';
