@@ -31,3 +31,11 @@ mobile/www/
 
 # 编辑器「分享/预览」导出的临时压缩包
 .trae-html-share-packages/
+
+# 本地草稿区：分析/校验脚本、无头仿真产物、配音试听样片、旧语音备份（共 40+ MB，不入库）
+Temp/
+# 配音试音的多版本对比样片（选型已定，留着只为回听）
+voice-trial/
+# Python 缓存
+__pycache__/
+*.pyc

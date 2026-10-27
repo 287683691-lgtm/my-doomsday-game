@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>第三篇章：机器人小兵 · 每关挑一个</title>
+<style>
+  :root{
+    --bg:#12161f; --panel:#1b2230; --line:#2c3648;
+    --tx:#f2f6ff; --mut:#a7b6c9; --pick:#0fdc78; --pickTx:#04331c;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%}
+  body{
+    background:linear-gradient(180deg,#10141d,#161d2b 40%,#12161f);
+    color:var(--tx);
+    font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    -webkit-tap-highlight-color:transparent;
+  }
+  header{
+    display:flex; flex-wrap:wrap; align-items:center; gap:12px;
+    padding:12px 18px; border-bottom:3px solid var(--line);
+    position:sticky; top:0; background:#131824; z-index:5;
+  }
+  h1{margin:0; font-size:24px; font-weight:900; letter-spacing:1px;
+    background:linear-gradient(90deg,#5ff0ff,#ff5fd7,#ffca28,#69f0ae);
+    -webkit-background-clip:text; background-clip:text; color:transparent;}
+  .tip{margin:0; font-size:14px; font-weight:700; color:var(--mut)}
+  .sel{margin-left:auto; font-size:18px; font-weight:900; color:var(--pick)}
+  button{
+    font:inherit; font-weight:900; color:var(--tx);
+    background:#242e42; border:3px solid var(--line); border-radius:12px;
+    padding:8px 14px; cursor:pointer;
+  }
+  button:active,button:hover{border-color:var(--pick)}
+  button[aria-pressed="true"]{background:var(--pick); color:var(--pickTx); border-color:var(--pick)}
+  .sec{padding:10px 18px 0}
+  .rowttl{
+    margin:10px 0 4px; padding:8px 14px;
+    background:#1c2536; border-left:8px solid var(--mut); border-radius:10px;
+    font-size:21px; font-weight:900; letter-spacing:1px;
+  }
+  .rowttl b{float:right; font-size:16px; color:var(--pick); font-weight:900}
+  .grid{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px}
+  @media (max-width:820px){ .grid{grid-template-columns:repeat(1,minmax(0,1fr))} }
+  .card{
+    background:var(--panel); border:4px solid var(--line); border-radius:16px;
+    overflow:hidden; display:flex; flex-direction:column; cursor:pointer;
+  }
+  .card.pick{border-color:var(--pick); box-shadow:0 0 0 3px rgba(15,220,120,.25)}
+  .card canvas{width:100%; display:block}
+  .meta{display:flex; align-items:center; gap:8px; padding:6px 10px 0}
+  .no{min-width:34px; text-align:center; font-size:22px; font-weight:900; color:var(--mut)}
+  .card.pick .no{color:var(--pick)}
+  .nm{font-size:20px; font-weight:900; line-height:1.2}
+  .spk{margin-left:auto; font-size:16px; padding:4px 10px}
+  .role{padding:2px 10px 12px; font-size:13px; font-weight:700; color:var(--mut); line-height:1.45}
+  footer{padding:10px 18px 26px; font-size:14px; font-weight:600; color:var(--mut); line-height:1.7}
+  footer b{color:var(--tx)}
+</style>
+</head>
+<body>
+<header>
+  <h1>第三篇章 · 机器人小兵</h1>
+  <p class="tip">每一关两队小兵，点一下你最喜欢的那队（绿框＝选定）</p>
+  <button id="sayRule">听规则</button>
+  <button id="slow" aria-pressed="false">慢动作</button>
+  <button id="pause" aria-pressed="false">暂停</button>
+  <button id="reset">清空重选</button>
+  <div class="sel" id="sel">还没挑</div>
+</header>
+
+<div id="wrap"></div>
+
+<footer>
+  这一页是<b>小兵</b>（大王在另一页《机器人大王-挑选页》）。每关两版都是<b>一身彩色机甲</b>：圆角分层亮面甲、胸口能量核一闪一闪、靴底和眼缝带辉光，还会<b>表演自己的招式</b>——哨兵天线充能吐弹、焊兵一路掉七彩焊花、重甲兵肩膀冒蒸汽、法师法杖放出激光弹、探针喷火悬空飞、链锯兵锯盘越转越快甩火星。<br>
+  全部沿用游戏里那一套步态公式（上下颠 bob、身子歪 rot、抬腿 3.4u、摆臂 1.6u，节拍 ×4.6），选定哪版都能直接接进现在的动画里。挑完 3 个小兵，告诉爸爸，再挑大王。
+</footer>
+
+<script>
+/* ---------- 画布工具 ---------- */
+function hexA(h,a){
+  const n=parseInt(h.slice(1),16);
+  return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+(+a).toFixed(3)+')';
+}
+function rr(c,x,y,w,h,r){
+  const m=Math.max(0.1,Math.min(r,w/2,h/2));
+  c.beginPath();
+  c.moveTo(x+m,y);
+  c.arcTo(x+w,y,x+w,y+h,m);
+  c.arcTo(x+w,y+h,x,y+h,m);
+  c.arcTo(x,y+h,x,y,m);
+  c.arcTo(x,y,x+w,y,m);
+  c.closePath();
+}
+/* 圆角分层甲片：主体壳色 + 顶部高光 + 右侧影 + 底暗 + 描边 + 可选铆钉 */
+function plate(c,u,x,y,w,h,p,rv){
+  const r=Math.min(2.4*u,h*0.34,w*0.34);
+  rr(c,x*u,y*u,w*u,h*u,r); c.fillStyle=p.shell; c.fill();
+  c.save(); rr(c,x*u,y*u,w*u,h*u,r); c.clip();
+  c.fillStyle=p.lt; c.fillRect(x*u,y*u,w*u,Math.max(1.1*u,h*0.16));
+  c.fillStyle=p.dk; c.fillRect((x+w-2.1)*u,y*u,2.1*u,h*u);
+  c.fillStyle='rgba(0,0,0,.2)'; c.fillRect(x*u,(y+h-1.5)*u,w*u,1.5*u);
+  c.restore();
+  c.strokeStyle='rgba(6,10,18,.5)'; c.lineWidth=Math.max(0.8,0.9*u);
+  rr(c,x*u,y*u,w*u,h*u,r); c.stroke();
+  if(rv&&w>7&&h>5){
+    c.fillStyle=p.riv;
+    const s=1.3*u;
+    c.beginPath(); c.arc((x+1.6)*u,(y+1.7)*u,s/1.6,0,7); c.fill();
+    c.beginPath(); c.arc((x+w-1.6)*u,(y+1.7)*u,s/1.6,0,7); c.fill();
+    c.beginPath(); c.arc((x+1.6)*u,(y+h-1.9)*u,s/1.6,0,7); c.fill();
+    c.beginPath(); c.arc((x+w-1.6)*u,(y+h-1.9)*u,s/1.6,0,7); c.fill();
+  }
+}
+/* 手臂甲（金属色，带亮面） */
+function arm(c,u,p,x,y,w,h){
+  plate(c,u,x,y,w,h,{shell:p.metal,lt:p.shell,dk:p.dark,riv:p.riv},false);
+}
+/* 斜纹警示条 */
+function warnStripe(c,u,x,y,w,h,base,ink){
+  c.save(); rr(c,x*u,y*u,w*u,h*u,Math.min(1.4*u,h*u/2)); c.clip();
+  c.fillStyle=base; c.fillRect(x*u,y*u,w*u,h*u);
+  c.fillStyle=ink;
+  for(let i=-2;i<w+h;i+=4){
+    c.beginPath();
+    c.moveTo((x+i)*u,y*u); c.lineTo((x+i+2)*u,y*u);
+    c.lineTo((x+i+2-h)*u,(y+h)*u); c.lineTo((x+i-h)*u,(y+h)*u);
+    c.closePath(); c.fill();
+  }
+  c.restore();
+}
+/* 辉光圆点 */
+function glowC(c,u,col,blur,x,y,r){
+  c.save(); c.shadowColor=col; c.shadowBlur=Math.max(1,blur*u);
+  c.fillStyle=col; c.beginPath(); c.arc(x*u,y*u,Math.max(0.2,r*u),0,7); c.fill(); c.fill();
+  c.restore();
+}
+/* 四角星火花 */
+function star(c,u,x,y,r,col,rot){
+  c.save(); c.translate(x*u,y*u); c.rotate(rot||0); c.fillStyle=col;
+  c.beginPath();
+  for(let i=0;i<8;i++){
+    const a=i*Math.PI/4, rad=(i%2? r*0.35:r)*u;
+    c.lineTo(Math.cos(a)*rad,Math.sin(a)*rad);
+  }
+  c.closePath(); c.fill(); c.restore();
+}
+/* 胸口能量核（脉动辉光） */
+function reactor(c,u,x,y,r,col,gp){
+  c.save(); c.shadowColor=col; c.shadowBlur=13*u*gp;
+  c.fillStyle='#0d1420'; c.beginPath(); c.arc(x*u,y*u,r*u,0,7); c.fill();
+  c.restore();
+  c.strokeStyle=col; c.lineWidth=1.7*u; c.globalAlpha=0.55+0.45*gp;
+  c.beginPath(); c.arc(x*u,y*u,r*u,0,7); c.stroke(); c.globalAlpha=1;
+  c.fillStyle=col; c.beginPath(); c.arc(x*u,y*u,r*0.55*u,0,7); c.fill();
+  c.fillStyle='#ffffff'; c.beginPath(); c.arc(x*u,y*u,r*0.22*u,0,7); c.fill();
+}
+/* 黑面罩 + 发光眼缝 */
+function visor(c,u,p,t,ph){
+  c.fillStyle='#0d1420'; rr(c,-9.6*u,-51*u,19.2*u,6.8*u,2*u); c.fill();
+  const e=0.6+0.4*Math.sin(t*5+ph);
+  c.save(); c.shadowColor=p.eye; c.shadowBlur=11*u*e;
+  c.globalAlpha=0.55+0.45*e; c.fillStyle=p.eye;
+  c.fillRect(-8.4*u,-49.4*u,16.8*u,3*u);
+  c.restore(); c.globalAlpha=1;
+}
+/* 机甲腿：大腿+膝甲+小腿靴+靴底辉光 */
+function legs(c,u,p,liftL,liftR,lw,gsw){
+  lw=lw||9;
+  c.fillStyle=p.metal; rr(c,1.6*u,-18*u,lw*u,13.2*u,2*u); c.fill();
+  c.fillStyle=p.shell;  rr(c,2.1*u,-17.6*u,(lw-2.6)*u,4.4*u,1.8*u); c.fill(); /* 膝甲 */
+  c.fillStyle=p.dark;   rr(c,0.6*u,-6.2*u-liftR,(lw+3)*u,6.2*u,2*u); c.fill(); /* 靴 */
+  c.fillStyle=p.dk; rr(c,-(lw+2.4)*u,-18*u,lw*u,13.2*u,2*u); c.fill();
+  c.fillStyle=p.shell; rr(c,-(lw+1.9)*u,-17.6*u,(lw-2.6)*u,4.4*u,1.8*u); c.fill();
+  c.fillStyle=p.dark; rr(c,-(lw+3.4)*u,-6.2*u-liftL,(lw+3)*u,6.2*u,2*u); c.fill();
+  if(gsw>0){
+    c.save(); c.shadowColor=p.acc; c.shadowBlur=9*u*gsw;
+    c.globalAlpha=0.45+0.4*gsw; c.fillStyle=p.acc;
+    c.fillRect(1*u,-1.5*u-liftR,(lw+2)*u,1.5*u);
+    c.fillRect(-(lw+2.8)*u,-1.5*u-liftL,(lw+2)*u,1.5*u);
+    c.restore(); c.globalAlpha=1;
+  }
+}
+const E8='#5ff0ff', E9='#ff5fd7', E10='#ff8a3c';
+
+/* ---------- 小兵六版（彩色精致机甲 + 专属招式特效） ---------- */
+function drawUnit(c,x,y,s,it,t,ph){
+  const u=s/58, p=it.pal, k=it.kind;
+  const bob=Math.sin(ph)*1.4*u, rot=Math.sin(ph)*0.05;
+  const liftL=Math.max(0,Math.sin(ph))*3.4*u, liftR=Math.max(0,-Math.sin(ph))*3.4*u;
+  const sw=Math.sin(ph)*1.6*u;
+  const gp=0.55+0.45*Math.sin(t*3.4);
+  const hover=(k==='drone');
+
+  /* 地面阴影 + 身后能量光环 */
+  c.fillStyle=hover?'rgba(0,0,0,.16)':'rgba(0,0,0,.3)';
+  c.beginPath(); c.ellipse(x,y+1,(hover?11.5:16)*u,3.4*u,0,0,7); c.fill();
+  const gy=y-(hover?64:50)*u;
+  const g=c.createRadialGradient(x,gy,2*u,x,gy,46*u);
+  g.addColorStop(0,hexA(p.acc,0.17*gp)); g.addColorStop(1,hexA(p.acc,0));
+  c.fillStyle=g; c.fillRect(x-48*u,gy-48*u,96*u,96*u);
+
+  c.save(); c.translate(x,y+bob-(hover?10*u:0)); c.rotate(rot+(k==='chain'?0.05:0));
+
+  /* ===== 腿 / 推进器 ===== */
+  if(k!=='drone'){
+    legs(c,u,p,liftL,liftR,k==='armor'?11:9,gp);
+  }else{
+    /* 浮游探针：喷口 + 三层尾焰 */
+    c.fillStyle=p.dark; rr(c,-9.6*u,-17*u,6.4*u,5.4*u,1.6*u); c.fill();
+    rr(c,3.2*u,-17*u,6.4*u,5.4*u,1.6*u); c.fill();
+    for(const nx of[-6,6.4]){
+      const fl=0.6+0.4*Math.abs(Math.sin(t*11+nx));
+      const jl=(9+3.5*Math.abs(Math.sin(t*11+nx)))*u;
+      c.globalAlpha=0.85*fl; c.fillStyle='#ff8a3c';
+      c.beginPath(); c.moveTo((nx-2.6)*u,-12*u); c.lineTo((nx+2.6)*u,-12*u); c.lineTo(nx*u,-12*u+jl); c.closePath(); c.fill();
+      c.fillStyle='#ffec62';
+      c.beginPath(); c.moveTo((nx-1.6)*u,-12*u); c.lineTo((nx+1.6)*u,-12*u); c.lineTo(nx*u,-12*u+jl*0.66); c.closePath(); c.fill();
+      c.globalAlpha=fl; c.fillStyle=p.acc;
+      c.beginPath(); c.moveTo((nx-0.9)*u,-12*u); c.lineTo((nx+0.9)*u,-12*u); c.lineTo(nx*u,-12*u+jl*0.38); c.closePath(); c.fill();
+      c.globalAlpha=1;
+    }
+  }
+
+  /* ===== 背挂小零件（先压在身后） ===== */
+  if(k==='armor'){
+    const dp=(t*0.85)%1;
+    c.globalAlpha=1-dp; c.fillStyle=p.riv;
+    rr(c,3.4*u,-20*u+dp*20*u,2.4*u,2.4*u,0.7*u); c.fill(); c.globalAlpha=1;
+  }
+
+  /* ===== 手臂 ===== */
+  if(k==='chain'){
+    arm(c,u,p,-18,-34,8,4.4); arm(c,u,p,-18,-26,8,4.4);
+  }else if(k==='adept'){
+    arm(c,u,p,-28,-28-sw,17,7); arm(c,u,p,-30,-36+sw,19,7);
+    c.fillStyle=p.dark; rr(c,-31.6*u,-30*u-sw,4.4*u,9.4*u,1.4*u); c.fill();
+    rr(c,-33.6*u,-38*u+sw,4.4*u,9.4*u,1.4*u); c.fill();
+    glowC(c,u,p.acc,8,-31.4,-25.4-sw,1.1+0.5*gp);      /* 杖头能量珠 */
+    glowC(c,u,p.trim,8,-33.4,-33.4+sw,1.0+0.4*gp);
+  }else{
+    arm(c,u,p,-28,-28-sw,17,7); arm(c,u,p,-30,-36+sw,19,7);
+    c.fillStyle=p.dark; rr(c,-31.6*u,-30*u-sw,4.4*u,9.4*u,1.4*u); c.fill();
+    rr(c,-33.6*u,-38*u+sw,4.4*u,9.4*u,1.4*u); c.fill();
+  }
+
+  /* ===== 躯干 ===== */
+  plate(c,u,-13,-38,26,21,p,true);
+  if(k==='sentry'){ c.fillStyle=hexA(p.dark,0.55); c.fillRect(-13*u,-28.2*u,26*u,1.7*u); }
+  if(k==='armor'){
+    c.save(); rr(c,-13*u,-38*u,13*u,21*u,2.4*u); c.clip();
+    c.fillStyle='rgba(0,0,0,.16)'; c.fillRect(-13*u,-38*u,13*u,21*u); c.restore();
+  }
+  if(k==='chain') warnStripe(c,u,-12.4,-19.6,24.8,3,p.trim,'#23262b');
+  else if(k!=='weld'){ c.fillStyle=p.dark; rr(c,-10.4*u,-22.6*u,6.2*u,2*u,1*u); c.fill(); rr(c,4.2*u,-22.6*u,6.2*u,2*u,1*u); c.fill(); }
+  if(k!=='adept') reactor(c,u,0,-27,k==='chain'?p.trim:p.acc,4.2,gp);
+  /* 肩甲 */
+  plate(c,u,-21,-41.5,10.5,8.5,p,true);
+  plate(c,u,10.5,-41.5,10.5,8.5,p,true);
+  if(k==='armor'){
+    plate(c,u,-22.5,-47,12,8.5,p,true);
+    plate(c,u,10,-50,12,8.5,{...p,shell:p.trim,lt:'#fff8e1',dk:'#c79a1e'},true); /* 金色低肩 */
+    plate(c,u,9.6,-45.5,12.6,9,p,true);
+  }
+  if(k==='weld'){
+    plate(c,u,3.6,-43,10,5.4,{...p,shell:p.trim,lt:'#ffd8a8',dk:'#b3541e'},false); /* 焊枪基座 */
+    c.fillStyle=p.dark; rr(c,-25.6*u,-32*u,6.4*u,5.4*u,1.5*u); c.fill();          /* 喷嘴 */
+  }
+
+  /* ===== 头 ===== */
+  if(k==='adept'){
+    plate(c,u,-13,-58,26,7,p,true);
+    plate(c,u,-11,-54,22,16,p,true);
+    c.fillStyle='#0d1420'; rr(c,-8.8*u,-49.4*u,17.6*u,5.8*u,1.8*u); c.fill();
+    const e2=0.6+0.4*Math.sin(t*5);
+    c.save(); c.shadowColor=p.eye; c.shadowBlur=11*u*e2;
+    c.globalAlpha=0.55+0.45*e2; c.fillStyle=p.eye; c.fillRect(-7.6*u,-48.2*u,15.2*u,2.6*u);
+    c.restore(); c.globalAlpha=1;
+    /* 头顶紫晶 */
+    c.save(); c.shadowColor=p.acc; c.shadowBlur=10*u*gp; c.fillStyle=p.acc;
+    c.beginPath(); c.moveTo(0,-64.5*u); c.lineTo(3*u,-57*u); c.lineTo(-3*u,-57*u); c.closePath(); c.fill(); c.restore();
+  }else{
+    plate(c,u,-12,-56,24,19,p,true);
+    visor(c,u,p,t,ph);
+    if(k==='sentry'){
+      c.fillStyle=p.dk; rr(c,-13.6*u,-56*u,27.2*u,3.4*u,1.4*u); c.fill();
+      /* 天线 */
+      c.fillStyle=p.dark; c.fillRect(6.6*u,-66*u,1.8*u,10.4*u);
+      const fc=2.0, fq=(t%fc)/fc;
+      const hot=fq>0.6? (0.65+0.35*Math.sin(t*22)) : (0.35+0.25*Math.sin(t*4));
+      glowC(c,u,p.acc,12*hot,8.5,-68.4,1.7+0.9*hot);
+      if(fq>0.6&&fq<0.72) star(c,u,8.5,-68.4,3.2,hexA('#ffffff',0.85),t*3);
+      if(fq>=0.72){ /* 铁皮碎屑弹飞出 */
+        const b=(fq-0.72)/0.28;
+        const bx=8.5-52*b, by=-68.4+26*b*b;
+        for(let i=0;i<3;i++){
+          const tb=Math.max(0,b-i*0.09);
+          c.globalAlpha=(0.55-i*0.15)*(1-b); c.fillStyle=p.acc;
+          c.beginPath(); c.arc((8.5-52*tb)*u,( -68.4+26*tb*tb)*u,(1.5-i*0.35)*u,0,7); c.fill();
+        }
+        c.globalAlpha=1;
+        glowC(c,u,p.acc,9,bx,by,1.7);
+        c.fillStyle=p.riv; rr(c,(bx-1.5)*u,(by-1.5)*u,3*u,3*u,0.9*u); c.fill();
+      }
+    }
+    if(k==='weld'){
+      /* 电焊盔：帽檐 + 翻下来的护目板 */
+      c.fillStyle=p.dk; rr(c,-13.4*u,-56.6*u,27*u,3.6*u,1.4*u); c.fill();
+      c.fillStyle='#0d1420'; rr(c,-6.5*u,-53.5*u,7*u,6.4*u,1.6*u); c.fill();
+      c.fillStyle=p.eye; c.globalAlpha=0.5+0.4*Math.sin(t*7);
+      c.fillRect(-5.6*u,-52.4*u,5.2*u,1.6*u); c.globalAlpha=1;
+    }
+    if(k==='drone'){
+      /* 侧耳螺旋 + 圆顶 */
+      c.fillStyle=p.dk; rr(c,-13.8*u,-45*u,2.6*u,5*u,1.2*u); c.fill();
+      rr(c,11.2*u,-45*u,2.6*u,5*u,1.2*u); c.fill();
+      c.fillStyle=p.trim; glowC(c,u,p.trim,7,0,-58.2,1.1+0.5*Math.sin(t*6));
+    }
+    if(k==='chain'){
+      warnStripe(c,u,-12,-58.4,24,3.4,p.trim,'#23262b');
+    }
+    if(k==='armor'){
+      c.fillStyle=p.trim; rr(c,-4*u,-58.6*u,8*u,2.4*u,1*u); c.fill(); /* 金冠条 */
+    }
+  }
+
+  /* ===== 旋翼（探针） ===== */
+  if(k==='drone'){
+    for(const sx of[-1,1]){
+      c.save(); c.translate(sx*15*u,-33*u);
+      c.globalAlpha=0.2; c.fillStyle=p.lt;
+      c.beginPath(); c.ellipse(0,0,9.2*u,2.8*u,0,0,7); c.fill(); c.globalAlpha=1;
+      c.rotate(t*20*sx);
+      c.fillStyle=p.dk; rr(c,-8.6*u,-1.2*u,17.2*u,2.4*u,1.1*u); c.fill();
+      c.rotate(Math.PI/2);
+      c.globalAlpha=0.5; rr(c,-8.6*u,-1.2*u,17.2*u,2.4*u,1.1*u); c.fill(); c.globalAlpha=1;
+      c.restore();
+      c.fillStyle=p.dark; c.beginPath(); c.arc(sx*15*u,-33*u,2.2*u,0,7); c.fill();
+    }
+  }
+
+  /* ===== 链锯（锯盘 + 火星） ===== */
+  if(k==='chain'){
+    const spv=0.5+0.5*Math.sin(t*1.7);
+    const ang=t*(12+12*spv);
+    c.save(); c.translate(-25*u,-29.5*u); c.rotate(ang);
+    c.fillStyle=p.dk; c.beginPath(); c.arc(0,0,9*u,0,7); c.fill();
+    c.fillStyle=p.metal;
+    for(let i=0;i<10;i++){
+      const a=i*Math.PI/5;
+      c.beginPath();
+      c.moveTo(Math.cos(a-0.12)*9*u,Math.sin(a-0.12)*9*u);
+      c.lineTo(Math.cos(a)*11.4*u,Math.sin(a)*11.4*u);
+      c.lineTo(Math.cos(a+0.12)*9*u,Math.sin(a+0.12)*9*u);
+      c.closePath(); c.fill();
+    }
+    c.strokeStyle=p.trim; c.lineWidth=1.6*u; c.globalAlpha=0.75;
+    c.beginPath(); c.moveTo(-8*u,0); c.lineTo(8*u,0); c.moveTo(0,-8*u); c.lineTo(0,8*u); c.stroke();
+    c.globalAlpha=1; c.restore();
+    glowC(c,u,p.trim,7,-25,-29.5,2*spv+0.8);
+    for(let i=0;i<6;i++){
+      const pr=((t*1.15+i*0.17)%1);
+      const dir=(i%2?1:-1);
+      const sx=-25+dir*(6+16*pr);
+      const sy=-29.5+20*pr*pr-7*pr;
+      c.globalAlpha=(1-pr)*(0.4+0.6*spv);
+      c.fillStyle=['#ffffff','#ffec62','#ff8a3c'][i%3];
+      c.fillRect(sx*u,sy*u,1.7*u,1.7*u);
+    }
+    c.globalAlpha=1;
+  }
+
+  /* ===== 焊枪火花（七彩焊花） ===== */
+  if(k==='weld'){
+    const flash=Math.abs(Math.sin(t*9))>0.9;
+    glowC(c,u,'#b9f2ff',flash?16:7,-23.2,-27.6,flash?2.6:1.5);
+    if(flash) star(c,u,-23.2,-27.6,4,'#ffffff',t*2.2);
+    const cols=['#ffffff','#fff59d','#ffb300','#7ff3ff','#ff8a3c'];
+    for(let i=0;i<8;i++){
+      const pr=((t*0.8+i*0.125)%1);
+      const dir=(i%2?1:-1);
+      const sx=-23.2+dir*(1.5+5*pr)*(((i*7)%5)/5+0.4);
+      const sy=-27.6+27*pr*pr;
+      c.globalAlpha=1-pr;
+      c.fillStyle=cols[i%5];
+      c.fillRect(sx*u,sy*u,(1.3+(i%3)*0.4)*u,(1.3+(i%3)*0.4)*u);
+    }
+    c.globalAlpha=1;
+  }
+
+  /* ===== 重甲兵：肩排汽（白色蒸汽团） ===== */
+  if(k==='armor'){
+    c.fillStyle=p.dark; rr(c,15*u,-48.6*u,3.6*u,3*u,1*u); c.fill();
+    const q=(t*0.6)%1;
+    for(let i=0;i<3;i++){
+      const qq=q-i*0.16;
+      if(qq<0||qq>0.6) continue;
+      c.globalAlpha=(1-qq/0.6)*0.42; c.fillStyle='#eef8ff';
+      c.beginPath(); c.arc((16.8+i*1.4)*u,(-49-27*qq)*u,(2+5.4*qq)*u,0,7); c.fill();
+    }
+    c.globalAlpha=1;
+  }
+
+  /* ===== 法师：腹部核 + 法杖激光弹 ===== */
+  if(k==='adept'){
+    const ac=1.5, aq=(t%ac)/ac;
+    reactor(c,u,0,-26,4.6,p.acc,0.4+0.6*aq);
+    /* 腹核菱形 */
+    c.save(); c.shadowColor=p.eye; c.shadowBlur=10*u*(0.4+0.6*aq);
+    c.fillStyle=p.eye; c.beginPath();
+    c.moveTo(0,-20.8*u); c.lineTo(3.2*u,-17.6*u); c.lineTo(0,-14.4*u); c.lineTo(-3.2*u,-17.6*u); c.closePath(); c.fill();
+    c.restore();
+    if(aq>0.8){
+      const b=(aq-0.8)/0.2;
+      const bx=-33.4-64*b, by=-33.4+sw;
+      c.globalAlpha=0.5*(1-b); c.fillStyle=p.acc;
+      c.fillRect((bx+8)*u,(by-0.8)*u,8*u,1.6*u); c.globalAlpha=1;
+      glowC(c,u,p.acc,14,bx,by,2.1*(1-b*0.4));
+      c.fillStyle='#ffffff'; c.beginPath(); c.arc(bx*u,by*u,0.9*u,0,7); c.fill();
+    }else{
+      glowC(c,u,p.acc,10,-33.4,-33.4+sw,1.4+2.4*aq);
+    }
+  }
+
+  /* ===== 哨兵：胸口副格栅小灯 ===== */
+  if(k==='sentry') glowC(c,u,p.trim,6,0,-33.4,0.9+0.4*Math.sin(t*3+1));
+
+  c.restore();
+}
+
+/* ---------- 六张卡 ---------- */
+const ITEMS=[
+  {slot:'m8', no:'8A', name:'铁皮哨兵', kind:'sentry', energy:E8,
+    pal:{shell:'#d9f2f5',lt:'#f6ffff',dk:'#84b3bf',metal:'#3f8b98',dark:'#1d4250',riv:'#eafbff',acc:'#3ae8f5',trim:'#ffd54f',eye:'#3ae8f5'},
+    role:'远程吐弹兵：头顶天线灯一闪一闪，灯亮＝要吐铁皮碎屑。躲法＝看见灯闪就换条路。'},
+  {slot:'m8', no:'8B', name:'电焊兵', kind:'weld', energy:E8,
+    pal:{shell:'#ffdf9e',lt:'#fff3cf',dk:'#c9973f',metal:'#c56a29',dark:'#5d3317',riv:'#ffe8b8',acc:'#ffb300',trim:'#ff7043',eye:'#4dd0e1'},
+    role:'炸火兵：肩扛焊枪一路走一路掉焊花，被打死时原地炸一圈火花。躲法＝别贴着它开枪。'},
+  {slot:'m9', no:'9A', name:'重甲机兵', kind:'armor', energy:E9,
+    pal:{shell:'#d3bcff',lt:'#efe3ff',dk:'#8f6fd6',metal:'#6a4cc0',dark:'#33206b',riv:'#e6d7ff',acc:'#ffd54f',trim:'#ffd54f',eye:'#ff69d0'},
+    role:'厚血兵（血 4）：四块加厚甲片、肩一高一低。用大火球／火箭弹打它才划算。'},
+  {slot:'m9', no:'9B', name:'电路法师', kind:'adept', energy:E9,
+    pal:{shell:'#b8c8ff',lt:'#e6ecff',dk:'#6f86e8',metal:'#7a5cff',dark:'#2c2170',riv:'#dfe6ff',acc:'#ff5fd7',trim:'#40c4ff',eye:'#c48cff'},
+    role:'主远程兵：腹部的核一闪一闪，闪完就吐小激光弹。远就是安全，见核亮换路。'},
+  {slot:'m10', no:'10A', name:'浮游探针', kind:'drone', energy:E10,
+    pal:{shell:'#d8f6ff',lt:'#ffffff',dk:'#8fc9e8',metal:'#4ba3d8',dark:'#215b83',riv:'#eaf8ff',acc:'#40c4ff',trim:'#ffab40',eye:'#69f0ae'},
+    role:'悬空随机换路：旋翼转成虚影、脚不沾地，地面的火和锤都伤不到它。盯弹不盯人。'},
+  {slot:'m10', no:'10B', name:'链锯突击兵', kind:'chain', energy:E10,
+    pal:{shell:'#f2705c',lt:'#ffb3a1',dk:'#a13c2c',metal:'#4a4e57',dark:'#23262b',riv:'#ffd2c8',acc:'#ff5722',trim:'#ffd54f',eye:'#ffca28'},
+    role:'冲刺兵（血 2）：圆锯盘由慢转快，转满那一下猛地提速。蓄力期打它最安全。'}
+];
+const SECTIONS=[
+  {ttl:'关 8 · 废铁坟场', slot:'m8', c:E8},
+  {ttl:'关 9 · 霓虹电路厂', slot:'m9', c:E9},
+  {ttl:'关 10 · 荒漠试验场', slot:'m10', c:E10}
+];
+const PICK_KEY='moday_ch3_pick_m';
+let picks={};
+try{ picks=JSON.parse(localStorage.getItem(PICK_KEY)||'{}')||{}; }catch(_){ picks={}; }
+
+const W=420, H=250, GY=222;
+const wrap=document.getElementById('wrap');
+const items=[];
+
+SECTIONS.forEach(sec=>{
+  const box=document.createElement('div'); box.className='sec';
+  const ttl=document.createElement('div'); ttl.className='rowttl';
+  ttl.style.borderLeftColor=sec.c;
+  const lab=document.createElement('span'); lab.textContent=sec.ttl;
+  const mark=document.createElement('b'); mark.id='mark_'+sec.slot;
+  ttl.appendChild(lab); ttl.appendChild(mark);
+  box.appendChild(ttl);
+  const grid=document.createElement('div'); grid.className='grid';
+  ITEMS.filter(it=>it.slot===sec.slot).forEach(it=>grid.appendChild(makeCard(it)));
+  box.appendChild(grid);
+  wrap.appendChild(box);
+  updMark(sec.slot);
+});
+
+function makeCard(it){
+  const card=document.createElement('div'); card.className='card';
+  const cnv=document.createElement('canvas'); card.appendChild(cnv);
+  const meta=document.createElement('div'); meta.className='meta';
+  const no=document.createElement('div'); no.className='no'; no.textContent=it.no;
+  const nm=document.createElement('div'); nm.className='nm'; nm.textContent=it.name;
+  const spk=document.createElement('button'); spk.className='spk'; spk.textContent='听';
+  meta.appendChild(no); meta.appendChild(nm); meta.appendChild(spk); card.appendChild(meta);
+  const role=document.createElement('div'); role.textContent=it.role; role.className='role';
+  card.appendChild(role);
+  const dpr=Math.max(1,Math.min(3,window.devicePixelRatio||1));
+  cnv.width=Math.round(W*dpr); cnv.height=Math.round(H*dpr);
+  cnv.style.aspectRatio=W+' / '+H;
+  const c=cnv.getContext('2d');
+  const rec={it, c, dpr, card, ph:items.length*0.55};
+  items.push(rec);
+  card.addEventListener('click',()=>select(it));
+  spk.addEventListener('click',ev=>{ ev.stopPropagation(); speak(it.name); });
+  if(picks[it.slot]===it.no) card.classList.add('pick');
+  return card;
+}
+
+function select(it){
+  picks[it.slot]=it.no;
+  try{ localStorage.setItem(PICK_KEY, JSON.stringify(picks)); }catch(_){}
+  items.forEach(r=>r.card.classList.toggle('pick', r.it.slot===it.slot && r.it.no===it.no));
+  updMark(it.slot);
+  speak(it.name+'，我选这个小兵');
+  const n=Object.keys(picks).length;
+  document.getElementById('sel').textContent = n>=3 ? '三个小兵挑好啦！再去挑大王' : ('已挑 '+n+' / 3');
+}
+function updMark(sl){
+  const el=document.getElementById('mark_'+sl); if(!el) return;
+  if(picks[sl]){ const it=ITEMS.find(x=>x.slot===sl&&x.no===picks[sl]); el.textContent='兵·'+it.name; }
+  else el.textContent='';
+}
+document.getElementById('reset').addEventListener('click',()=>{
+  picks={}; try{ localStorage.removeItem(PICK_KEY); }catch(_){}
+  items.forEach(r=>r.card.classList.remove('pick'));
+  SECTIONS.forEach(s=>updMark(s.slot));
+  document.getElementById('sel').textContent='还没挑';
+  speak('都清空啦，重新挑吧');
+});
+
+/* ---------- 语音 ---------- */
+function speak(text){
+  try{
+    if(!('speechSynthesis' in window)) return;
+    speechSynthesis.cancel();
+    const ut=new SpeechSynthesisUtterance(text);
+    ut.lang='zh-CN'; ut.rate=0.9; ut.pitch=1.15;
+    speechSynthesis.speak(ut);
+  }catch(_){ }
+}
+document.getElementById('sayRule').addEventListener('click',()=>{
+  speak('这一页挑小兵。三关里每关有两队彩色机器人，点一下你最喜欢的那队，绿框框住的就是你选的。挑完小兵，再去大王那一页挑大王。');
+});
+
+/* ---------- 控制与主循环 ---------- */
+let slow=false, paused=false;
+const slowBtn=document.getElementById('slow'), pauseBtn=document.getElementById('pause');
+slowBtn.addEventListener('click',()=>{ slow=!slow; slowBtn.setAttribute('aria-pressed',String(slow)); });
+pauseBtn.addEventListener('click',()=>{ paused=!paused; pauseBtn.setAttribute('aria-pressed',String(paused)); });
+
+let last=performance.now(), T=0, scroll=0;
+function frame(now){
+  let dt=(now-last)/1000; last=now;
+  if(dt>0.1) dt=0.1;
+  if(paused) dt=0;
+  dt*=slow?0.3:1;
+  T+=dt; scroll=(scroll+dt*26)%26;
+  items.forEach(r=>{
+    r.ph += dt*4.6;
+    const c=r.c, p=r.it.pal;
+    c.setTransform(r.dpr,0,0,r.dpr,0,0);
+    c.clearRect(0,0,W,H);
+    /* 背景渐变 + 能量色地光线 */
+    const bg=c.createLinearGradient(0,0,0,H);
+    bg.addColorStop(0,'#141a26'); bg.addColorStop(1,'#1e2a3c');
+    c.fillStyle=bg; c.fillRect(0,0,W,H);
+    c.fillStyle=hexA(p.acc,0.55); c.fillRect(0,GY,W,3);
+    c.fillStyle=hexA(p.acc,0.22);
+    for(let x=-scroll;x<W;x+=26) c.fillRect(x,GY+9,14,4);
+    drawUnit(c,W/2,GY,130,r.it,T,r.ph);
+  });
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+document.getElementById('sel').textContent = Object.keys(picks).length>=3 ? '三个小兵挑好啦！再去挑大王' : ('已挑 '+Object.keys(picks).length+' / 3');
+</script>
+</body>
+</html>

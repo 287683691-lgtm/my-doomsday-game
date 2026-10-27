@@ -48,9 +48,44 @@ button{font-family:inherit;cursor:pointer;border:0}
   padding:calc(30px + env(safe-area-inset-top)) calc(18px + env(safe-area-inset-right)) calc(30px + env(safe-area-inset-bottom)) calc(18px + env(safe-area-inset-left));
   background:radial-gradient(circle at 50% 40%,rgba(16,28,52,.86),rgba(4,8,18,.96))}
 .scr.hide{display:none}
-/* 矮屏两档：菜单是 position:fixed + overflow:hidden + justify-content:center，
-   内容一旦超过视口高度，上下各切一半（标题被削顶、分数行看不见）。
-   藏宝图改成两行之后纵向更吃紧，所以矮屏把「头部三件套」一起压下来换空间。 */
+/* 藏宝图扩到四行之后，菜单在 768 高的平板横屏上也会超出一屏。
+   .scr 是「居中 + overflow:hidden」，内容一超高就上下各切一半（标题削顶、第四行看不见），
+   所以菜单单独改成「贴顶排 + 整屏可滚」，再在头尾各垫一块可伸缩的空白：
+   装得下时两块均分余量，看起来和原来的居中一模一样；
+   装不下时两块自动塌成 0，内容从顶部开始排，第四行「世界尽头」滚一下就到，永远不会被切掉。 */
+#scrMenu{justify-content:flex-start;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+#scrMenu::before,#scrMenu::after{content:'';flex:1 1 0;min-height:0;align-self:stretch}
+/* 目标平板档（高 761–1060，主力机 MatePad Air 横屏可视约 1370×920 就在这档）：
+   满尺寸（地图 340）时首页自然总高约 1010px，比 920 还高一截，
+   第四行「世界尽头」会被切掉约 90px，孩子不滑一下根本看不见终章——
+   而藏宝图必须一屏看全（四个篇章四行是一眼要读出来的进度）。
+   所以这一档按"量出来的数字"压到刚好一屏（1370×920 实测 scrollHeight=920、overflow=0）：
+   地图 340→280、格子 58→48、主按钮 9vh→56、标题 86→54，
+   字号取满尺寸档与矮屏档的中间值，行距 69 > 格高 48，⭐/🔒 角标仍有位置。
+   电脑大屏（高 >1060）不吃这条规则，仍是下面的满尺寸版。 */
+@media (min-height:761px) and (max-height:1060px){
+  #scrMenu{gap:10px;padding-top:calc(22px + env(safe-area-inset-top));padding-bottom:calc(22px + env(safe-area-inset-bottom))}
+  #scrMenu h1{font-size:clamp(40px,5.9vw,54px);letter-spacing:4px}
+  #scrMenu .tagline{font-size:17px;margin-top:-2px}
+  #scrMenu .chars{margin:2px 0}
+  #scrMenu .chc{width:clamp(126px,15.8vw,148px);padding:5px 9px 6px;border-radius:18px}
+  #scrMenu .cn{font-size:15px;margin-top:4px}
+  #scrMenu .mapTitle{font-size:16px}
+  #scrMenu .mapWrap{height:280px;width:min(620px,92vw)}
+  #scrMenu .spot,#scrMenu .gift{height:48px;font-size:11px}
+  #scrMenu .spot span{font-size:20px}
+  #scrMenu .gift span{font-size:18px}
+  #scrMenu .spot i,#scrMenu .gift i{font-size:11px}
+  /* 行距 69 − 格高 48 只剩 21px 空隙，⭐ 角标往上抬 16 会顶到上一行的卡片下沿，这档收一点 */
+  #scrMenu .spot.sel::before{top:-13px;font-size:14px}
+  #scrMenu .spot .no{font-size:8px;padding:0 4px;top:-8px;left:-4px}
+  #scrMenu .big{height:56px;font-size:18px;padding:0 22px}
+  #scrMenu .menuRow{font-size:14px}
+  #fitRow .fit{width:56px}
+  #fitRow .fit canvas{width:46px;height:54px}
+}
+/* 矮屏两档：菜单是 position:fixed，纵向空间一紧就得把「头部三件套」和卡片一起压下来；
+   最矮那档（横屏手机）连压带缩也装不下四行地图，靠上面那条整屏滚动兜底。 */
 @media (max-height:760px){
   #scrMenu{gap:8px;padding-top:calc(22px + env(safe-area-inset-top));padding-right:calc(10px + env(safe-area-inset-right));
     padding-bottom:calc(22px + env(safe-area-inset-bottom));padding-left:calc(10px + env(safe-area-inset-left))}
@@ -60,7 +95,7 @@ button{font-family:inherit;cursor:pointer;border:0}
   #scrMenu .chc{width:clamp(112px,17vw,150px);padding:4px 8px 6px;border-radius:18px}
   #scrMenu .cn{font-size:12px;margin-top:3px}
   #scrMenu .mapTitle{font-size:12px}
-  #scrMenu .mapWrap{height:158px;width:min(560px,90vw)}
+  #scrMenu .mapWrap{height:250px;width:min(560px,90vw)}
   #scrMenu .spot{height:44px;font-size:10px;border-width:2.5px;border-radius:11px}
   #scrMenu .spot span{font-size:18px}
   #scrMenu .spot i{font-size:10px}
@@ -71,27 +106,36 @@ button{font-family:inherit;cursor:pointer;border:0}
   #scrMenu .gift span{font-size:17px}
   #scrMenu .big{height:50px;font-size:20px;padding:0 20px}
   #scrMenu .menuRow{font-size:13px}
+  #fitRow .fit{width:50px}
+  #fitRow .fit canvas{width:42px;height:48px}
 }
-/* 手机横屏（高 ≤520）：藏宝图两行放不下，人物卡压成「头像＋名字」横条，副标题让位。
-   头像仍是真实立绘 canvas（40×46＝200×230 的原比例，不拉伸），不是 emoji 占位。 */
+/* 手机横屏（高 ≤520）：藏宝图四行很挤，人物卡压成「头像＋名字」横条，副标题让位。
+   头像仍是真实立绘 canvas（38×44＝200×230 的原比例，不拉伸），不是 emoji 占位。
+   这一档视口最矮（真机常见 375），四行地图怎么压都装不下，
+   靠上面那条「贴顶排＋整屏可滚」兜底：滚一下就能看到「世界尽头」那一格。 */
 @media (max-height:520px){
-  #scrMenu{gap:5px;padding-top:calc(14px + env(safe-area-inset-top));padding-bottom:calc(14px + env(safe-area-inset-bottom))}
-  #scrMenu h1{font-size:24px;letter-spacing:2px}
+  #scrMenu{gap:4px;
+    padding-top:calc(10px + env(safe-area-inset-top));padding-bottom:calc(10px + env(safe-area-inset-bottom))}
+  #scrMenu h1{font-size:22px;letter-spacing:2px}
   #scrMenu .tagline{display:none}
   #scrMenu .chars{gap:8px}
-  #scrMenu .chc{display:flex;align-items:center;gap:7px;width:auto;padding:3px 10px 3px 3px;border-radius:12px;border-width:3px}
-  #scrMenu .chc canvas{width:40px;height:46px;flex:0 0 auto;border-radius:8px}
-  #scrMenu .cn{margin-top:0;font-size:12px;white-space:nowrap}
+  #scrMenu .chc{display:flex;align-items:center;gap:7px;width:auto;padding:2px 9px 2px 2px;border-radius:12px;border-width:3px}
+  #scrMenu .chc canvas{width:38px;height:44px;flex:0 0 auto;border-radius:8px}
+  #scrMenu .cn{margin-top:0;font-size:11px;white-space:nowrap}
   #scrMenu .mapTitle{font-size:11px}
-  #scrMenu .mapWrap{height:132px;width:min(540px,94vw)}
-  #scrMenu .spot{height:42px;font-size:9px;padding:0 4px}
+  #scrMenu .mapWrap{height:196px;width:min(540px,94vw)}
+  #scrMenu .spot{height:34px;font-size:9px;padding:0 4px;border-radius:10px}
   #scrMenu .spot i{font-size:9px}
-  #scrMenu .spot span{font-size:16px}
-  #scrMenu .gift{height:42px;font-size:8px}
-  #scrMenu .gift span{font-size:15px}
-  #scrMenu .big{height:44px;font-size:18px;padding:0 16px}
+  #scrMenu .spot span{font-size:15px}
+  #scrMenu .gift{height:34px;font-size:8px}
+  #scrMenu .gift span{font-size:14px}
+  #scrMenu .big{height:42px;font-size:18px;padding:0 16px}
   #scrMenu .menuRow{font-size:12px}
   #scrMenu .best b{font-size:14px}
+  #fitRow{gap:6px;margin:0 auto}
+  #fitRow .fit{width:42px}
+  #fitRow .fit canvas{width:31px;height:36px}
+  #fitRow .fit .fn{font-size:9px}
 }
 /* 标题和副标题也可点击发声：小朋友点哪儿都有声音 */
 #scrMenu h1,#scrMenu .tagline{cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .12s}
@@ -107,6 +151,17 @@ h1{margin:0;font-size:clamp(38px,8vw,86px);line-height:1;font-weight:900;letter-
 .chc canvas{width:100%;height:auto;display:block;border-radius:14px;background:#101a2e;touch-action:none}
 .cn{color:#fff;font-weight:900;font-size:clamp(14px,2vw,20px);margin-top:6px}
 .chc.sel .cn{color:#ffd54f}
+/* 衣服条（4.12）：选角第二步，只给焕宸换衣服；整行 dim＝当前选的是爸爸 */
+#fitRow{display:flex;align-items:flex-start;justify-content:center;flex-wrap:wrap;gap:8px;margin:8px auto 0}
+#fitRow .tag{font-size:12px;color:#cfe8ff;align-self:center}
+#fitRow .fit{position:relative;width:62px;cursor:pointer;text-align:center}
+#fitRow .fit canvas{display:block;width:52px;height:60px;margin:0 auto;background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.18);border-radius:10px}
+#fitRow .fit .fn{font-size:11px;color:#bcd7f0;margin-top:2px}
+#fitRow .fit.sel canvas{border-color:#ffd54f;box-shadow:0 0 8px rgba(255,213,79,.5)}
+#fitRow .fit.sel .fn{color:#ffd54f}
+#fitRow .fit.lock{cursor:default;filter:grayscale(1) brightness(.62)}
+#fitRow .fit.lock::after{content:'🔒';position:absolute;top:3px;right:3px;font-size:13px}
+#fitRow.dim{opacity:.45;pointer-events:none}
 .menuRow{display:flex;gap:14px;align-items:center;justify-content:center;flex-wrap:wrap;color:#9fb4d8;font-size:16px;font-weight:700}
 .best b{color:#ffd54f;font-size:20px}
 .emo{font-size:clamp(56px,11vw,104px);line-height:1}
@@ -116,9 +171,10 @@ h1{margin:0;font-size:clamp(38px,8vw,86px);line-height:1;font-weight:900;letter-
 /* ---------- 藏宝图小地图：像探险一样选战场 ---------- */
 #mapBox{display:flex;flex-direction:column;gap:6px;align-items:center}
 .mapTitle{color:#ffe082;font-weight:900;font-size:clamp(14px,2vw,20px)}
-/* 藏宝图两行四格（B 版）：卡片扁长、格与格之间只留一小段连线。
-   flex:none 是刚需——.scr 是纵向 flex，地图超高时会被压缩，第二行直接溢出羊皮纸。 */
-.mapWrap{position:relative;flex:none;width:min(700px,92vw);height:212px;border-radius:16px;
+/* 藏宝图四行四格：一行一个篇章，卡片扁长、格与格之间只留一小段连线。
+   flex:none 是刚需——.scr 是纵向 flex，地图超高时会被压缩，底行直接溢出羊皮纸。
+   340＝四行按 12.5/37.5/62.5/87.5% 排：卡片高 58，行距 85，行间还剩 27 给连线和⭐。 */
+.mapWrap{position:relative;flex:none;width:min(700px,92vw);height:340px;border-radius:16px;
   background:linear-gradient(160deg,#f0dfae,#dcc189 60%,#cfae74);
   border:3px dashed #8d6e63;box-shadow:inset 0 0 26px rgba(120,84,40,.35)}
 .mapWrap svg{position:absolute;inset:0;width:100%;height:100%}
@@ -129,7 +185,7 @@ h1{margin:0;font-size:clamp(38px,8vw,86px);line-height:1;font-weight:900;letter-
   font-size:clamp(10px,1.15vw,13px);line-height:1.15}
 .spot i{font-style:normal;white-space:nowrap}
 .spot span{font-size:clamp(19px,2.4vw,26px)}
-/* 第二章一格＝一关，左上角挂关号；终章格紫框；第一行第四格是第一章宝藏（打完发光，不能点） */
+/* 一格＝一关，左上角挂关号；终章格（第四行世界尽头）紫框；第一行第四格是第一章宝藏（打完发光，不能点） */
 .spot .no{position:absolute;top:-9px;left:-6px;background:#6d4c41;color:#fff8e1;font-size:9px;font-weight:900;
   border-radius:8px;padding:1px 5px;letter-spacing:0}
 .spot.fin{border-color:#7e57c2;background:#f3ecff}
@@ -218,6 +274,13 @@ h1{margin:0;font-size:clamp(38px,8vw,86px);line-height:1;font-weight:900;letter-
 .wcard .wn{color:#fff;font-weight:900;font-size:14px}
 .wcard .wp{color:#ffd54f;font-weight:800;font-size:13px}
 .wcard .wp.own{color:#69f0ae}
+/* 强化武器区：紫色系和买枪的金色分开，小朋友一眼知道这排是"给已经有的枪提速" */
+#arsGrid .arsep{grid-column:1/-1;margin-top:6px;padding:6px 10px;border-radius:12px;
+  background:rgba(126,87,194,.18);border:2px dashed rgba(179,157,219,.45);
+  color:#d1c4e9;font-weight:900;font-size:14px;text-align:center}
+.wcard.upc{border-color:rgba(179,157,219,.5);background:rgba(126,87,194,.13)}
+.wcard.upc.full{opacity:.72}
+.wcard .wvl{color:#b39ddb;font-weight:900;font-size:13px;letter-spacing:2px;line-height:1}
 /* 竖屏提示 */
 #scrRotate{z-index:60;background:#0b1020}
 #scrRotate .emo{animation:rot 1.8s ease-in-out infinite}
@@ -276,25 +339,40 @@ h1{margin:0;font-size:clamp(38px,8vw,86px);line-height:1;font-weight:900;letter-
       <div class="cn">焕宸爸爸 · 冲锋战士</div>
     </div>
   </div>
+  <div class="fits dim" id="fitRow"></div>
   <div id="mapBox">
     <div class="mapTitle">🗺 末日藏宝图 · 点一块去探险</div>
     <div class="mapWrap">
-      <svg viewBox="0 0 700 212" preserveAspectRatio="none" aria-hidden="true">
-        <!-- 第一行＝第一章三块战场（棕色路线），第二行＝第二章四关（紫色路线）；虚线只连到相邻卡片之间 -->
-        <path d="M162 58 H188 M337 58 H363 M512 58 H538" fill="none"
+      <svg viewBox="0 0 700 340" preserveAspectRatio="none" aria-hidden="true">
+        <!-- 一行一个篇章：第一行＝第一章三块战场（棕色路线），第二行＝第二章四关（紫色路线），
+             第三行＝第三章机器人四关（青色路线），第四行＝第四篇章「世界尽头」四关（暗红路线）；
+             虚线只连到相邻卡片之间 -->
+        <path d="M162 42.5 H188 M337 42.5 H363 M512 42.5 H538" fill="none"
           stroke="#8d6e63" stroke-width="3.5" stroke-dasharray="7 8" stroke-linecap="round"/>
-        <path d="M162 154 H188 M337 154 H363 M512 154 H538" fill="none"
+        <path d="M162 127.5 H188 M337 127.5 H363 M512 127.5 H538" fill="none"
           stroke="#7e57c2" stroke-width="3.5" stroke-dasharray="6 9" stroke-linecap="round"/>
-        <path d="M636 192 l13 13 M649 192 l-13 13" stroke="#c62828" stroke-width="4" stroke-linecap="round"/>
+        <path d="M162 212.5 H188 M337 212.5 H363 M512 212.5 H538" fill="none"
+          stroke="#00838f" stroke-width="3.5" stroke-dasharray="5 8" stroke-linecap="round"/>
+        <path d="M162 297.5 H188 M337 297.5 H363 M512 297.5 H538" fill="none"
+          stroke="#880e4f" stroke-width="4" stroke-dasharray="4 8" stroke-linecap="round"/>
+        <path d="M515 249 l13 13 M528 249 l-13 13" stroke="#c62828" stroke-width="4" stroke-linecap="round"/>
       </svg>
-      <button class="spot" data-bg="forest" style="left:12.5%;top:27.5%"><b class="no">第1关</b><span>🌲</span><i>发光森林</i></button>
-      <button class="spot" data-bg="city" style="left:37.5%;top:27.5%"><b class="no">第2关</b><span>🌃</span><i>破破城市</i></button>
-      <button class="spot" data-bg="desert" style="left:62.5%;top:27.5%"><b class="no">第3关</b><span>🌵</span><i>太阳沙漠</i></button>
-      <div class="gift" id="mapGift" style="left:87.5%;top:27.5%"><span>💰</span><i>打完有宝藏</i></div>
-      <button class="spot" data-bg="lava" style="left:12.5%;top:72.5%"><b class="no">第4关</b><span>🌋</span><i>熔岩谷</i></button>
-      <button class="spot" data-bg="bone" style="left:37.5%;top:72.5%"><b class="no">第5关</b><span>💀</span><i>白骨地</i></button>
-      <button class="spot" data-bg="ice" style="left:62.5%;top:72.5%"><b class="no">第6关</b><span>❄️</span><i>寒冰谷</i></button>
-      <button class="spot fin" data-bg="rift" style="left:87.5%;top:72.5%"><b class="no">终章</b><span>👑</span><i>合体山谷</i></button>
+      <button class="spot" data-bg="forest" style="left:12.5%;top:12.5%"><b class="no">第1关</b><span>🌲</span><i>发光森林</i></button>
+      <button class="spot" data-bg="city" style="left:37.5%;top:12.5%"><b class="no">第2关</b><span>🌃</span><i>破破城市</i></button>
+      <button class="spot" data-bg="desert" style="left:62.5%;top:12.5%"><b class="no">第3关</b><span>🌵</span><i>太阳沙漠</i></button>
+      <div class="gift" id="mapGift" style="left:87.5%;top:12.5%"><span>💰</span><i>打完有宝藏</i></div>
+      <button class="spot" data-bg="lava" style="left:12.5%;top:37.5%"><b class="no">第4关</b><span>🌋</span><i>熔岩谷</i></button>
+      <button class="spot" data-bg="bone" style="left:37.5%;top:37.5%"><b class="no">第5关</b><span>💀</span><i>白骨地</i></button>
+      <button class="spot" data-bg="ice" style="left:62.5%;top:37.5%"><b class="no">第6关</b><span>❄️</span><i>寒冰谷</i></button>
+      <button class="spot" data-bg="rift" style="left:87.5%;top:37.5%"><b class="no">第7关</b><span>👑</span><i>合体山谷</i></button>
+      <button class="spot" data-bg="junk" style="left:12.5%;top:62.5%"><b class="no">第8关</b><span>⚙️</span><i>机甲坟场</i></button>
+      <button class="spot" data-bg="neon" style="left:37.5%;top:62.5%"><b class="no">第9关</b><span>🏭</span><i>霓虹流水线</i></button>
+      <button class="spot" data-bg="dome" style="left:62.5%;top:62.5%"><b class="no">第10关</b><span>🛢️</span><i>峡谷旧油库</i></button>
+      <button class="spot" data-bg="core" style="left:87.5%;top:62.5%"><b class="no">第11关</b><span>🤖</span><i>机核深渊</i></button>
+      <button class="spot" data-bg="ruin" style="left:12.5%;top:87.5%"><b class="no">第12关</b><span>🌇</span><i>落日废墟城</i></button>
+      <button class="spot" data-bg="giant" style="left:37.5%;top:87.5%"><b class="no">第13关</b><span>🦴</span><i>巨兽白骨地</i></button>
+      <button class="spot" data-bg="wreck" style="left:62.5%;top:87.5%"><b class="no">第14关</b><span>🛸</span><i>机甲残骸长廊</i></button>
+      <button class="spot fin" data-bg="throne" style="left:87.5%;top:87.5%"><b class="no">终章</b><span>👑</span><i>世界尽头</i></button>
     </div>
   </div>
   <div class="btnRow">
@@ -982,6 +1060,460 @@ const BG={
     glowCracks(ctx,t,'#ff4d6d',4);
     embersUp(ctx,t,16,'#ff9ecb',GROUND);
     vg(ctx);
+  },
+  /* ---- 第三章：挑选页坐标系(420x250)用 transform 映射进来，地面带用游戏坐标重画 ---- */
+  junk(ctx,t){ /* 8B 机甲坟场之夜 */
+    ctx.save(); ctx.translate(0,GROUND-RGY); ctx.scale(W/RW,1);
+    sky(ctx,['#0b1026','#141b33']);
+    for(let i=0;i<26;i++){
+      const x=rnd(i)*RW, y=rnd(i+50)*130, a=0.25+0.75*Math.abs(Math.sin(t*1.3+i));
+      ctx.fillStyle=hexA('#cfe8ff',a);
+      ctx.fillRect(x,y,1.8,1.8);
+    }
+    glow(ctx,'#e8f1ff',14,70,52,15,0.9);
+    ctx.fillStyle='#e8f1ff'; ctx.beginPath(); ctx.arc(70,52,15,0,7); ctx.fill();
+    ctx.fillStyle='#c9d6ea';
+    ctx.beginPath(); ctx.arc(65,48,3,0,7); ctx.fill();
+    ctx.beginPath(); ctx.arc(75,57,2.2,0,7); ctx.fill();
+    ctx.fillStyle='#0e1322';
+    ctx.beginPath(); ctx.moveTo(0,RGY); ctx.lineTo(60,150); ctx.lineTo(150,178);
+    ctx.lineTo(250,146); ctx.lineTo(340,172); ctx.lineTo(RW,150); ctx.lineTo(RW,RGY); ctx.fill();
+    ctx.fillStyle='#0e1322'; ctx.fillRect(48,92,10,110);
+    ctx.save(); ctx.translate(53,92); ctx.rotate(-1.15+0.55*Math.sin(t*0.3));
+    ctx.fillStyle=hexA('#5ff0ff',0.10);
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(330,-24); ctx.lineTo(330,24); ctx.closePath(); ctx.fill();
+    ctx.fillStyle=hexA('#bffcff',0.14);
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(330,-8); ctx.lineTo(330,8); ctx.closePath(); ctx.fill();
+    ctx.restore();
+    glow(ctx,'#5ff0ff',8,53,92,3.4,0.9);
+    const heads=[[140,196,56,42,-0.15],[232,200,66,50,0.10],[322,192,48,38,-0.24]];
+    heads.forEach((hd,i)=>{
+      ctx.save(); ctx.translate(hd[0],hd[1]); ctx.rotate(hd[4]);
+      ctx.fillStyle='#131a2c'; ctx.strokeStyle='#2a3652'; ctx.lineWidth=2;
+      rr(ctx,-hd[2]/2,-hd[3],hd[2],hd[3],7); ctx.fill(); ctx.stroke();
+      const a=0.35+0.3*Math.sin(t*2.2+i*1.4);
+      glow(ctx,'#5ff0ff',8,-hd[2]/4,-hd[3]/2,3.4,a+0.2);
+      glow(ctx,'#5ff0ff',8, hd[2]/4,-hd[3]/2,3.4,a+0.2);
+      ctx.fillStyle='#1c2740'; ctx.fillRect(-hd[2]/5,-hd[3]/6,hd[2]*0.4,4);
+      ctx.restore();
+    });
+    const q=(t%2.4)/2.4;
+    if(q<0.22){
+      const a=1-q/0.22;
+      ctx.strokeStyle=hexA('#ffe08a',a); ctx.lineWidth=1.6;
+      for(let i=0;i<5;i++){
+        const an=-Math.PI/2+(i-2)*0.5, L=5+q*34;
+        ctx.beginPath(); ctx.moveTo(250,146);
+        ctx.lineTo(250+Math.cos(an)*L,146+Math.sin(an)*L); ctx.stroke();
+      }
+    }
+    ctx.restore();
+    const gg=ctx.createLinearGradient(0,GROUND,0,H);
+    gg.addColorStop(0,'#0e1322');gg.addColorStop(1,'#060a16');
+    ctx.fillStyle=gg;ctx.fillRect(0,GROUND,W,H-GROUND);
+    ctx.fillStyle=hexA('#5ff0ff',0.55);ctx.fillRect(0,GROUND,W,3);
+    ctx.fillStyle=hexA('#5ff0ff',0.22);
+    for(let x=-(t*26)%26;x<W;x+=26) ctx.fillRect(x,GROUND+9,14,4);
+    vg(ctx);
+  },
+  neon(ctx,t){ /* 9A 霓虹流水线 */
+    ctx.save(); ctx.translate(0,GROUND-RGY); ctx.scale(W/RW,1);
+    sky(ctx,['#141a2a','#1a2436']);
+    ctx.strokeStyle='#20304a'; ctx.lineWidth=1;
+    for(let x=30;x<RW;x+=60){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,150); ctx.stroke(); }
+    for(let y=34;y<150;y+=38){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(RW,y); ctx.stroke(); }
+    for(let i=0;i<4;i++){
+      const y=52+i*26;
+      ctx.strokeStyle=hexA('#ff5fd7',0.22); ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(RW,y); ctx.stroke();
+      for(let j=0;j<3;j++){
+        const x=(t*46+i*90+j*150)%(RW+20)-10;
+        glow(ctx,'#ff5fd7',8,x,y,2.2,0.9);
+      }
+    }
+    for(let i=0;i<3;i++){
+      const a=0.5+0.35*Math.sin(t*3+i*1.3);
+      ctx.save(); ctx.shadowColor='#ff5fd7'; ctx.shadowBlur=12;
+      ctx.fillStyle=hexA('#ff5fd7',a);
+      rr(ctx,26+i*132,16,96,7,3.5); ctx.fill(); ctx.restore();
+    }
+    ctx.fillStyle='#2c3648'; ctx.fillRect(0,168,RW,8);
+    ctx.fillStyle='#1a2233';
+    for(let x=-(t*52)%24;x<RW;x+=24) ctx.fillRect(x,170,3,4);
+    for(let i=0;i<5;i++){
+      const x=((i*86+t*34)%(RW+60))-40;
+      ctx.fillStyle='#c56a29'; rr(ctx,x,146,28,22,3); ctx.fill();
+      ctx.fillStyle='#ffb300'; rr(ctx,x,146,28,15,3); ctx.fill();
+      ctx.fillStyle='#8a4a1a'; ctx.fillRect(x+12,146,4,22);
+    }
+    ctx.fillStyle='#39465e'; ctx.fillRect(386,80,10,88);
+    ctx.fillStyle='#4a5a78'; ctx.fillRect(382,80,18,6);
+    for(let i=0;i<2;i++){
+      const k=((t*0.7+i*0.5)%1);
+      glow(ctx,'#dfe8f5',0,384-k*8,76-k*40,3+k*6,(1-k)*0.3);
+    }
+    ctx.restore();
+    const gg=ctx.createLinearGradient(0,GROUND,0,H);
+    gg.addColorStop(0,'#1a2233');gg.addColorStop(1,'#0d1420');
+    ctx.fillStyle=gg;ctx.fillRect(0,GROUND,W,H-GROUND);
+    ctx.fillStyle=hexA('#ff5fd7',0.55);ctx.fillRect(0,GROUND,W,3);
+    ctx.fillStyle=hexA('#ff5fd7',0.22);
+    for(let x=-(t*26)%26;x<W;x+=26) ctx.fillRect(x,GROUND+9,14,4);
+    vg(ctx);
+  },
+  dome(ctx,t){ /* 10B 峡谷旧油库 */
+    ctx.save(); ctx.translate(0,GROUND-RGY); ctx.scale(W/RW,1);
+    sky(ctx,['#7a3b1e','#ffb36b']);
+    ctx.fillStyle='#3a1d14';
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(86,0); ctx.lineTo(64,54); ctx.lineTo(92,108);
+    ctx.lineTo(56,164); ctx.lineTo(78,RGY); ctx.lineTo(0,RGY); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(RW,0); ctx.lineTo(348,0); ctx.lineTo(368,64); ctx.lineTo(338,122);
+    ctx.lineTo(372,176); ctx.lineTo(352,RGY); ctx.lineTo(RW,RGY); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle=hexA('#ff8a3c',0.16); ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(86,0); ctx.lineTo(64,54); ctx.lineTo(92,108); ctx.lineTo(56,164); ctx.stroke();
+    ctx.fillStyle='#5b616b'; rr(ctx,140,148,122,46,22); ctx.fill();
+    ctx.fillStyle='#7b828d'; rr(ctx,146,152,110,10,5); ctx.fill();
+    ctx.fillStyle='#3d424a'; ctx.fillRect(156,194,10,20); ctx.fillRect(236,194,10,20);
+    ctx.fillStyle='#5b616b'; rr(ctx,278,160,82,34,16); ctx.fill();
+    ctx.fillStyle='#3d424a'; ctx.fillRect(290,194,8,20); ctx.fillRect(340,194,8,20);
+    ctx.fillStyle='#4a4e57'; ctx.fillRect(118,206,206,7);
+    for(let x=130;x<320;x+=46) ctx.fillRect(x,213,5,9);
+    for(let i=0;i<2;i++){
+      const on=Math.sin(t*4+i*Math.PI)>0;
+      glow(ctx,'#ff5252',on?12:4,200+i*120,142+i*12,on?3.6:2.4,on?1:0.25);
+    }
+    for(let i=0;i<3;i++) ctx.fillRect(352+i*22,196,4,RGY-196);
+    const fw=76;
+    ctx.save(); ctx.beginPath(); ctx.rect(350,192,fw,8); ctx.clip();
+    ctx.fillStyle='#ffd54f'; ctx.fillRect(350,192,fw,8);
+    ctx.fillStyle='#23262b';
+    for(let x=350;x<350+fw+10;x+=8){
+      ctx.beginPath(); ctx.moveTo(x,192); ctx.lineTo(x+4,192); ctx.lineTo(x-4,200); ctx.lineTo(x-8,200);
+      ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+    const cx=((t*70)%(RW+90))-45, cy=RGY-9-Math.abs(Math.sin(t*3))*12;
+    ctx.save(); ctx.translate(cx,cy); ctx.rotate(t*6);
+    ctx.strokeStyle='#a1813c'; ctx.lineWidth=1.8;
+    ctx.beginPath(); ctx.arc(0,0,9,0,7); ctx.stroke();
+    for(let i=0;i<4;i++){
+      const an=i*Math.PI/4;
+      ctx.beginPath(); ctx.moveTo(Math.cos(an)*-9,Math.sin(an)*-9);
+      ctx.lineTo(Math.cos(an)*9,Math.sin(an)*9); ctx.stroke();
+    }
+    ctx.restore();
+    ctx.strokeStyle=hexA('#ffcc80',0.3); ctx.lineWidth=1.2;
+    for(let i=0;i<6;i++){
+      const x=(i*83+t*40)%RW, y=RGY-8-rnd(i)*16;
+      ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+7,y); ctx.stroke();
+    }
+    ctx.restore();
+    const gg=ctx.createLinearGradient(0,GROUND,0,H);
+    gg.addColorStop(0,'#4a2a1a');gg.addColorStop(1,'#2a160c');
+    ctx.fillStyle=gg;ctx.fillRect(0,GROUND,W,H-GROUND);
+    ctx.fillStyle=hexA('#ff8a3c',0.55);ctx.fillRect(0,GROUND,W,3);
+    ctx.fillStyle=hexA('#ff8a3c',0.22);
+    for(let x=-(t*26)%26;x<W;x+=26) ctx.fillRect(x,GROUND+9,14,4);
+    vg(ctx);
+  },
+  core(ctx,t){ /* 关 11 机核深渊：顶部巨型机核 + 垂到山脊的能量管线（游戏坐标自绘） */
+    const g=ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,'#05070d');g.addColorStop(.55,'#0d1622');g.addColorStop(1,'#1c2b38');
+    ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+    starsN(ctx,t,30,13,7,54,'#bfe6ff');
+    const gp2=0.55+0.45*Math.sin(t*2.1);
+    for(let i=0;i<3;i++){
+      const a0=Math.sin(t*0.8+i*2)*0.5;
+      ctx.strokeStyle='rgba(105,240,174,'+(0.28-i*0.07).toFixed(3)+')';
+      ctx.lineWidth=2-i*0.4;
+      ctx.beginPath(); ctx.arc(200,64,30+i*10,a0,a0+Math.PI*1.7); ctx.stroke();
+    }
+    ctx.fillStyle='#0a121c'; ctx.beginPath(); ctx.arc(200,64,26,0,7); ctx.fill();
+    ctx.save(); ctx.shadowColor='#69f0ae'; ctx.shadowBlur=18*gp2;
+    ctx.globalAlpha=0.5+0.5*gp2; ctx.fillStyle='#69f0ae';
+    ctx.beginPath(); ctx.arc(200,64,13,0,7); ctx.fill();
+    ctx.restore(); ctx.globalAlpha=1;
+    ctx.fillStyle='#eafff5'; ctx.beginPath(); ctx.arc(200,64,5,0,7); ctx.fill();
+    const pipes=[[150,150],[200,156],[258,150]];
+    pipes.forEach((pd,i)=>{
+      ctx.strokeStyle='rgba(105,240,174,.22)'; ctx.lineWidth=3;
+      ctx.beginPath(); ctx.moveTo(200,88);
+      ctx.quadraticCurveTo((200+pd[0])/2+(i-1)*10,120,pd[0],pd[1]); ctx.stroke();
+      const q=((t*0.5+i*0.33)%1);
+      const px=200+(pd[0]-200)*q, py=88+(pd[1]-88)*q;
+      ctx.fillStyle='rgba(170,255,215,.8)'; ctx.fillRect(px-1.5,py-1.5,3,3);
+    });
+    peaks(ctx,152,'#16222e',24,46,9);
+    peaks(ctx,GROUND-2,'#0b1118',14,30,4);
+    fogBands(ctx,t,GROUND-24);
+    const gg=ctx.createLinearGradient(0,GROUND,0,H);
+    gg.addColorStop(0,'#1c2b38');gg.addColorStop(1,'#0a1016');
+    ctx.fillStyle=gg;ctx.fillRect(0,GROUND,W,H-GROUND);
+    ctx.fillStyle='rgba(105,240,174,.45)';ctx.fillRect(0,GROUND,W,3);
+    ctx.fillStyle='rgba(105,240,174,.22)';
+    for(let x=-(t*26)%26;x<W;x+=26) ctx.fillRect(x,GROUND+9,14,4);
+    vg(ctx);
+  },
+  /* ===== 第四章（终极篇章）四幕：焕宸挑的是 12A / 13B / 14B / 15B，从挑选页逐笔搬进来 =====
+     和第三章一个套路：挑选页坐标系(420x250、地平线 222)用 transform 映射进来，
+     地平线以下的地面带改用游戏坐标重画，保证路面色的起点对齐 GROUND。 */
+  ruin(ctx,t){ /* 关 12 落日废墟城：血日落在一排炸烂的楼后头，楼缝里还亮着僵尸的绿窗 */
+    ctx.save(); ctx.translate(0,GROUND-RGY); ctx.scale(W/RW,1);
+    sky(ctx,['#221a3c','#5c2b4e','#c8553f','#ffa257']);
+    glow(ctx,'#ffb066',30,250,152,25,0.55);
+    ctx.fillStyle='#ffd09a'; ctx.beginPath(); ctx.arc(250,152,18,0,7); ctx.fill();
+    for(let i=0;i<4;i++){ ctx.fillStyle=hexA('#ffc38a',0.09); ctx.fillRect(0,132+i*17,RW,6); }
+    [[4,34],[40,26],[76,36],[116,24],[150,32],[196,26],[232,34],[276,24],[316,32],[356,40]]
+      .forEach((b,i)=>jag(ctx,b[0],b[1],88+rnd(i+7)*70,'#241c36'));
+    for(let i=0;i<11;i++){
+      const bx=16+i*37, by=112+rnd(i+2)*70;
+      const on=Math.sin(t*2.4+i*1.7)>0.15;
+      if(!on) continue;
+      const a=0.42+0.34*Math.abs(Math.sin(t*3+i));
+      glow(ctx,E12,10,bx+2,by+3,5,a*0.55);
+      ctx.fillStyle=hexA(E12,a); ctx.fillRect(bx,by,5,7);
+      ctx.fillStyle=hexA('#e8ffd0',a*0.85); ctx.fillRect(bx+1,by+1,2,3);
+    }
+    [[130,146],[168,142],[206,150]].forEach((p,i)=>{
+      ctx.fillStyle='#1a1428';
+      ctx.fillRect(p[0],p[1],7,RGY-p[1]);
+      ctx.beginPath(); ctx.arc(p[0]+3.5,p[1],7+i*1.4,Math.PI,0); ctx.closePath(); ctx.fill();
+      glow(ctx,E12,7,p[0]+3.5,p[1]-2,1.8,0.3+0.25*Math.sin(t*2+i));
+    });
+    ctx.save(); ctx.translate(372,64); ctx.rotate(0.09);
+    ctx.fillStyle='#191326'; ctx.fillRect(0,0,9,160); ctx.fillRect(-64,0,64,7);
+    const hx=-52+Math.sin(t*0.7)*10;
+    ctx.strokeStyle='#191326'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(hx,7); ctx.lineTo(hx,52+Math.sin(t*0.7)*5); ctx.stroke();
+    ctx.fillRect(hx-4,52+Math.sin(t*0.7)*5,8,8);
+    ctx.restore();
+    ctx.fillStyle='#191326';
+    ctx.fillRect(30,140,40,22);
+    ctx.beginPath(); ctx.moveTo(26,140); ctx.lineTo(50,126); ctx.lineTo(74,140); ctx.closePath(); ctx.fill();
+    ctx.fillRect(34,162,4,60); ctx.fillRect(62,162,4,60);
+    ctx.strokeStyle='#15101f'; ctx.lineWidth=4;
+    ctx.beginPath(); ctx.moveTo(10,RGY); ctx.lineTo(18,166); ctx.stroke();
+    ctx.lineWidth=2;
+    [[-16,-10],[10,-18],[20,-4]].forEach(b=>{
+      ctx.beginPath(); ctx.moveTo(18,166); ctx.lineTo(18+b[0],166+b[1]); ctx.stroke();
+    });
+    for(let i=0;i<4;i++){
+      const x=((t*46+i*118)%(RW+50))-25, y=RGY-14-rnd(i+11)*22+Math.sin(t*3+i)*5;
+      ctx.save(); ctx.translate(x,y); ctx.rotate(Math.sin(t*4+i)*0.8);
+      ctx.fillStyle=hexA('#d9cfc0',0.5); ctx.fillRect(-4,-3,8,6);
+      ctx.restore();
+    }
+    ash(ctx,t,16,'#e8c9a0',9,7,1.5);
+    cracks(ctx,E12,t,[52,148,236,330]);
+    ctx.restore();
+    const gg=ctx.createLinearGradient(0,GROUND,0,H);
+    gg.addColorStop(0,'#39282a');gg.addColorStop(1,'#1d1420');
+    ctx.fillStyle=gg;ctx.fillRect(0,GROUND,W,H-GROUND);
+    ctx.fillStyle=hexA(E12,0.55);ctx.fillRect(0,GROUND,W,3);
+    ctx.fillStyle=hexA(E12,0.22);
+    for(let x=-(t*26)%26;x<W;x+=26) ctx.fillRect(x,GROUND+9,14,4);
+    vg(ctx);
+  },
+  giant(ctx,t){ /* 关 13 巨兽白骨地：太阳被灰吃掉一圈，一头巨兽烂在地上只剩骨架 */
+    ctx.save(); ctx.translate(0,GROUND-RGY); ctx.scale(W/RW,1);
+    sky(ctx,['#2f2a22','#6a5233','#b99a63','#e8cd94']);
+    glow(ctx,'#f2e2b4',26,96,74,20,0.4);
+    ctx.fillStyle='#f6ecd0'; ctx.beginPath(); ctx.arc(96,74,15,0,7); ctx.fill();
+    fog(ctx,t,96,12,'#e8d3a8',3);
+    ctx.fillStyle='#4a3a2a'; ctx.beginPath(); ctx.moveTo(0,168);
+    for(let x=0;x<=RW;x+=18) ctx.lineTo(x,162+Math.sin(x*0.021+1.4)*10);
+    ctx.lineTo(RW,RGY); ctx.lineTo(0,RGY); ctx.fill();
+    ctx.strokeStyle='#e7dcc0'; ctx.lineWidth=4;
+    ctx.beginPath(); ctx.moveTo(150,150); ctx.quadraticCurveTo(230,132,318,152); ctx.stroke();
+    for(let i=0;i<7;i++){
+      const k=i/6, bx=160+k*150, by=148-Math.sin(k*Math.PI)*14;
+      ctx.lineWidth=4.4-k*1.4;
+      ctx.strokeStyle=hexA('#efe4c8',0.95-k*0.2);
+      ctx.beginPath(); ctx.moveTo(bx,by);
+      ctx.quadraticCurveTo(bx+9,by+30,bx-4,by+62); ctx.stroke();
+    }
+    ctx.fillStyle='#e6dbc0';
+    rr(ctx,330,166,62,40,12); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(342,206); ctx.lineTo(352,220); ctx.lineTo(384,206); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#231a14';
+    ctx.beginPath(); ctx.arc(350,182,8,0,7); ctx.fill();
+    ctx.beginPath(); ctx.arc(376,182,6.5,0,7); ctx.fill();
+    ctx.fillStyle='#3a2c20'; ctx.fillRect(352,206,3,8); ctx.fillRect(362,206,3,8); ctx.fillRect(372,206,3,6);
+    ctx.save(); ctx.translate(84,RGY-4); ctx.rotate(-0.12);
+    ctx.fillStyle='#ded2b4'; ctx.fillRect(-4,-96,8,96);
+    rr(ctx,-22,-118,44,28,9); ctx.fill();
+    ctx.fillStyle='#a99a78'; ctx.fillRect(-22,-104,44,5);
+    ctx.restore();
+    ctx.strokeStyle='#d8caaa'; ctx.lineWidth=5;
+    ctx.beginPath(); ctx.moveTo(200,190); ctx.lineTo(200,158);
+    ctx.quadraticCurveTo(226,132,252,158); ctx.lineTo(252,190); ctx.stroke();
+    for(let i=0;i<4;i++){
+      const x=126+i*58+rnd(i)*10, y=RGY-8-rnd(i+5)*4;
+      ctx.fillStyle='#e0d4b6'; rr(ctx,x,y-11,14,12,4); ctx.fill();
+      ctx.fillStyle='#2b2118'; ctx.fillRect(x+3,y-8,3,3); ctx.fillRect(x+8,y-8,3,3);
+    }
+    ctx.fillStyle='#1b1712';
+    const fx=262,fy=146+Math.sin(t*3)*1.5;
+    ctx.beginPath(); ctx.ellipse(fx,fy,7,4,0,0,7); ctx.fill();
+    ctx.beginPath(); ctx.arc(fx+6,fy-3,2.6,0,7); ctx.fill();
+    ctx.save(); ctx.translate(fx,fy-2); ctx.rotate(Math.sin(t*6)*0.5);
+    ctx.beginPath(); ctx.ellipse(0,-3,8,2.4,-0.5,0,7); ctx.fill(); ctx.restore();
+    const cir=(t*0.7)%6.283;
+    const cx2=210+Math.cos(cir)*90, cy2=92+Math.sin(cir)*22;
+    ctx.strokeStyle='#1b1712'; ctx.lineWidth=2.4;
+    ctx.beginPath(); ctx.moveTo(cx2-7,cy2);
+    ctx.quadraticCurveTo(cx2,cy2-5-Math.sin(t*9)*3,cx2+7,cy2); ctx.stroke();
+    ctx.strokeStyle=hexA('#f0dcb0',0.35); ctx.lineWidth=1.5;
+    for(let i=0;i<9;i++){
+      const x=RW-((t*62+i*77)%(RW+50)), y=RGY-16-rnd(i+2)*54;
+      ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+12,y-1); ctx.stroke();
+    }
+    const rx=((t*58)%(RW+90))-45, ry=RGY-9-Math.abs(Math.sin(t*3.2))*10;
+    ctx.save(); ctx.translate(rx,ry); ctx.rotate(t*5.6);
+    ctx.strokeStyle='#cbbb98'; ctx.lineWidth=1.8;
+    ctx.beginPath(); ctx.arc(0,0,8,0,7); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-8,0); ctx.lineTo(8,0); ctx.stroke();
+    ctx.restore();
+    ash(ctx,t,18,'#d8c8a8',12,7,1.5);
+    ctx.restore();
+    const gg=ctx.createLinearGradient(0,GROUND,0,H);
+    gg.addColorStop(0,'#3d2f24');gg.addColorStop(1,'#211a14');
+    ctx.fillStyle=gg;ctx.fillRect(0,GROUND,W,H-GROUND);
+    ctx.fillStyle=hexA(E13,0.55);ctx.fillRect(0,GROUND,W,3);
+    ctx.fillStyle=hexA(E13,0.22);
+    for(let x=-(t*26)%26;x<W;x+=26) ctx.fillRect(x,GROUND+9,14,4);
+    vg(ctx);
+  },
+  wreck(ctx,t){ /* 关 14 机甲残骸长廊：三台报废巨型机甲靠墙站着，独眼还在一闪一闪 */
+    ctx.save(); ctx.translate(0,GROUND-RGY); ctx.scale(W/RW,1);
+    sky(ctx,['#080d16','#0f1828','#0a1018']);
+    ctx.strokeStyle='#1d2b42'; ctx.lineWidth=2;
+    for(let i=0;i<5;i++){
+      const y=30+i*30;
+      ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(160,y+Math.sin(i)*4); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(RW,y); ctx.lineTo(260,y-Math.sin(i)*4); ctx.stroke();
+    }
+    ctx.fillStyle='#0e1a2c'; ctx.fillRect(160,88,100,110);
+    shaft(ctx,E14,210,196,-1.57,110,34,0.13);
+    ctx.fillStyle=hexA('#cbb2ff',0.3+0.12*Math.sin(t*2.4)); ctx.fillRect(166,186,88,6);
+    [[54,120,62,88,-0.04],[300,110,74,98,0.05],[186,150,44,60,0]].forEach((m,i)=>{
+      ctx.save(); ctx.translate(m[0],m[1]); ctx.rotate(m[4]);
+      const bw=m[2], bh=m[3], lg=Math.max(6,RGY-(m[1]+m[3]));
+      ctx.fillStyle='#131d2e'; ctx.strokeStyle='#26364f'; ctx.lineWidth=3;
+      ctx.fillStyle='#101a29';
+      ctx.fillRect(bw*0.14,bh-2,bw*0.24,lg); ctx.fillRect(bw*0.6,bh-2,bw*0.24,lg-4);
+      ctx.fillStyle='#131d2e';
+      rr(ctx,-bw*0.18,bh*0.1,bw*0.32,bh*0.28,5); ctx.fill(); ctx.stroke();
+      rr(ctx,bw*0.86,bh*0.1,bw*0.32,bh*0.28,5); ctx.fill(); ctx.stroke();
+      rr(ctx,bw*0.28,-bh*0.22,bw*0.44,bh*0.28,5); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle='#26364f'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(bw*0.5,-bh*0.22); ctx.lineTo(bw*0.62,-bh*0.4); ctx.stroke();
+      ctx.fillStyle='#131d2e'; ctx.lineWidth=3;
+      rr(ctx,0,0,bw,bh,10); ctx.fill(); ctx.stroke();
+      ctx.fillStyle='#0b1220'; ctx.fillRect(bw*0.16,bh*0.22,bw*0.68,9);
+      const fl=Math.sin(t*(2.2+i*0.6))>-0.5?0.85:0.18;
+      glow(ctx,i===2?'#ff5252':'#5ff0ff',9,bw*0.5,bh*0.26+4,3.2,fl);
+      glow(ctx,i===2?'#ff5252':'#5ff0ff',7,bw*0.5,-bh*0.1,2,fl*0.8);
+      ctx.strokeStyle='#33455f'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(bw*0.2,bh*0.62); ctx.lineTo(bw*0.42,bh*0.78);
+      ctx.lineTo(bw*0.3,bh*0.92); ctx.stroke();
+      const dk=((t*0.9+i*0.4)%1);
+      ctx.fillStyle=hexA('#0f1a28',0.9);
+      ctx.beginPath(); ctx.arc(bw*0.72,bh+dk*24,1.8,0,7); ctx.fill();
+      ctx.restore();
+      if(i===0){ const rp=((t*0.9)%1); ctx.strokeStyle=hexA('#2b3b52',0.7); ctx.lineWidth=1.6;
+        ctx.beginPath(); ctx.ellipse(100,RGY-6,rp*11,rp*3.4,0,0,7); ctx.stroke(); }
+    });
+    for(let i=0;i<6;i++){
+      const x=((i*72+t*40)%(RW+40))-20;
+      ctx.fillStyle=hexA('#dfe8ff',0.16); ctx.fillRect(x,10,34,4);
+      shaft(ctx,'#cfe0ff',x+17,14,1.57,74,13,0.06);
+    }
+    for(let i=0;i<7;i++){
+      const k=((i*0.14+t*0.32)%1);
+      ctx.fillStyle=hexA(E14,0.4*(1-k)+0.1);
+      ctx.fillRect(150-k*150,196+k*18,40+k*110,3);
+    }
+    const wx=352+Math.sin(t*1.3)*11, wy=64+Math.cos(t*1.3)*4;
+    ctx.strokeStyle='#223048'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(378,0); ctx.quadraticCurveTo(wx+10,32,wx,wy); ctx.stroke();
+    ctx.fillStyle='#0c1220'; ctx.fillRect(wx-4,wy,8,9);
+    for(let i=0;i<4;i++){
+      const a=t*7+i*1.57;
+      ctx.strokeStyle=hexA('#ffe08a',0.7-0.1*i); ctx.lineWidth=1.3;
+      ctx.beginPath(); ctx.moveTo(wx,wy+9);
+      ctx.lineTo(wx+Math.cos(a)*9,wy+9+Math.sin(a)*9); ctx.stroke();
+    }
+    for(let i=0;i<20;i++){
+      const x=(rnd(i)*RW+Math.sin(t*0.7+i)*6+RW)%RW, y=(rnd(i+30)*160+t*4)%160;
+      ctx.fillStyle=hexA('#cfe0ff',0.16); ctx.fillRect(x,y+20,1.5,1.5);
+    }
+    ctx.restore();
+    const gg=ctx.createLinearGradient(0,GROUND,0,H);
+    gg.addColorStop(0,'#0b111c');gg.addColorStop(1,'#05080f');
+    ctx.fillStyle=gg;ctx.fillRect(0,GROUND,W,H-GROUND);
+    ctx.fillStyle=hexA(E14,0.55);ctx.fillRect(0,GROUND,W,3);
+    ctx.fillStyle=hexA(E14,0.22);
+    for(let x=-(t*26)%26;x<W;x+=26) ctx.fillRect(x,GROUND+9,14,4);
+    vg(ctx);
+  },
+  throne(ctx,t){ /* 关 15 世界尽头的王座：暗日被啃成环，三个篇章的破旗插在王座四面 */
+    ctx.save(); ctx.translate(0,GROUND-RGY); ctx.scale(W/RW,1);
+    sky(ctx,['#0d0611','#33081c','#7c2f1f','#c86a3a']);
+    const co=0.55+0.35*Math.sin(t*1.8);
+    glow(ctx,'#ffb066',26,208,82,26,co*0.5);
+    ctx.save();
+    ctx.strokeStyle=hexA('#ffd9a0',0.5+0.3*co); ctx.lineWidth=3;
+    ctx.beginPath(); ctx.arc(208,82,20,0,7); ctx.stroke();
+    ctx.fillStyle='#0b0510'; ctx.beginPath(); ctx.arc(208,82,17,0,7); ctx.fill();
+    ctx.restore();
+    ctx.fillStyle='#1d0f18';
+    [[0,126,22],[26,146,16],[352,132,26],[382,152,20]].forEach(b=>jag(ctx,b[0],b[2],b[1],'#1d0f18'));
+    ctx.fillStyle='#1d0f18'; ctx.fillRect(300,168,52,7);
+    ctx.fillRect(344,175,7,47);
+    fog(ctx,t,132,12,'#e08a5a',3);
+    ctx.fillStyle='#241019';
+    for(let i=0;i<4;i++) ctx.fillRect(150-i*10,196+i*7,120+i*20,8);
+    ctx.fillStyle='#150a12';
+    rr(ctx,176,110,68,86,8); ctx.fill();
+    rr(ctx,162,150,18,46,5); ctx.fill();
+    rr(ctx,240,150,18,46,5); ctx.fill();
+    ctx.fillStyle='#2c1520'; ctx.fillRect(182,120,56,9); ctx.fillRect(186,136,48,6);
+    ctx.fillStyle='#150a12';
+    ctx.beginPath(); ctx.moveTo(176,110); ctx.lineTo(186,92); ctx.lineTo(196,110); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(224,110); ctx.lineTo(234,90); ctx.lineTo(244,110); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle=hexA('#ffd54f',0.6+0.3*Math.sin(t*3)); ctx.lineWidth=2.4;
+    ctx.beginPath(); ctx.moveTo(194,108); ctx.lineTo(200,98); ctx.lineTo(206,106);
+    ctx.lineTo(212,96); ctx.lineTo(218,106); ctx.lineTo(224,98); ctx.lineTo(230,108); ctx.stroke();
+    [[124,116],[272,108],[86,140],[318,146]].forEach((p,i)=>{
+      ctx.fillStyle='#2a1620'; ctx.fillRect(p[0],p[1],4,RGY-p[1]);
+      flag(ctx,p[0]+4,p[1]+4,34,22,hexA([E12,E13,E14,E15][i],0.68),t,i*1.4);
+    });
+    [[140,178],[268,178]].forEach((b,i)=>{
+      ctx.fillStyle='#150a12'; ctx.fillRect(b[0]-10,b[1],20,7); ctx.fillRect(b[0]-2,b[1]+7,4,RGY-b[1]-7);
+      for(let k=0;k<3;k++){
+        const fh=12-k*3+Math.sin(t*8+i*3+k)*2.2;
+        ctx.fillStyle=hexA(['#ffe08a','#ff9e4a','#ff4d2e'][k],0.72-k*0.1);
+        ctx.beginPath(); ctx.ellipse(b[0],b[1]-5-k*2.5,fh*0.5,fh,0,0,7); ctx.fill();
+      }
+    });
+    ash(ctx,t,30,'#d9c6c0',14,7,1.6);
+    embers(ctx,t,16,'#ffb066',20,10);
+    for(let i=0;i<3;i++){
+      const a=t*0.6+i*2.1, x=208+Math.cos(a)*(70+i*16), y=84+Math.sin(a*1.3)*16;
+      ctx.strokeStyle='#120a12'; ctx.lineWidth=2.2;
+      ctx.beginPath(); ctx.moveTo(x-7,y);
+      ctx.quadraticCurveTo(x,y-4-Math.sin(t*10+i)*3,x+7,y); ctx.stroke();
+    }
+    fog(ctx,t,RGY-26,10,'#e0a080',3);
+    ctx.restore();
+    const gg=ctx.createLinearGradient(0,GROUND,0,H);
+    gg.addColorStop(0,'#1e0f0e');gg.addColorStop(1,'#0d0508');
+    ctx.fillStyle=gg;ctx.fillRect(0,GROUND,W,H-GROUND);
+    ctx.fillStyle=hexA(E15,0.55);ctx.fillRect(0,GROUND,W,3);
+    ctx.fillStyle=hexA(E15,0.22);
+    for(let x=-(t*26)%26;x<W;x+=26) ctx.fillRect(x,GROUND+9,14,4);
+    vg(ctx);
   }
 };
 /* ---------- 前景层：飘在人物前面的小东西（不受路带遮罩影响） ---------- */
@@ -1155,6 +1687,528 @@ function drawBuddy(ctx,x,y,s,sk,t,fire){
 const CHARS={
   thin:{name:'焕宸 · 迷彩小战士',voice:'迷彩小战士，焕宸',sk:HERO,draw:drawSoldier},
   fat:{name:'焕宸爸爸 · 冲锋战士',voice:'冲锋战士，焕宸爸爸',sk:BUDDY,draw:drawBuddy}
+};
+
+/* =========================================================
+   4.12 衣服层：三套皮肤（山谷游侠 A／裂谷星铠 B／星核机甲 C）
+   从「我的末日-新主角装扮-三版挑选.html」逐字移植，只改接口：
+   · 签名统一成 (ctx,x,y,s,sk,t,fire)，和 CHARS[*].draw 一模一样；
+   · sk 不接色板——每套的配色画在函数内部（整身重绘，不是换色层）；
+   · 挑选页的 rig(t,act) 换成 rigRun(t,fire)：主游戏永远按走路节拍动，
+     火光由第 7 参 fire 驱动（同 drawSoldier 的 h.fire 口径）；
+   · 挑选页里 RM?静态:动画 的三元一律取动画分支。
+   纯外观：数值、枪、弹道全都不碰，衣服只给焕宸穿，爸爸保持原造型。
+   ========================================================= */
+function ell(ctx,x,y,rx,ry){ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,7);ctx.fill();}
+function rigRun(t,fire){
+  const R={bob:-Math.abs(Math.sin(t*7.4))*2.4,
+    liftL:Math.max(0,Math.sin(t*7.4))*4.2,liftR:Math.max(0,-Math.sin(t*7.4))*4.2,
+    sway:1,fire:fire||0,blink:Math.sin(t*1.6+1)>0.985};
+  R.bob-=R.fire*1.2;
+  return R;
+}
+function eyes(ctx,u,R){
+  ctx.fillStyle='#2b2b2b';
+  if(R.blink){ctx.fillRect(-5.5*u,-66.5*u,4*u,1.4*u);ctx.fillRect(2*u,-66.5*u,4*u,1.4*u);}
+  else{ell(ctx,-3.5*u,-66*u,1.9*u,1.9*u);ell(ctx,4*u,-66*u,1.9*u,1.9*u);}
+}
+function blush(ctx,u){
+  ctx.fillStyle='rgba(244,143,117,.55)';
+  ell(ctx,-7*u,-61*u,2*u,2*u);ell(ctx,7.5*u,-61*u,2*u,2*u);
+}
+function smile(ctx,u){
+  ctx.strokeStyle='#a1503c';ctx.lineWidth=1.6*u;ctx.lineCap='round';
+  ctx.beginPath();ctx.arc(1.2*u,-62*u,3.4*u,Math.PI*0.16,Math.PI*0.84);ctx.stroke();
+}
+function gun(ctx,u,R,c1,c2){
+  ctx.fillStyle=c1;rrect(ctx,12*u,-49*u,20*u,3.2*u,1.6*u);ctx.fill();
+  ctx.fillStyle=c2;ctx.fillRect(15*u,-45.5*u,3.5*u,6*u);
+  const f=R.fire;
+  if(f>0){
+    ctx.save();ctx.globalAlpha=Math.min(1,f)*0.55;
+    ctx.shadowColor='#fff176';ctx.shadowBlur=14*u;ctx.fillStyle='#fff176';
+    ell(ctx,33.5*u,-47.4*u,6*u,6*u);ctx.restore();
+  }
+  star(ctx,33.5*u,-47.4*u,5.5*u+f*1.6*u,'#ffd54f');
+}
+function arms(ctx,u,bodyC,toneC){
+  ctx.fillStyle=bodyC;rrect(ctx,-13.5*u,-52*u,4.5*u,14*u,2.2*u);ctx.fill();
+  rrect(ctx,5*u,-50*u,11*u,5*u,2.2*u);ctx.fill();
+  ctx.fillStyle=toneC;rrect(ctx,14*u,-51*u,5.5*u,6.5*u,2.2*u);ctx.fill();
+}
+
+/* ---------- A 版：山谷游侠（灰绿斗篷 + 护目镜） ---------- */
+const RA={cloak:'#6b7f63',cloakDark:'#4f6152',body:'#7d8f6b',bodyDark:'#5d6f4f',
+  leg:'#5d6f4f',boot:'#4e342e',leather:'#4e342e',leatherLt:'#6d4c41',
+  cream:'#d7c9a7',tone:'#ffe0b2',hair:'#4a3728',strap:'#2f3b42',lens:'#7ee8ff'};
+function drawRanger(ctx,x,y,s,sk,t,fire){
+  var u=s/84,R=rigRun(t,fire);
+  ctx.save();ctx.translate(x,y);
+  ctx.fillStyle='rgba(0,0,0,.25)';ell(ctx,0,1,15*u,3.4*u);
+  ctx.translate(0,R.bob*u);
+  /* 斗篷（画在身体后面，下摆到大腿，腿和靴子要露出来） */
+  var sw=3.2+R.sway*2.4;
+  var hem=-sw*u;
+  ctx.fillStyle=RA.cloakDark;
+  ctx.beginPath();
+  ctx.moveTo(-8*u,-54*u);
+  ctx.bezierCurveTo(-15.5*u,-48*u,-16.5*u,-36*u,-13.5*u+hem,-25*u);
+  ctx.quadraticCurveTo(-6*u+hem,-21*u,0,-25.5*u+hem*0.4);
+  ctx.quadraticCurveTo(6.5*u,-28.5*u,10*u+hem*0.5,-31*u);
+  ctx.bezierCurveTo(11*u,-40*u,9.5*u,-49*u,8*u,-54*u);
+  ctx.closePath();ctx.fill();
+  ctx.fillStyle=RA.cloak;
+  ctx.beginPath();
+  ctx.moveTo(-7.5*u,-54*u);
+  ctx.bezierCurveTo(-14.5*u,-48.5*u,-15.5*u,-37.5*u,-12.5*u+hem,-27*u);
+  ctx.quadraticCurveTo(-5.5*u+hem,-23.5*u,0.5*u,-27.5*u+hem*0.4);
+  ctx.quadraticCurveTo(6*u,-30.5*u,9.2*u+hem*0.5,-32.5*u);
+  ctx.bezierCurveTo(10*u,-41*u,9*u,-49*u,7.5*u,-54*u);
+  ctx.closePath();ctx.fill();
+  /* 下摆深色边 + 米色缝线 */
+  ctx.strokeStyle=RA.cloakDark;ctx.lineWidth=2.6*u;ctx.lineJoin='round';ctx.lineCap='round';
+  ctx.beginPath();
+  ctx.moveTo(-12.5*u+hem,-27*u);
+  ctx.quadraticCurveTo(-5.5*u+hem,-23.5*u,0.5*u,-27.5*u+hem*0.4);
+  ctx.quadraticCurveTo(6*u,-30.5*u,9.2*u+hem*0.5,-32.5*u);
+  ctx.stroke();
+  ctx.strokeStyle=RA.cream;ctx.lineWidth=1*u;ctx.setLineDash([2.4*u,2.2*u]);
+  ctx.beginPath();
+  ctx.moveTo(-11.5*u+hem,-30.5*u);
+  ctx.quadraticCurveTo(-5*u+hem,-27*u,0.5*u,-31*u+hem*0.4);
+  ctx.quadraticCurveTo(5.8*u,-33.8*u,8.8*u+hem*0.5,-35.8*u);
+  ctx.stroke();ctx.setLineDash([]);
+  /* 颈后卷起的兜帽 */
+  ctx.fillStyle=RA.cloakDark;rrect(ctx,-8.5*u,-58.5*u,17*u,6.5*u,3*u);ctx.fill();
+  ctx.fillStyle=RA.cloak;rrect(ctx,-8.5*u,-58.5*u,17*u,3.2*u,1.6*u);ctx.fill();
+  /* 腿、靴 */
+  ctx.fillStyle=RA.leg;
+  rrect(ctx,-9*u,-24*u,7*u,20*u-R.liftL*u,2.5*u);ctx.fill();
+  rrect(ctx,2*u,-24*u,7*u,20*u-R.liftR*u,2.5*u);ctx.fill();
+  ctx.fillStyle=RA.cream;
+  rrect(ctx,-9*u,-15*u-R.liftL*u,7*u,2.6*u,1.2*u);ctx.fill();
+  rrect(ctx,2*u,-15*u-R.liftR*u,7*u,2.6*u,1.2*u);ctx.fill();
+  ctx.fillStyle=RA.boot;
+  rrect(ctx,-10*u,-5*u-R.liftL*u,9*u,5*u,2*u);ctx.fill();
+  rrect(ctx,1*u,-5*u-R.liftR*u,9*u,5*u,2*u);ctx.fill();
+  /* 上身 */
+  ctx.fillStyle=RA.body;rrect(ctx,-10*u,-54*u,20*u,31*u,4*u);ctx.fill();
+  ctx.fillStyle=RA.bodyDark;rrect(ctx,-10*u,-32*u,20*u,9*u,3*u);ctx.fill();
+  /* 胸前星扣 */
+  star(ctx,0,-49.5*u,3.4*u,'#ffd54f');
+  /* 皮质斜背带 + 胯部皮袋 */
+  ctx.strokeStyle=RA.leather;ctx.lineWidth=3*u;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(-7.5*u,-50*u);ctx.lineTo(6.5*u,-31*u);ctx.stroke();
+  ctx.fillStyle=RA.leatherLt;rrect(ctx,3.5*u,-33*u,7.5*u,6.5*u,2*u);ctx.fill();
+  ctx.fillStyle=RA.leather;rrect(ctx,3.5*u,-33*u,7.5*u,2.4*u,1.2*u);ctx.fill();
+  /* 腰带 */
+  ctx.fillStyle=RA.leather;ctx.fillRect(-10*u,-30.5*u,20*u,4.2*u);
+  ctx.fillStyle='#c0a060';ctx.fillRect(-2.6*u,-31*u,5.2*u,5.2*u);
+  /* 肩上的叶子 */
+  ctx.save();ctx.translate(-10.5*u,-55*u);ctx.rotate(-0.5);
+  ctx.fillStyle='#7cb342';ell(ctx,0,0,2.2*u,4*u);
+  ctx.strokeStyle='#558b2f';ctx.lineWidth=0.8*u;
+  ctx.beginPath();ctx.moveTo(0,-3.6*u);ctx.lineTo(0,3.6*u);ctx.stroke();ctx.restore();
+  /* 手臂与枪 */
+  arms(ctx,u,RA.cloak,RA.tone);
+  gun(ctx,u,R,'#8d6e63','#6d4c41');
+  /* 头 */
+  ctx.fillStyle=RA.tone;rrect(ctx,-10*u,-74*u,20*u,20*u,5*u);ctx.fill();
+  /* 头发（不戴军帽） */
+  ctx.fillStyle=RA.hair;rrect(ctx,-11*u,-80.5*u,22*u,10.5*u,5*u);ctx.fill();
+  ctx.fillStyle='#3d2d21';rrect(ctx,-11*u,-73.5*u,3.4*u,4.5*u,1.6*u);ctx.fill();
+  rrect(ctx,7.6*u,-73.5*u,3.4*u,4.5*u,1.6*u);ctx.fill();
+  /* 护目镜推在额头 */
+  ctx.fillStyle=RA.strap;rrect(ctx,-11.6*u,-76.5*u,23.2*u,4.4*u,2*u);ctx.fill();
+  var gl=Math.sin(t*1.3);
+  ctx.fillStyle='#243038';ell(ctx,-5*u,-74.6*u,3.9*u,3.9*u);ell(ctx,5*u,-74.6*u,3.9*u,3.9*u);
+  ctx.fillStyle=RA.lens;ell(ctx,-5*u,-74.6*u,3.1*u,3.1*u);ell(ctx,5*u,-74.6*u,3.1*u,3.1*u);
+  ctx.fillStyle='rgba(255,255,255,.85)';
+  ell(ctx,-5*u+gl*1.3*u,-75.6*u,1*u,1.5*u);ell(ctx,5*u+gl*1.3*u,-75.6*u,1*u,1.5*u);
+  /* 脸 */
+  eyes(ctx,u,R);blush(ctx,u);smile(ctx,u);
+  ctx.restore();
+}
+
+/* ---------- B 版：裂谷星铠（银色铠甲 + 发光星星 + 粉紫披风） ---------- */
+const RF={cape:'#6a3a99',capeEdge:'#ff6ea1',plate:'#cfd8e8',plateDark:'#9aa8c6',
+  inner:'#2a2f45',boot:'#232838',tone:'#ffe0b2',cyan:'#7ee8ff',star:'#ffd54f',helm:'#cfd8e8'};
+function drawRift(ctx,x,y,s,sk,t,fire){
+  var u=s/84,R=rigRun(t,fire);
+  var gp=0.55+0.45*Math.sin(t*3.1);
+  ctx.save();ctx.translate(x,y);
+  ctx.fillStyle='rgba(0,0,0,.25)';ell(ctx,0,1,15*u,3.4*u);
+  ctx.translate(0,R.bob*u);
+  /* 能量披风（下摆到膝盖上方，小腿和靴子露出来） */
+  var sw=2.6+R.sway*2, hem=-sw*u;
+  ctx.fillStyle='#3f1f63';
+  ctx.beginPath();
+  ctx.moveTo(-8.6*u,-53*u);
+  ctx.bezierCurveTo(-15*u,-42*u,-16*u,-28*u,-12.4*u+hem,-18*u);
+  ctx.quadraticCurveTo(-4.4*u+hem,-13.4*u,0.6*u,-18*u+hem*0.4);
+  ctx.quadraticCurveTo(6.5*u,-21.6*u,9.6*u+hem*0.5,-23.6*u);
+  ctx.bezierCurveTo(10.6*u,-35*u,9.4*u,-46*u,8.6*u,-53*u);
+  ctx.closePath();ctx.fill();
+  ctx.fillStyle=RF.cape;
+  ctx.beginPath();
+  ctx.moveTo(-8*u,-53*u);
+  ctx.bezierCurveTo(-14*u,-42*u,-15*u,-26*u,-11.5*u+hem,-20*u);
+  ctx.quadraticCurveTo(-4*u+hem,-15.5*u,0.5*u,-20*u+hem*0.4);
+  ctx.quadraticCurveTo(6*u,-23.5*u,9*u+hem*0.5,-25.5*u);
+  ctx.bezierCurveTo(10*u,-34*u,9*u,-46*u,8*u,-53*u);
+  ctx.closePath();ctx.fill();
+  /* 披风上的青色星纹 */
+  ctx.globalAlpha=0.5+0.4*gp;ctx.fillStyle=RF.cyan;
+  star(ctx,-7.5*u,-38*u,1.7*u,RF.cyan);star(ctx,-4.5*u,-27*u,1.3*u,RF.cyan);
+  star(ctx,3*u,-32*u,1.4*u,RF.cyan);
+  ctx.globalAlpha=1;
+  ctx.globalAlpha=0.5+0.5*gp;ctx.fillStyle=RF.capeEdge;
+  ctx.beginPath();
+  ctx.moveTo(-11.5*u+hem,-20*u);
+  ctx.quadraticCurveTo(-4*u+hem,-15.5*u,0.5*u,-20*u+hem*0.4);
+  ctx.quadraticCurveTo(6*u,-23.5*u,9*u+hem*0.5,-25.5*u);
+  ctx.lineTo(9.6*u+hem*0.5,-28.5*u);
+  ctx.quadraticCurveTo(6*u,-26.5*u,0.4*u,-23*u+hem*0.4);
+  ctx.quadraticCurveTo(-4.4*u+hem,-18.5*u,-11*u+hem,-23*u);
+  ctx.closePath();ctx.fill();ctx.globalAlpha=1;
+  for(var i=0;i<3;i++){
+    var p=((t*0.7+i*0.33)%1);
+    ctx.globalAlpha=(1-p)*0.55;ctx.fillStyle=RF.capeEdge;
+    ell(ctx,-6*u+hem*p-i*2*u+p*3*u,-21*u-p*13*u,0.9*u,0.9*u);
+  }
+  ctx.globalAlpha=1;
+  /* 腿 */
+  ctx.fillStyle=RF.inner;
+  rrect(ctx,-9*u,-24*u,7*u,20*u-R.liftL*u,2.5*u);ctx.fill();
+  rrect(ctx,2*u,-24*u,7*u,20*u-R.liftR*u,2.5*u);ctx.fill();
+  ctx.fillStyle=RF.plateDark;
+  rrect(ctx,-9.4*u,-19*u-R.liftL*u,7.8*u,4.4*u,1.8*u);ctx.fill();
+  rrect(ctx,1.6*u,-19*u-R.liftR*u,7.8*u,4.4*u,1.8*u);ctx.fill();
+  ctx.fillStyle=RF.boot;
+  rrect(ctx,-10*u,-5*u-R.liftL*u,9*u,5*u,2*u);ctx.fill();
+  rrect(ctx,1*u,-5*u-R.liftR*u,9*u,5*u,2*u);ctx.fill();
+  ctx.fillStyle=RF.cyan;ctx.globalAlpha=0.55+0.3*gp;
+  ctx.fillRect(-10*u,-6.6*u-R.liftL*u,9*u,1.1*u);
+  ctx.fillRect(1*u,-6.6*u-R.liftR*u,9*u,1.1*u);
+  ctx.globalAlpha=1;
+  /* 胸甲 */
+  ctx.fillStyle=RF.plate;rrect(ctx,-10.5*u,-54*u,21*u,31*u,4*u);ctx.fill();
+  ctx.fillStyle=RF.plateDark;rrect(ctx,6*u,-53*u,4.5*u,29*u,2.4*u);ctx.fill();
+  ctx.fillStyle=RF.inner;rrect(ctx,-10.5*u,-32*u,21*u,9*u,3*u);ctx.fill();
+  /* 甲缝青光 */
+  ctx.fillStyle=RF.cyan;ctx.globalAlpha=0.3+0.5*gp;
+  ctx.fillRect(-8*u,-44*u,16*u,1.3*u);
+  ctx.fillRect(-8*u,-38.5*u,16*u,1.3*u);
+  ctx.fillRect(-10.5*u,-31.5*u,21*u,1.6*u);
+  ctx.globalAlpha=1;
+  /* 腰带 */
+  ctx.fillStyle=RF.boot;ctx.fillRect(-10.5*u,-30*u,21*u,4.2*u);
+  ctx.fillStyle=RF.capeEdge;ctx.fillRect(-2.8*u,-30.6*u,5.6*u,5.4*u);
+  /* 胸口大星徽 */
+  ctx.save();ctx.shadowColor=RF.cyan;ctx.shadowBlur=10*u*gp;ctx.fillStyle=RF.cyan;
+  ell(ctx,0,-45*u,7.6*u+gp*u,7.6*u+gp*u);ctx.restore();
+  ctx.fillStyle='#2b3350';ell(ctx,0,-45*u,6.4*u,6.4*u);
+  star(ctx,0,-45*u,5.6*u+gp*0.7*u,RF.star);
+  /* 肩甲 */
+  ctx.fillStyle=RF.plateDark;
+  rrect(ctx,-16*u,-55*u,7.5*u,7.5*u,2.6*u);ctx.fill();
+  rrect(ctx,8.5*u,-55*u,7.5*u,7.5*u,2.6*u);ctx.fill();
+  ctx.fillStyle=RF.cyan;ctx.globalAlpha=0.45+0.4*gp;
+  rrect(ctx,-16*u,-55*u,7.5*u,1.8*u,0.9*u);ctx.fill();
+  rrect(ctx,8.5*u,-55*u,7.5*u,1.8*u,0.9*u);ctx.fill();
+  ctx.globalAlpha=1;
+  /* 手臂与枪 */
+  ctx.fillStyle=RF.plate;rrect(ctx,-13.5*u,-50*u,4.6*u,13*u,2.2*u);ctx.fill();
+  rrect(ctx,5*u,-50*u,11*u,5*u,2.2*u);ctx.fill();
+  ctx.fillStyle=RF.tone;rrect(ctx,14*u,-51*u,5.5*u,6.5*u,2.2*u);ctx.fill();
+  gun(ctx,u,R,'#5c6b8a','#3d4763');
+  if(R.fire>0.2){
+    ctx.globalAlpha=R.fire;star(ctx,39*u,-44*u,2.2*u,'#fff59d');
+    star(ctx,36*u,-51.5*u,1.8*u,'#fff59d');ctx.globalAlpha=1;
+  }
+  /* 头与脸 */
+  ctx.fillStyle=RF.tone;rrect(ctx,-10*u,-74*u,20*u,20*u,5*u);ctx.fill();
+  eyes(ctx,u,R);blush(ctx,u);smile(ctx,u);
+  /* 头盔（宽扁圆顶，只压住头顶，露出眼睛和脸） */
+  ctx.fillStyle=RF.helm;rrect(ctx,-12*u,-81*u,24*u,10.6*u,5.2*u);ctx.fill();
+  ctx.fillStyle=RF.plateDark;rrect(ctx,6.2*u,-80*u,5.8*u,9.6*u,2.9*u);ctx.fill();
+  /* 两侧颊甲 */
+  ctx.fillStyle=RF.plateDark;
+  rrect(ctx,-11.8*u,-71.6*u,3.2*u,11*u,1.6*u);ctx.fill();
+  rrect(ctx,8.6*u,-71.6*u,3.2*u,11*u,1.6*u);ctx.fill();
+  ctx.fillStyle='#2b3350';rrect(ctx,-11.6*u,-73*u,23.2*u,2.6*u,1.3*u);ctx.fill();
+  ctx.fillStyle=RF.cyan;ctx.globalAlpha=0.6+0.4*gp;
+  rrect(ctx,-10.2*u,-75.4*u,20.4*u,1.9*u,0.95*u);ctx.fill();ctx.globalAlpha=1;
+  /* 顶冠（三角鳍） + 额前小星 */
+  ctx.fillStyle=RF.capeEdge;
+  ctx.beginPath();ctx.moveTo(-3.4*u,-80.4*u);ctx.lineTo(0,-88.8*u);ctx.lineTo(3.4*u,-80.4*u);
+  ctx.closePath();ctx.fill();
+  ctx.fillStyle=RF.plate;rrect(ctx,-1.4*u,-82.4*u,2.8*u,2*u,1*u);ctx.fill();
+  star(ctx,0,-77.8*u,2.8*u,RF.star);
+  ctx.restore();
+}
+
+/* ---------- C 版：星核机甲（银灰机甲 + 胸口反应堆 + 右臂臂炮） ---------- */
+const MC={shell:'#e3e9f5',shellLt:'#f5f8ff',shellDark:'#aab5cd',metal:'#39415a',dark:'#262c3e',
+  cyan:'#5ff0ff',cyanDeep:'#0b1a24',orange:'#ff8a3c',tone:'#ffe0b2',star:'#ffd54f'};
+function drawMecha(ctx,x,y,s,sk,t,fire){
+  var u=s/84,R=rigRun(t,fire);
+  var gp=0.55+0.45*Math.sin(t*3.4);
+  ctx.save();ctx.translate(x,y);
+  ctx.fillStyle='rgba(0,0,0,.25)';ell(ctx,0,1,16*u,3.6*u);
+  ctx.translate(0,R.bob*u);
+  /* 背后背包（推进器喷口与尾焰画在手臂之上，见下方） */
+  var jl=12+4.5*Math.abs(Math.sin(t*11));
+  var fa=0.6+0.4*Math.sin(t*14);
+  ctx.fillStyle=MC.metal;
+  rrect(ctx,-17.5*u,-66*u,7.5*u,17*u,2.8*u);ctx.fill();
+  rrect(ctx,10*u,-66*u,7.5*u,17*u,2.8*u);ctx.fill();
+  ctx.fillStyle=MC.dark;
+  rrect(ctx,-16.6*u,-52*u,5.8*u,3.4*u,1.6*u);ctx.fill();
+  rrect(ctx,10.8*u,-52*u,5.8*u,3.4*u,1.6*u);ctx.fill();
+  ctx.fillStyle=MC.orange;
+  rrect(ctx,-16.6*u,-65.2*u,5.8*u,2.2*u,1.1*u);ctx.fill();
+  rrect(ctx,10.8*u,-65.2*u,5.8*u,2.2*u,1.1*u);ctx.fill();
+  ctx.globalAlpha=0.55+0.35*gp;ctx.fillStyle=MC.cyan;
+  ell(ctx,-13.7*u,-50.3*u,1.5*u,1.5*u);ell(ctx,13.7*u,-50.3*u,1.5*u,1.5*u);
+  ctx.globalAlpha=1;
+  /* 机械腿：深枪灰 + 亮银膝甲 + 方块重靴 + 青色靴底光 */
+  ctx.fillStyle=MC.metal;
+  rrect(ctx,-9.5*u,-26*u,7.5*u,21*u-R.liftL*u,2.6*u);ctx.fill();
+  rrect(ctx,2*u,-26*u,7.5*u,21*u-R.liftR*u,2.6*u);ctx.fill();
+  ctx.fillStyle=MC.shell;
+  rrect(ctx,-10.2*u,-22*u-R.liftL*u,8.8*u,5.6*u,2*u);ctx.fill();
+  rrect(ctx,1.4*u,-22*u-R.liftR*u,8.8*u,5.6*u,2*u);ctx.fill();
+  ctx.fillStyle=MC.metal;
+  rrect(ctx,-8.4*u,-33.5*u,5.2*u,9*u,2*u);ctx.fill();
+  rrect(ctx,3.2*u,-33.5*u,5.2*u,9*u,2*u);ctx.fill();
+  ctx.fillStyle=MC.dark;
+  rrect(ctx,-12*u,-7*u-R.liftL*u,11*u,7*u,2.4*u);ctx.fill();
+  rrect(ctx,1*u,-7*u-R.liftR*u,11*u,7*u,2.4*u);ctx.fill();
+  ctx.fillStyle=MC.shell;
+  rrect(ctx,-12*u,-7*u-R.liftL*u,11*u,3.2*u,1.6*u);ctx.fill();
+  rrect(ctx,1*u,-7*u-R.liftR*u,11*u,3.2*u,1.6*u);ctx.fill();
+  ctx.globalAlpha=0.5+0.4*gp;ctx.fillStyle=MC.cyan;
+  rrect(ctx,-11.2*u,-2.2*u-R.liftL*u,9.4*u,1.6*u,0.8*u);ctx.fill();
+  rrect(ctx,1.8*u,-2.2*u-R.liftR*u,9.4*u,1.6*u,0.8*u);ctx.fill();
+  ctx.globalAlpha=1;
+  /* 躯干（比 A/B 更宽更方） */
+  ctx.fillStyle=MC.shell;rrect(ctx,-12.5*u,-56*u,25*u,32*u,4.6*u);ctx.fill();
+  ctx.fillStyle=MC.shellDark;rrect(ctx,6.6*u,-54*u,5.6*u,28*u,2.6*u);ctx.fill();
+  ctx.fillStyle=MC.metal;rrect(ctx,-9*u,-34*u,18*u,8*u,2.6*u);ctx.fill();
+  /* 腰线警示橙 */
+  ctx.fillStyle=MC.orange;rrect(ctx,-11.8*u,-38.6*u,23.6*u,2.2*u,1.1*u);ctx.fill();
+  /* 胸口反应堆核心 */
+  ctx.save();ctx.shadowColor=MC.cyan;ctx.shadowBlur=13*u*gp;
+  ctx.fillStyle=MC.dark;ell(ctx,0,-47*u,6.2*u,6.2*u);ctx.restore();
+  ctx.strokeStyle=MC.cyan;ctx.lineWidth=1.9*u;ctx.globalAlpha=0.65+0.35*gp;
+  ctx.beginPath();ctx.arc(0,-47*u,6.2*u,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;
+  ctx.fillStyle=MC.cyanDeep;ell(ctx,0,-47*u,4.1*u,4.1*u);
+  ctx.globalAlpha=0.5+0.5*gp;ctx.fillStyle=MC.cyan;ell(ctx,0,-47*u,2.9*u,2.9*u);ctx.globalAlpha=1;
+  star(ctx,0,-47*u,2.3*u+gp*0.7*u,'#eafcff');
+  /* 肩甲（大方块 + 亮面 + 橙色警示条） */
+  ctx.fillStyle=MC.shell;
+  rrect(ctx,-19.4*u,-58.8*u,10.4*u,10.4*u,3.4*u);ctx.fill();
+  rrect(ctx,9*u,-58.8*u,10.4*u,10.4*u,3.4*u);ctx.fill();
+  ctx.fillStyle=MC.shellLt;
+  rrect(ctx,-18.6*u,-58*u,8.8*u,3.4*u,1.7*u);ctx.fill();
+  rrect(ctx,9.8*u,-58*u,8.8*u,3.4*u,1.7*u);ctx.fill();
+  ctx.fillStyle=MC.orange;
+  rrect(ctx,-17.8*u,-53*u,7.2*u,2.2*u,1.1*u);ctx.fill();
+  rrect(ctx,10.6*u,-53*u,7.2*u,2.2*u,1.1*u);ctx.fill();
+  /* 左臂（机械拳） */
+  ctx.fillStyle=MC.metal;rrect(ctx,-16.8*u,-49*u,6.6*u,14*u,2.4*u);ctx.fill();
+  ctx.fillStyle=MC.shell;rrect(ctx,-17.2*u,-36.5*u,7.2*u,6.4*u,2.4*u);ctx.fill();
+  /* 右臂＝臂炮（不开手里那把枪） */
+  ctx.fillStyle=MC.metal;rrect(ctx,9.6*u,-49.5*u,6.6*u,9*u,2.4*u);ctx.fill();
+  ctx.fillStyle=MC.shell;rrect(ctx,7*u,-53*u,20.5*u,9.4*u,3*u);ctx.fill();
+  ctx.fillStyle=MC.shellLt;rrect(ctx,8.6*u,-52*u,17*u,2.8*u,1.4*u);ctx.fill();
+  ctx.fillStyle=MC.orange;rrect(ctx,13.2*u,-52.6*u,3*u,8.6*u,1.4*u);ctx.fill();
+  ctx.fillStyle=MC.dark;rrect(ctx,24.6*u,-52.2*u,4.4*u,8*u,2.2*u);ctx.fill();
+  ctx.globalAlpha=0.45+0.35*gp;ctx.fillStyle=MC.cyan;
+  ell(ctx,29.2*u,-48.2*u,2.3*u,3.2*u);ctx.globalAlpha=1;
+  var mf=R.fire;
+  if(mf>0){
+    ctx.save();ctx.globalAlpha=Math.min(1,mf)*0.6;
+    ctx.shadowColor=MC.cyan;ctx.shadowBlur=16*u;ctx.fillStyle='#dffcff';
+    ell(ctx,29.6*u,-48.2*u,6.6*u,6.6*u);ctx.restore();
+  }
+  star(ctx,29.6*u,-48.2*u,5.5*u+mf*1.8*u,MC.star);
+  /* 肩下推进器喷口 + 尾焰（画在手臂之上，走路时往下喷） */
+  for(var sd=-1;sd<=1;sd+=2){
+    ctx.fillStyle=MC.metal;
+    rrect(ctx,(sd<0?-25.4:19.8)*u,-46.8*u,5.6*u,3.6*u,1.5*u);ctx.fill();
+    ctx.fillStyle=MC.dark;
+    rrect(ctx,(sd<0?-24.4:20.6)*u,-45.8*u,3.8*u,2.4*u,1.1*u);ctx.fill();
+    ctx.globalAlpha=fa*0.8;ctx.fillStyle=MC.orange;
+    ctx.beginPath();ctx.moveTo(sd*20.4*u,-44.6*u);ctx.lineTo(sd*24.8*u,-44.6*u);
+    ctx.lineTo(sd*23.8*u,-44.6*u+jl*u);ctx.lineTo(sd*21.2*u,-44.6*u+jl*0.6*u);
+    ctx.closePath();ctx.fill();
+    ctx.globalAlpha=fa;ctx.fillStyle='#ffec62';
+    ctx.beginPath();ctx.moveTo(sd*21*u,-44.6*u);ctx.lineTo(sd*24.2*u,-44.6*u);
+    ctx.lineTo(sd*23.2*u,-44.6*u+jl*0.6*u);ctx.lineTo(sd*21.8*u,-44.6*u+jl*0.3*u);
+    ctx.closePath();ctx.fill();
+    ctx.globalAlpha=fa*0.95;ctx.fillStyle=MC.cyan;
+    ctx.beginPath();ctx.moveTo(sd*21.6*u,-44.6*u);ctx.lineTo(sd*23.6*u,-44.6*u);
+    ctx.lineTo(sd*22.6*u,-44.6*u+jl*0.3*u);ctx.closePath();ctx.fill();
+    ctx.globalAlpha=1;
+  }
+  /* 头（先画焕宸的脸，再压头盔和面罩） */
+  ctx.fillStyle=MC.dark;rrect(ctx,-6*u,-57*u,12*u,4.5*u,2*u);ctx.fill();
+  ctx.fillStyle=MC.tone;rrect(ctx,-10*u,-74*u,20*u,20*u,5*u);ctx.fill();
+  ctx.fillStyle=MC.shell;rrect(ctx,-11.4*u,-80.6*u,22.8*u,12.4*u,5.4*u);ctx.fill();
+  ctx.fillStyle=MC.shellDark;rrect(ctx,6.2*u,-80*u,5.2*u,11.4*u,2.4*u);ctx.fill();
+  ctx.fillStyle=MC.metal;
+  rrect(ctx,-13.8*u,-77.5*u,3*u,8.6*u,1.4*u);ctx.fill();
+  rrect(ctx,10.8*u,-77.5*u,3*u,8.6*u,1.4*u);ctx.fill();
+  ctx.globalAlpha=0.6+0.4*gp;ctx.fillStyle=MC.cyan;
+  ell(ctx,-12.3*u,-73.2*u,1.1*u,1.1*u);ell(ctx,12.3*u,-73.2*u,1.1*u,1.1*u);ctx.globalAlpha=1;
+  /* 面罩（深色底 + 眼睛 + 半透青光玻璃） */
+  ctx.fillStyle=MC.dark;rrect(ctx,-10.4*u,-69.8*u,20.8*u,7.6*u,3*u);ctx.fill();
+  eyes(ctx,u,R);
+  ctx.globalAlpha=0.3+0.16*gp;ctx.fillStyle=MC.cyan;
+  rrect(ctx,-10.4*u,-69.8*u,20.8*u,7.6*u,3*u);ctx.fill();ctx.globalAlpha=1;
+  ctx.strokeStyle=MC.cyan;ctx.lineWidth=1.2*u;ctx.globalAlpha=0.55+0.35*gp;
+  rrect(ctx,-10.4*u,-69.8*u,20.8*u,7.6*u,3*u);ctx.stroke();ctx.globalAlpha=1;
+  /* 两侧颊甲 + 头顶橙色鳍冠 */
+  ctx.fillStyle=MC.shellDark;
+  rrect(ctx,-11.6*u,-68*u,2.8*u,8*u,1.4*u);ctx.fill();
+  rrect(ctx,8.8*u,-68*u,2.8*u,8*u,1.4*u);ctx.fill();
+  ctx.fillStyle=MC.orange;
+  ctx.beginPath();ctx.moveTo(-3.4*u,-80*u);ctx.lineTo(0,-87.6*u);ctx.lineTo(3.4*u,-80*u);
+  ctx.closePath();ctx.fill();
+  ctx.fillStyle=MC.shell;rrect(ctx,-1.5*u,-82*u,3*u,2.2*u,1*u);ctx.fill();
+  blush(ctx,u);smile(ctx,u);
+  ctx.restore();
+}
+
+/* ---------- D 版：末日王铠（第四篇章「世界尽头的王座」通关奖励） ----------
+   紫黑王袍 + 赤金三尖冠：把打掉的末日总王披在身上。胸口那颗菱形红宝石和总王冠心
+   同色（#ff2f5e＝第四章主色），冠心一颗小的跟着呼吸一明一暗。
+   高度上限：衣服 chip 是 52×60 逻辑格、脚底 y=57、u=54/84，往上只剩 88.6u，
+   所以冠尖＋金珠最高做到 87.3u（比星核机甲的鳍冠 87.6u 再矮一档，不会被切顶）。 */
+const KG={cape:'#3a0f52',capeLt:'#5b1c7e',capeDeep:'#22062f',gold:'#ffd54f',goldDeep:'#f9a825',
+  plate:'#2b2540',plateLt:'#453c66',plateDeep:'#191428',metal:'#1b1830',boot:'#241d33',
+  gem:'#ff2f5e',tone:'#ffe0b2',hair:'#3b2b20'};
+function drawKing(ctx,x,y,s,sk,t,fire){
+  var u=s/84,R=rigRun(t,fire),gp=0.55+0.45*Math.sin(t*3.4);
+  ctx.save();ctx.translate(x,y);
+  ctx.fillStyle='rgba(0,0,0,.25)';ell(ctx,0,1,15.5*u,3.4*u);
+  ctx.translate(0,R.bob*u);
+  /* 王袍（画在所有东西后面）：深紫打底 + 正紫提亮，一直垂到脚踝 */
+  var sw=3.4+R.sway*2.6,hem=-sw*u;
+  ctx.fillStyle=KG.capeDeep;
+  ctx.beginPath();
+  ctx.moveTo(-8*u,-55*u);
+  ctx.bezierCurveTo(-17.5*u,-46*u,-18.5*u,-28*u,-15*u+hem,-9*u);
+  ctx.quadraticCurveTo(-6.5*u+hem,-4.5*u,1*u,-8*u+hem*0.4);
+  ctx.quadraticCurveTo(8.5*u,-12*u,12*u+hem*0.5,-20*u);
+  ctx.bezierCurveTo(13*u,-34*u,10.8*u,-48*u,8*u,-55*u);
+  ctx.closePath();ctx.fill();
+  ctx.fillStyle=KG.cape;
+  ctx.beginPath();
+  ctx.moveTo(-7.6*u,-55*u);
+  ctx.bezierCurveTo(-16*u,-46.5*u,-17*u,-29.5*u,-13.8*u+hem,-11.5*u);
+  ctx.quadraticCurveTo(-6*u+hem,-7.5*u,0.8*u,-11*u+hem*0.4);
+  ctx.quadraticCurveTo(7.8*u,-14.5*u,11.2*u+hem*0.5,-22*u);
+  ctx.bezierCurveTo(12*u,-35*u,10*u,-48.5*u,7.6*u,-55*u);
+  ctx.closePath();ctx.fill();
+  /* 内衬亮紫：只在身后左侧露出一条，袍子才有厚度 */
+  ctx.fillStyle=KG.capeLt;
+  ctx.beginPath();
+  ctx.moveTo(-7.6*u,-54*u);
+  ctx.bezierCurveTo(-13.5*u,-46*u,-14.6*u,-34*u,-12.4*u+hem,-20*u);
+  ctx.quadraticCurveTo(-9*u+hem,-16*u,-6.5*u,-19.5*u);
+  ctx.bezierCurveTo(-7.5*u,-32*u,-8.2*u,-45*u,-6*u,-54*u);
+  ctx.closePath();ctx.fill();
+  /* 下摆一道赤金滚边 */
+  ctx.strokeStyle=KG.goldDeep;ctx.lineWidth=2.2*u;ctx.lineJoin='round';ctx.lineCap='round';
+  ctx.beginPath();
+  ctx.moveTo(-13.8*u+hem,-11.5*u);
+  ctx.quadraticCurveTo(-6*u+hem,-7.5*u,0.8*u,-11*u+hem*0.4);
+  ctx.quadraticCurveTo(7.8*u,-14.5*u,11.2*u+hem*0.5,-22*u);
+  ctx.stroke();
+  /* 颈口金扣（袍子提在脖子上） */
+  ctx.fillStyle=KG.gold;rrect(ctx,-9*u,-59*u,18*u,5.5*u,2.6*u);ctx.fill();
+  ctx.fillStyle=KG.plate;rrect(ctx,-7.6*u,-58.2*u,15.2*u,2.6*u,1.3*u);ctx.fill();
+  /* 腿、铁靴（靴尖包金） */
+  ctx.fillStyle=KG.plate;
+  rrect(ctx,-9*u,-24*u,7*u,20*u-R.liftL*u,2.5*u);ctx.fill();
+  rrect(ctx,2*u,-24*u,7*u,20*u-R.liftR*u,2.5*u);ctx.fill();
+  ctx.fillStyle=KG.plateLt;
+  rrect(ctx,-9*u,-19*u-R.liftL*u,7*u,2.4*u,1.1*u);ctx.fill();
+  rrect(ctx,2*u,-19*u-R.liftR*u,7*u,2.4*u,1.1*u);ctx.fill();
+  ctx.fillStyle=KG.boot;
+  rrect(ctx,-10.2*u,-5*u-R.liftL*u,9.2*u,5*u,2*u);ctx.fill();
+  rrect(ctx,1*u,-5*u-R.liftR*u,9.2*u,5*u,2*u);ctx.fill();
+  ctx.fillStyle=KG.gold;
+  rrect(ctx,-10.2*u,-5*u-R.liftL*u,3*u,5*u,1.4*u);ctx.fill();
+  /* 胸铠：深色底 + 亮紫胸片 + 一道中缝暗槽 */
+  ctx.fillStyle=KG.plate;rrect(ctx,-10.6*u,-55*u,21.2*u,32*u,4.5*u);ctx.fill();
+  ctx.fillStyle=KG.plateLt;rrect(ctx,-10.6*u,-55*u,21.2*u,16*u,4*u);ctx.fill();
+  ctx.fillStyle=KG.plateDeep;rrect(ctx,-1.4*u,-54*u,2.8*u,23*u,1.2*u);ctx.fill();
+  /* 腰下三片战裙 */
+  ctx.fillStyle=KG.plate;
+  rrect(ctx,-10.6*u,-26*u,6.6*u,7*u,2*u);ctx.fill();
+  rrect(ctx,-3.3*u,-26*u,6.6*u,7.6*u,2*u);ctx.fill();
+  rrect(ctx,4*u,-26*u,6.6*u,7*u,2*u);ctx.fill();
+  /* 金腰带 + 带扣暗座 */
+  ctx.fillStyle=KG.goldDeep;ctx.fillRect(-10.8*u,-30.6*u,21.6*u,4.6*u);
+  ctx.fillStyle=KG.gold;ctx.fillRect(-10.8*u,-30.6*u,21.6*u,1.4*u);
+  ctx.fillStyle=KG.plateDeep;rrect(ctx,-3.4*u,-31.6*u,6.8*u,6.6*u,2*u);ctx.fill();
+  /* 胸口菱形红宝石：第四章主色，一亮一暗 */
+  ctx.save();ctx.shadowColor=KG.gem;ctx.shadowBlur=12*u*gp;ctx.fillStyle=KG.gem;
+  ctx.beginPath();ctx.moveTo(0,-49.5*u);ctx.lineTo(4.2*u,-45*u);ctx.lineTo(0,-40.5*u);ctx.lineTo(-4.2*u,-45*u);
+  ctx.closePath();ctx.fill();ctx.restore();
+  ctx.fillStyle='rgba(255,255,255,.7)';
+  ctx.beginPath();ctx.moveTo(0,-48.4*u);ctx.lineTo(2.2*u,-45.4*u);ctx.lineTo(0,-43.8*u);ctx.lineTo(-2.2*u,-45.4*u);
+  ctx.closePath();ctx.fill();
+  /* 赤金肩甲（亮金面 + 深金边 + 下沿暗条） */
+  ctx.fillStyle=KG.goldDeep;
+  rrect(ctx,-15.2*u,-56*u,7.6*u,9*u,3.4*u);ctx.fill();
+  rrect(ctx,7.6*u,-56*u,7.6*u,9*u,3.4*u);ctx.fill();
+  ctx.fillStyle=KG.gold;
+  rrect(ctx,-15.2*u,-56*u,7.6*u,4*u,2*u);ctx.fill();
+  rrect(ctx,7.6*u,-56*u,7.6*u,4*u,2*u);ctx.fill();
+  ctx.fillStyle=KG.plateDeep;
+  rrect(ctx,-14.6*u,-48.6*u,6.4*u,1.8*u,0.9*u);ctx.fill();
+  rrect(ctx,8.2*u,-48.6*u,6.4*u,1.8*u,0.9*u);ctx.fill();
+  /* 手臂与赤金枪（只换配色，火力数值不碰） */
+  arms(ctx,u,KG.plate,KG.tone);
+  gun(ctx,u,R,KG.goldDeep,KG.metal);
+  /* 头 + 头发 */
+  ctx.fillStyle=KG.tone;rrect(ctx,-10*u,-74*u,20*u,20*u,5*u);ctx.fill();
+  ctx.fillStyle=KG.hair;rrect(ctx,-11*u,-80.5*u,22*u,10.5*u,5*u);ctx.fill();
+  ctx.fillStyle='#33241b';rrect(ctx,-11*u,-73.5*u,3.4*u,4.5*u,1.6*u);ctx.fill();
+  rrect(ctx,7.6*u,-73.5*u,3.4*u,4.5*u,1.6*u);ctx.fill();
+  /* 三尖赤金王冠：先出三个尖，再压住一圈冠带 */
+  ctx.fillStyle=KG.gold;
+  ctx.beginPath();
+  ctx.moveTo(-11.2*u,-81.2*u);ctx.lineTo(-8*u,-85.4*u);ctx.lineTo(-4.6*u,-81.4*u);
+  ctx.lineTo(0,-86.2*u);ctx.lineTo(4.6*u,-81.4*u);ctx.lineTo(8*u,-85.4*u);ctx.lineTo(11.2*u,-81.2*u);
+  ctx.lineTo(11.2*u,-78.8*u);ctx.lineTo(-11.2*u,-78.8*u);
+  ctx.closePath();ctx.fill();
+  ctx.fillStyle=KG.goldDeep;rrect(ctx,-11.8*u,-80.6*u,23.6*u,4.2*u,1.6*u);ctx.fill();
+  ctx.fillStyle=KG.gold;rrect(ctx,-11.8*u,-80.6*u,23.6*u,2.2*u,1.1*u);ctx.fill();
+  /* 冠心红宝石（和总王同一处）+ 三个尖上的金珠 */
+  ctx.save();ctx.shadowColor=KG.gem;ctx.shadowBlur=9*u*gp;
+  ctx.fillStyle=(Math.sin(t*3)>0)?KG.gem:'#ff6f91';
+  ell(ctx,0,-78.6*u,1.9*u,1.9*u);ctx.restore();
+  ctx.fillStyle='#ffe082';
+  ell(ctx,-8*u,-85.4*u,1*u,1*u);ell(ctx,0,-86.2*u,1.1*u,1.1*u);ell(ctx,8*u,-85.4*u,1*u,1*u);
+  /* 脸 */
+  eyes(ctx,u,R);blush(ctx,u);smile(ctx,u);
+  ctx.restore();
+}
+
+/* 衣服表：lv＝解锁所需篇章（0＝一开始就有）；voice＝点选时念的语音键；
+   数值一律不碰——枪、弹、伤害仍按人物走 curWeaponId() */
+const OUTFITS={
+  camo:  {name:'迷彩服',  lv:0,voice:'char_thin',draw:drawSoldier,sk:HERO},
+  ranger:{name:'山谷游侠',lv:1,voice:'uf_ranger',draw:drawRanger,sk:HERO},
+  rift:  {name:'裂谷星铠',lv:2,voice:'uf_rift', draw:drawRift, sk:HERO},
+  mecha: {name:'星核机甲',lv:3,voice:'uf_mecha',draw:drawMecha,sk:HERO},
+  king:  {name:'末日王铠',lv:4,voice:'uf_king',  draw:drawKing,  sk:HERO}
 };
 
 /* ---------- 僵尸：经典绿僵尸（已选定） ---------- */
@@ -1402,6 +2456,620 @@ function drawBlockZombie(ctx,x,y,s,zk,t,ph){
   ctx.restore();
 }
 
+/* ---------- 第三章机器人（从三个挑选页的定稿画布原样搬来） ----------
+   兵：8B 电焊兵 / 9A 重甲机兵 / 10B 链锯突击兵 / 浮游探针（终章主攻召唤）——小兵挑选页；
+   王：8B 活塞重锤王 / 9B 钻头臂王 / 10B 机库王——大王挑选页。
+   helper 两套：兵版保持原名（plate/arm/visor/legs/reactor），王版尺寸略有差异（甲片右影更宽、
+   靴子更厚、面罩更大、反应核光晕更亮），加 b 前缀防串画；hexA/rr/warnStripe/glowC 两页一致，共用一份。
+   四角星火花叫 sparkStar——主游戏早有一个 star()（画五角星徽章），别撞名。
+   步态公式一个字没动：u=s/58、bob/rot/lift/sw 全按挑选页定稿，改它=改手感。 */
+
+/* ===== 共用画布工具（两页一字不差的部分） ===== */
+function hexA(h,a){
+  const n=parseInt(h.slice(1),16);
+  return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+(+a).toFixed(3)+')';
+}
+function rr(c,x,y,w,h,r){
+  const m=Math.max(0.1,Math.min(r,w/2,h/2));
+  c.beginPath();
+  c.moveTo(x+m,y);
+  c.arcTo(x+w,y,x+w,y+h,m);
+  c.arcTo(x+w,y+h,x,y+h,m);
+  c.arcTo(x,y+h,x,y,m);
+  c.arcTo(x,y,x+w,y,m);
+  c.closePath();
+}
+/* 斜纹警示条 */
+function warnStripe(c,u,x,y,w,h,base,ink){
+  c.save(); rr(c,x*u,y*u,w*u,h*u,Math.min(1.4*u,h*u/2)); c.clip();
+  c.fillStyle=base; c.fillRect(x*u,y*u,w*u,h*u);
+  c.fillStyle=ink;
+  for(let i=-2;i<w+h;i+=4){
+    c.beginPath();
+    c.moveTo((x+i)*u,y*u); c.lineTo((x+i+2)*u,y*u);
+    c.lineTo((x+i+2-h)*u,(y+h)*u); c.lineTo((x+i-h)*u,(y+h)*u);
+    c.closePath(); c.fill();
+  }
+  c.restore();
+}
+/* 辉光圆点 */
+function glowC(c,u,col,blur,x,y,r){
+  c.save(); c.shadowColor=col; c.shadowBlur=Math.max(1,blur*u);
+  c.fillStyle=col; c.beginPath(); c.arc(x*u,y*u,Math.max(0.2,r*u),0,7); c.fill(); c.fill();
+  c.restore();
+}
+/* 四角星火花（挑选页里叫 star，这里避开主游戏的五角星 star） */
+function sparkStar(c,u,x,y,r,col,rot){
+  c.save(); c.translate(x*u,y*u); c.rotate(rot||0); c.fillStyle=col;
+  c.beginPath();
+  for(let i=0;i<8;i++){
+    const a=i*Math.PI/4, rad=(i%2? r*0.35:r)*u;
+    c.lineTo(Math.cos(a)*rad,Math.sin(a)*rad);
+  }
+  c.closePath(); c.fill(); c.restore();
+}
+
+/* ===== 小兵版零件（原名照搬） ===== */
+/* 圆角分层甲片：主体壳色 + 顶部高光 + 右侧影 + 底暗 + 描边 + 可选铆钉 */
+function plate(c,u,x,y,w,h,p,rv){
+  const r=Math.min(2.4*u,h*0.34,w*0.34);
+  rr(c,x*u,y*u,w*u,h*u,r); c.fillStyle=p.shell; c.fill();
+  c.save(); rr(c,x*u,y*u,w*u,h*u,r); c.clip();
+  c.fillStyle=p.lt; c.fillRect(x*u,y*u,w*u,Math.max(1.1*u,h*0.16));
+  c.fillStyle=p.dk; c.fillRect((x+w-2.1)*u,y*u,2.1*u,h*u);
+  c.fillStyle='rgba(0,0,0,.2)'; c.fillRect(x*u,(y+h-1.5)*u,w*u,1.5*u);
+  c.restore();
+  c.strokeStyle='rgba(6,10,18,.5)'; c.lineWidth=Math.max(0.8,0.9*u);
+  rr(c,x*u,y*u,w*u,h*u,r); c.stroke();
+  if(rv&&w>7&&h>5){
+    c.fillStyle=p.riv;
+    const s=1.3*u;
+    c.beginPath(); c.arc((x+1.6)*u,(y+1.7)*u,s/1.6,0,7); c.fill();
+    c.beginPath(); c.arc((x+w-1.6)*u,(y+1.7)*u,s/1.6,0,7); c.fill();
+    c.beginPath(); c.arc((x+1.6)*u,(y+h-1.9)*u,s/1.6,0,7); c.fill();
+    c.beginPath(); c.arc((x+w-1.6)*u,(y+h-1.9)*u,s/1.6,0,7); c.fill();
+  }
+}
+/* 手臂甲（金属色，带亮面） */
+function arm(c,u,p,x,y,w,h){
+  plate(c,u,x,y,w,h,{shell:p.metal,lt:p.shell,dk:p.dark,riv:p.riv},false);
+}
+/* 胸口能量核（脉动辉光） */
+function reactor(c,u,x,y,r,col,gp){
+  c.save(); c.shadowColor=col; c.shadowBlur=13*u*gp;
+  c.fillStyle='#0d1420'; c.beginPath(); c.arc(x*u,y*u,r*u,0,7); c.fill();
+  c.restore();
+  c.strokeStyle=col; c.lineWidth=1.7*u; c.globalAlpha=0.55+0.45*gp;
+  c.beginPath(); c.arc(x*u,y*u,r*u,0,7); c.stroke(); c.globalAlpha=1;
+  c.fillStyle=col; c.beginPath(); c.arc(x*u,y*u,r*0.55*u,0,7); c.fill();
+  c.fillStyle='#ffffff'; c.beginPath(); c.arc(x*u,y*u,r*0.22*u,0,7); c.fill();
+}
+/* 黑面罩 + 发光眼缝 */
+function visor(c,u,p,t,ph){
+  c.fillStyle='#0d1420'; rr(c,-9.6*u,-51*u,19.2*u,6.8*u,2*u); c.fill();
+  const e=0.6+0.4*Math.sin(t*5+ph);
+  c.save(); c.shadowColor=p.eye; c.shadowBlur=11*u*e;
+  c.globalAlpha=0.55+0.45*e; c.fillStyle=p.eye;
+  c.fillRect(-8.4*u,-49.4*u,16.8*u,3*u);
+  c.restore(); c.globalAlpha=1;
+}
+/* 机甲腿：大腿+膝甲+小腿靴+靴底辉光 */
+function legs(c,u,p,liftL,liftR,lw,gsw){
+  lw=lw||9;
+  c.fillStyle=p.metal; rr(c,1.6*u,-18*u,lw*u,13.2*u,2*u); c.fill();
+  c.fillStyle=p.shell;  rr(c,2.1*u,-17.6*u,(lw-2.6)*u,4.4*u,1.8*u); c.fill(); /* 膝甲 */
+  c.fillStyle=p.dark;   rr(c,0.6*u,-6.2*u-liftR,(lw+3)*u,6.2*u,2*u); c.fill(); /* 靴 */
+  c.fillStyle=p.dk; rr(c,-(lw+2.4)*u,-18*u,lw*u,13.2*u,2*u); c.fill();
+  c.fillStyle=p.shell; rr(c,-(lw+1.9)*u,-17.6*u,(lw-2.6)*u,4.4*u,1.8*u); c.fill();
+  c.fillStyle=p.dark; rr(c,-(lw+3.4)*u,-6.2*u-liftL,(lw+3)*u,6.2*u,2*u); c.fill();
+  if(gsw>0){
+    c.save(); c.shadowColor=p.acc; c.shadowBlur=9*u*gsw;
+    c.globalAlpha=0.45+0.4*gsw; c.fillStyle=p.acc;
+    c.fillRect(1*u,-1.5*u-liftR,(lw+2)*u,1.5*u);
+    c.fillRect(-(lw+2.8)*u,-1.5*u-liftL,(lw+2)*u,1.5*u);
+    c.restore(); c.globalAlpha=1;
+  }
+}
+
+/* ===== 小兵配色表（键名＝ZB/KIND 里用的兵种 key，配色抄挑选页 ITEMS 定稿） ===== */
+const ROBOT_SK={
+  weld :{kind:'weld',
+    pal:{shell:'#ffdf9e',lt:'#fff3cf',dk:'#c9973f',metal:'#c56a29',dark:'#5d3317',riv:'#ffe8b8',acc:'#ffb300',trim:'#ff7043',eye:'#4dd0e1'}},
+  armor:{kind:'armor',
+    pal:{shell:'#d3bcff',lt:'#efe3ff',dk:'#8f6fd6',metal:'#6a4cc0',dark:'#33206b',riv:'#e6d7ff',acc:'#ffd54f',trim:'#ffd54f',eye:'#ff69d0'}},
+  chain:{kind:'chain',
+    pal:{shell:'#f2705c',lt:'#ffb3a1',dk:'#a13c2c',metal:'#4a4e57',dark:'#23262b',riv:'#ffd2c8',acc:'#ff5722',trim:'#ffd54f',eye:'#ffca28'}},
+  drone:{kind:'drone',
+    pal:{shell:'#d8f6ff',lt:'#ffffff',dk:'#8fc9e8',metal:'#4ba3d8',dark:'#215b83',riv:'#eaf8ff',acc:'#40c4ff',trim:'#ffab40',eye:'#69f0ae'}}
+};
+
+/* ---------- 小兵绘制（挑选页 drawUnit 定稿原样搬，只删了没选上的哨兵/法师两版） ---------- */
+function drawRobotUnit(c,x,y,s,it,t,ph){
+  const u=s/58, p=it.pal, k=it.kind;
+  const bob=Math.sin(ph)*1.4*u, rot=Math.sin(ph)*0.05;
+  const liftL=Math.max(0,Math.sin(ph))*3.4*u, liftR=Math.max(0,-Math.sin(ph))*3.4*u;
+  const sw=Math.sin(ph)*1.6*u;
+  const gp=0.55+0.45*Math.sin(t*3.4);
+  const hover=(k==='drone');
+
+  /* 地面阴影 + 身后能量光环 */
+  c.fillStyle=hover?'rgba(0,0,0,.16)':'rgba(0,0,0,.3)';
+  c.beginPath(); c.ellipse(x,y+1,(hover?11.5:16)*u,3.4*u,0,0,7); c.fill();
+  const gy=y-(hover?64:50)*u;
+  const g=c.createRadialGradient(x,gy,2*u,x,gy,46*u);
+  g.addColorStop(0,hexA(p.acc,0.17*gp)); g.addColorStop(1,hexA(p.acc,0));
+  c.fillStyle=g; c.fillRect(x-48*u,gy-48*u,96*u,96*u);
+
+  c.save(); c.translate(x,y+bob-(hover?10*u:0)); c.rotate(rot+(k==='chain'?0.05:0));
+
+  /* ===== 腿 / 推进器 ===== */
+  if(k!=='drone'){
+    legs(c,u,p,liftL,liftR,k==='armor'?11:9,gp);
+  }else{
+    /* 浮游探针：喷口 + 三层尾焰 */
+    c.fillStyle=p.dark; rr(c,-9.6*u,-17*u,6.4*u,5.4*u,1.6*u); c.fill();
+    rr(c,3.2*u,-17*u,6.4*u,5.4*u,1.6*u); c.fill();
+    for(const nx of[-6,6.4]){
+      const fl=0.6+0.4*Math.abs(Math.sin(t*11+nx));
+      const jl=(9+3.5*Math.abs(Math.sin(t*11+nx)))*u;
+      c.globalAlpha=0.85*fl; c.fillStyle='#ff8a3c';
+      c.beginPath(); c.moveTo((nx-2.6)*u,-12*u); c.lineTo((nx+2.6)*u,-12*u); c.lineTo(nx*u,-12*u+jl); c.closePath(); c.fill();
+      c.fillStyle='#ffec62';
+      c.beginPath(); c.moveTo((nx-1.6)*u,-12*u); c.lineTo((nx+1.6)*u,-12*u); c.lineTo(nx*u,-12*u+jl*0.66); c.closePath(); c.fill();
+      c.globalAlpha=fl; c.fillStyle=p.acc;
+      c.beginPath(); c.moveTo((nx-0.9)*u,-12*u); c.lineTo((nx+0.9)*u,-12*u); c.lineTo(nx*u,-12*u+jl*0.38); c.closePath(); c.fill();
+      c.globalAlpha=1;
+    }
+  }
+
+  /* ===== 背挂小零件（先压在身后） ===== */
+  if(k==='armor'){
+    const dp=(t*0.85)%1;
+    c.globalAlpha=1-dp; c.fillStyle=p.riv;
+    rr(c,3.4*u,-20*u+dp*20*u,2.4*u,2.4*u,0.7*u); c.fill(); c.globalAlpha=1;
+  }
+
+  /* ===== 手臂 ===== */
+  if(k==='chain'){
+    arm(c,u,p,-18,-34,8,4.4); arm(c,u,p,-18,-26,8,4.4);
+  }else{
+    arm(c,u,p,-28,-28-sw,17,7); arm(c,u,p,-30,-36+sw,19,7);
+    c.fillStyle=p.dark; rr(c,-31.6*u,-30*u-sw,4.4*u,9.4*u,1.4*u); c.fill();
+    rr(c,-33.6*u,-38*u+sw,4.4*u,9.4*u,1.4*u); c.fill();
+  }
+
+  /* ===== 躯干 ===== */
+  plate(c,u,-13,-38,26,21,p,true);
+  if(k==='armor'){
+    c.save(); rr(c,-13*u,-38*u,13*u,21*u,2.4*u); c.clip();
+    c.fillStyle='rgba(0,0,0,.16)'; c.fillRect(-13*u,-38*u,13*u,21*u); c.restore();
+  }
+  if(k==='chain') warnStripe(c,u,-12.4,-19.6,24.8,3,p.trim,'#23262b');
+  else if(k!=='weld'){ c.fillStyle=p.dark; rr(c,-10.4*u,-22.6*u,6.2*u,2*u,1*u); c.fill(); rr(c,4.2*u,-22.6*u,6.2*u,2*u,1*u); c.fill(); }
+  reactor(c,u,0,-27,k==='chain'?p.trim:p.acc,4.2,gp);
+  /* 肩甲 */
+  plate(c,u,-21,-41.5,10.5,8.5,p,true);
+  plate(c,u,10.5,-41.5,10.5,8.5,p,true);
+  if(k==='armor'){
+    plate(c,u,-22.5,-47,12,8.5,p,true);
+    plate(c,u,10,-50,12,8.5,{...p,shell:p.trim,lt:'#fff8e1',dk:'#c79a1e'},true); /* 金色低肩 */
+    plate(c,u,9.6,-45.5,12.6,9,p,true);
+  }
+  if(k==='weld'){
+    plate(c,u,3.6,-43,10,5.4,{...p,shell:p.trim,lt:'#ffd8a8',dk:'#b3541e'},false); /* 焊枪基座 */
+    c.fillStyle=p.dark; rr(c,-25.6*u,-32*u,6.4*u,5.4*u,1.5*u); c.fill();          /* 喷嘴 */
+  }
+
+  /* ===== 头 ===== */
+  plate(c,u,-12,-56,24,19,p,true);
+  visor(c,u,p,t,ph);
+  if(k==='weld'){
+    /* 电焊盔：帽檐 + 翻下来的护目板 */
+    c.fillStyle=p.dk; rr(c,-13.4*u,-56.6*u,27*u,3.6*u,1.4*u); c.fill();
+    c.fillStyle='#0d1420'; rr(c,-6.5*u,-53.5*u,7*u,6.4*u,1.6*u); c.fill();
+    c.fillStyle=p.eye; c.globalAlpha=0.5+0.4*Math.sin(t*7);
+    c.fillRect(-5.6*u,-52.4*u,5.2*u,1.6*u); c.globalAlpha=1;
+  }
+  if(k==='drone'){
+    /* 侧耳螺旋 + 圆顶 */
+    c.fillStyle=p.dk; rr(c,-13.8*u,-45*u,2.6*u,5*u,1.2*u); c.fill();
+    rr(c,11.2*u,-45*u,2.6*u,5*u,1.2*u); c.fill();
+    c.fillStyle=p.trim; glowC(c,u,p.trim,7,0,-58.2,1.1+0.5*Math.sin(t*6));
+  }
+  if(k==='chain'){
+    warnStripe(c,u,-12,-58.4,24,3.4,p.trim,'#23262b');
+  }
+  if(k==='armor'){
+    c.fillStyle=p.trim; rr(c,-4*u,-58.6*u,8*u,2.4*u,1*u); c.fill(); /* 金冠条 */
+  }
+
+  /* ===== 旋翼（探针） ===== */
+  if(k==='drone'){
+    for(const sx of[-1,1]){
+      c.save(); c.translate(sx*15*u,-33*u);
+      c.globalAlpha=0.2; c.fillStyle=p.lt;
+      c.beginPath(); c.ellipse(0,0,9.2*u,2.8*u,0,0,7); c.fill(); c.globalAlpha=1;
+      c.rotate(t*20*sx);
+      c.fillStyle=p.dk; rr(c,-8.6*u,-1.2*u,17.2*u,2.4*u,1.1*u); c.fill();
+      c.rotate(Math.PI/2);
+      c.globalAlpha=0.5; rr(c,-8.6*u,-1.2*u,17.2*u,2.4*u,1.1*u); c.fill(); c.globalAlpha=1;
+      c.restore();
+      c.fillStyle=p.dark; c.beginPath(); c.arc(sx*15*u,-33*u,2.2*u,0,7); c.fill();
+    }
+  }
+
+  /* ===== 链锯（锯盘 + 火星） ===== */
+  if(k==='chain'){
+    const spv=0.5+0.5*Math.sin(t*1.7);
+    const ang=t*(12+12*spv);
+    c.save(); c.translate(-25*u,-29.5*u); c.rotate(ang);
+    c.fillStyle=p.dk; c.beginPath(); c.arc(0,0,9*u,0,7); c.fill();
+    c.fillStyle=p.metal;
+    for(let i=0;i<10;i++){
+      const a=i*Math.PI/5;
+      c.beginPath();
+      c.moveTo(Math.cos(a-0.12)*9*u,Math.sin(a-0.12)*9*u);
+      c.lineTo(Math.cos(a)*11.4*u,Math.sin(a)*11.4*u);
+      c.lineTo(Math.cos(a+0.12)*9*u,Math.sin(a+0.12)*9*u);
+      c.closePath(); c.fill();
+    }
+    c.strokeStyle=p.trim; c.lineWidth=1.6*u; c.globalAlpha=0.75;
+    c.beginPath(); c.moveTo(-8*u,0); c.lineTo(8*u,0); c.moveTo(0,-8*u); c.lineTo(0,8*u); c.stroke();
+    c.globalAlpha=1; c.restore();
+    glowC(c,u,p.trim,7,-25,-29.5,2*spv+0.8);
+    for(let i=0;i<6;i++){
+      const pr=((t*1.15+i*0.17)%1);
+      const dir=(i%2?1:-1);
+      const sx=-25+dir*(6+16*pr);
+      const sy=-29.5+20*pr*pr-7*pr;
+      c.globalAlpha=(1-pr)*(0.4+0.6*spv);
+      c.fillStyle=['#ffffff','#ffec62','#ff8a3c'][i%3];
+      c.fillRect(sx*u,sy*u,1.7*u,1.7*u);
+    }
+    c.globalAlpha=1;
+  }
+
+  /* ===== 焊枪火花（七彩焊花） ===== */
+  if(k==='weld'){
+    const flash=Math.abs(Math.sin(t*9))>0.9;
+    glowC(c,u,'#b9f2ff',flash?16:7,-23.2,-27.6,flash?2.6:1.5);
+    if(flash) sparkStar(c,u,-23.2,-27.6,4,'#ffffff',t*2.2);
+    const cols=['#ffffff','#fff59d','#ffb300','#7ff3ff','#ff8a3c'];
+    for(let i=0;i<8;i++){
+      const pr=((t*0.8+i*0.125)%1);
+      const dir=(i%2?1:-1);
+      const sx=-23.2+dir*(1.5+5*pr)*(((i*7)%5)/5+0.4);
+      const sy=-27.6+27*pr*pr;
+      c.globalAlpha=1-pr;
+      c.fillStyle=cols[i%5];
+      c.fillRect(sx*u,sy*u,(1.3+(i%3)*0.4)*u,(1.3+(i%3)*0.4)*u);
+    }
+    c.globalAlpha=1;
+  }
+
+  /* ===== 重甲兵：肩排汽（白色蒸汽团） ===== */
+  if(k==='armor'){
+    c.fillStyle=p.dark; rr(c,15*u,-48.6*u,3.6*u,3*u,1*u); c.fill();
+    const q=(t*0.6)%1;
+    for(let i=0;i<3;i++){
+      const qq=q-i*0.16;
+      if(qq<0||qq>0.6) continue;
+      c.globalAlpha=(1-qq/0.6)*0.42; c.fillStyle='#eef8ff';
+      c.beginPath(); c.arc((16.8+i*1.4)*u,(-49-27*qq)*u,(2+5.4*qq)*u,0,7); c.fill();
+    }
+    c.globalAlpha=1;
+  }
+
+  c.restore();
+}
+
+/* ---------- 第三章三位大王：彩色精致机甲（焕宸从挑选页里挑的 8B / 9B / 10B） ----------
+   从挑选页照抄，只删掉没被选中的 laser/rail/shield 三个分支；步态公式与小兵一致（ph+=dt*3.2 在别处推进）。
+   大王版甲片和兵版参数略有差异（右影 2.3u、铆钉 0.8*u、腿靴更宽），所以单独一套 b 前缀，不复用兵版。
+   hexA/rr/warnStripe/glowC 两版逐字相同，共用上面小兵块的。 */
+function bPlate(c,u,x,y,w,h,p,rv){
+  const r=Math.min(2.4*u,h*0.34,w*0.34);
+  rr(c,x*u,y*u,w*u,h*u,r); c.fillStyle=p.shell; c.fill();
+  c.save(); rr(c,x*u,y*u,w*u,h*u,r); c.clip();
+  c.fillStyle=p.lt; c.fillRect(x*u,y*u,w*u,Math.max(1.1*u,h*0.16));
+  c.fillStyle=p.dk; c.fillRect((x+w-2.3)*u,y*u,2.3*u,h*u);
+  c.fillStyle='rgba(0,0,0,.2)'; c.fillRect(x*u,(y+h-1.6)*u,w*u,1.6*u);
+  c.restore();
+  c.strokeStyle='rgba(6,10,18,.5)'; c.lineWidth=Math.max(0.8,0.9*u);
+  rr(c,x*u,y*u,w*u,h*u,r); c.stroke();
+  if(rv&&w>7&&h>5){
+    c.fillStyle=p.riv;
+    c.beginPath(); c.arc((x+1.7)*u,(y+1.8)*u,0.8*u,0,7); c.fill();
+    c.beginPath(); c.arc((x+w-1.7)*u,(y+1.8)*u,0.8*u,0,7); c.fill();
+    c.beginPath(); c.arc((x+1.7)*u,(y+h-2)*u,0.8*u,0,7); c.fill();
+    c.beginPath(); c.arc((x+w-1.7)*u,(y+h-2)*u,0.8*u,0,7); c.fill();
+  }
+}
+function bArm(c,u,p,x,y,w,h){
+  bPlate(c,u,x,y,w,h,{shell:p.metal,lt:p.shell,dk:p.dark,riv:p.riv},false);
+}
+function bReactor(c,u,x,y,r,col,gp){
+  c.save(); c.shadowColor=col; c.shadowBlur=15*u*gp;
+  c.fillStyle='#0d1420'; c.beginPath(); c.arc(x*u,y*u,r*u,0,7); c.fill();
+  c.restore();
+  c.strokeStyle=col; c.lineWidth=1.9*u; c.globalAlpha=0.55+0.45*gp;
+  c.beginPath(); c.arc(x*u,y*u,r*u,0,7); c.stroke(); c.globalAlpha=1;
+  c.fillStyle=col; c.beginPath(); c.arc(x*u,y*u,r*0.55*u,0,7); c.fill();
+  c.fillStyle='#ffffff'; c.beginPath(); c.arc(x*u,y*u,r*0.24*u,0,7); c.fill();
+}
+function bVisor(c,u,p,t,e){
+  c.fillStyle='#0d1420'; rr(c,-11*u,-53.5*u,22*u,7.4*u,2.2*u); c.fill();
+  c.save(); c.shadowColor=p.eye; c.shadowBlur=13*u*e;
+  c.globalAlpha=0.55+0.45*e; c.fillStyle=p.eye;
+  c.fillRect(-9.6*u,-51.9*u,19.2*u,3.4*u);
+  c.restore(); c.globalAlpha=1;
+}
+function bLegs(c,u,p,liftL,liftR,lw,gsw){
+  lw=lw||9;
+  c.fillStyle=p.metal; rr(c,1.6*u,-18*u,lw*u,13.4*u,2.2*u); c.fill();
+  c.fillStyle=p.shell;  rr(c,2*u,-17.6*u,(lw-2.4)*u,4.8*u,2*u); c.fill();
+  c.fillStyle=p.dark;   rr(c,0.2*u,-6.4*u-liftR,(lw+3.6)*u,6.4*u,2.2*u); c.fill();
+  c.fillStyle=p.dk;   rr(c,-(lw+2.8)*u,-18*u,lw*u,13.4*u,2.2*u); c.fill();
+  c.fillStyle=p.shell; rr(c,-(lw+2.4)*u,-17.6*u,(lw-2.4)*u,4.8*u,2*u); c.fill();
+  c.fillStyle=p.dark; rr(c,-(lw+4)*u,-6.4*u-liftL,(lw+3.6)*u,6.4*u,2.2*u); c.fill();
+  if(gsw>0){
+    c.save(); c.shadowColor=p.acc; c.shadowBlur=10*u*gsw;
+    c.globalAlpha=0.45+0.4*gsw; c.fillStyle=p.acc;
+    c.fillRect(0.6*u,-1.6*u-liftR,(lw+2.8)*u,1.6*u);
+    c.fillRect(-(lw+3.4)*u,-1.6*u-liftL,(lw+2.8)*u,1.6*u);
+    c.restore(); c.globalAlpha=1;
+  }
+}
+/* 三支大王的配色（照抄挑选页 ITEMS 的 8B / 9B / 10B） */
+const RBOSS_SK={
+  piston:{kind:'piston',
+    pal:{shell:'#fbc02d',lt:'#ffe98a',dk:'#b98600',metal:'#ff7a1a',dark:'#4e3220',riv:'#ffefb8',acc:'#ffab00',trim:'#ffd54f',eye:'#4dd0e1'}},
+  drill:{kind:'drill',
+    pal:{shell:'#ffbe9e',lt:'#ffe8d4',dk:'#c77b4d',metal:'#e65100',dark:'#4e2610',riv:'#ffdcc0',acc:'#ff8a3c',trim:'#ffd54f',eye:'#ffb300'}},
+  hangar:{kind:'hangar',
+    pal:{shell:'#b7e3ae',lt:'#e4f6d8',dk:'#6fa56b',metal:'#2e7d32',dark:'#173a1c',riv:'#d9f2cf',acc:'#69f0ae',trim:'#ff8a3c',eye:'#aeea00'}}
+};
+function drawRobotBoss(c,x,y,s,it,t,ph){
+  const u=s/58, p=it.pal, k=it.kind;
+  const bob=Math.sin(ph)*1.4*u, rot=Math.sin(ph)*0.05;
+  const liftL=Math.max(0,Math.sin(ph))*3.4*u, liftR=Math.max(0,-Math.sin(ph))*3.4*u;
+  const sw=Math.sin(ph)*1.6*u;
+  const gp=0.55+0.45*Math.sin(t*3.4);
+  const pulse=0.5+0.5*Math.sin(t*5);
+
+  c.fillStyle='rgba(0,0,0,.32)';
+  c.beginPath(); c.ellipse(x,y+1,23*u,4.4*u,0,0,7); c.fill();
+  const gy=y-56*u;
+  const g=c.createRadialGradient(x,gy,3*u,x,gy,56*u);
+  g.addColorStop(0,hexA(p.acc,0.15*gp)); g.addColorStop(1,hexA(p.acc,0));
+  c.fillStyle=g; c.fillRect(x-58*u,gy-58*u,116*u,116*u);
+
+  c.save(); c.translate(x,y+bob);
+  c.rotate(rot);
+
+  /* ===== 腿 ===== */
+  bLegs(c,u,p,liftL,liftR,k==='drill'?11:10,gp);
+
+  /* ===== 背后结构（压在身后） ===== */
+  if(k==='hangar'){
+    bPlate(c,u,12,-68,32,44,p,true);
+    warnStripe(c,u,13,-27,30,3.4,p.trim,'#173a1c');
+    const fc=3.2, q=(t%fc)/fc;
+    const openA=q>0.5?Math.min(1,(q-0.5)/0.1):(q>0.92?Math.max(0,1-(q-0.92)/0.08):0);
+    const gapH=2.6+8.4*openA;
+    c.fillStyle='#0d1420'; rr(c,14.5*u,(-48)*u,27*u,gapH*u,1.4*u); c.fill();
+    if(openA>0.05){
+      c.save(); c.shadowColor=p.acc; c.shadowBlur=12*u*openA;
+      c.globalAlpha=0.35+0.6*openA; c.fillStyle=p.acc;
+      c.fillRect(16*u,-47.2*u,24*u,(gapH-1.6)*u);
+      c.restore(); c.globalAlpha=1;
+    }
+    c.fillStyle=p.dark; c.fillRect(26*u,-77*u,2*u,9.4*u);
+    glowC(c,u,'#ff5252',Math.sin(t*4)>0?12:3,27,-80,1.8);
+    /* 放出小探针 */
+    if(q>0.7){
+      for(let d=0;d<2;d++){
+        const b=(q-0.7)/0.3-d*0.4;
+        if(b<0||b>1) continue;
+        const dx=27-46*b, dy=-46-26*b+5*Math.sin(b*7+d);
+        c.globalAlpha=1-b*0.75;
+        c.fillStyle=p.dk; c.beginPath(); c.arc(dx*u,dy*u,2.4*u,0,7); c.fill();
+        c.fillStyle=p.acc; c.beginPath(); c.arc(dx*u,dy*u,1.1*u,0,7); c.fill();
+        c.strokeStyle=hexA(p.lt,0.8); c.lineWidth=0.9*u;
+        c.beginPath(); c.moveTo((dx-4)*u,(dy-2.8)*u); c.lineTo((dx+4)*u,(dy-2.8)*u); c.stroke();
+        c.globalAlpha=(1-b)*0.4; c.fillStyle=p.acc;
+        c.fillRect((dx+2)*u,(dy+1)*u,4*u,1.2*u);
+        c.globalAlpha=1;
+      }
+    }
+  }
+  if(k==='drill'){
+    c.save(); c.translate(17.5*u,-36*u); c.rotate(0.38);
+    bPlate(c,u,0,-16,13,34,{...p,shell:p.dk,lt:p.metal,dk:p.dark},true);
+    const da=(t*10)%6;
+    c.fillStyle=hexA(p.dark,0.6);
+    for(let i=0;i<6;i++) c.fillRect(0.5*u,(-15+i*6+da-6)*u,12*u,1.8*u);
+    c.restore();
+  }
+
+  /* ===== 前侧巨物 + 招式 ===== */
+  if(k==='piston'){
+    /* 液压巨臂 */
+    const fc=1.8, q=(t%fc)/fc;
+    let d=0;
+    if(q<0.3) d=-7*(q/0.3);
+    else if(q<0.42) d=-7+16*((q-0.3)/0.12);
+    else if(q<0.78) d=9+0.5*Math.sin(t*30);
+    else d=9*(1-(q-0.78)/0.22);
+    c.fillStyle=p.dk; rr(c,-21.5*u,(-31+d*0.4)*u,5.4*u,(24+d)*u,1.6*u); c.fill(); /* 活塞杆 */
+    c.fillStyle=p.riv; rr(c,-20.6*u,(-31+d*0.4)*u,1.4*u,(24+d)*u,0.6*u); c.fill();
+    bPlate(c,u,-24.5,-48,12,18,p,true); /* 肩窝 */
+    warnStripe(c,u,-31,-9+d,19,10.5,p.acc,'#263238'); /* 锤头（黄黑警示） */
+    c.strokeStyle='rgba(6,10,18,.5)'; c.lineWidth=Math.max(0.8,0.9*u);
+    rr(c,-31*u,(-9+d)*u,19*u,10.5*u,2.4*u); c.stroke();
+    if(q>=0.42&&q<0.78){ /* 砸地：冲击波环 + 尘土 */
+      const rq=Math.min(1,(q-0.42)/0.34);
+      for(let i=0;i<2;i++){
+        const rx=(7+34*(rq))+i*9, al=(1-rq)*(i?0.5:0.8);
+        if(al<=0) continue;
+        c.globalAlpha=al; c.strokeStyle=p.trim; c.lineWidth=(2.2-i*0.8)*u;
+        c.beginPath(); c.ellipse(-21.5*u,-0.5*u,rx*u,(rx*0.28)*u,0,0,7); c.stroke();
+      }
+      c.globalAlpha=1;
+      for(let i=0;i<7;i++){
+        const pr=Math.min(1,rq*1.3), dir=(i%2?1:-1);
+        c.globalAlpha=(1-pr)*0.5; c.fillStyle='#efe3c0';
+        c.beginPath();
+        c.arc((-21.5+dir*(5+22*pr))*u,(-2-7*pr*(1-pr*0.4))*u,(1.4+2.6*pr)*u,0,7); c.fill();
+      }
+      c.globalAlpha=1;
+    }
+    if(q>=0.42&&q<0.78&&Math.sin(t*12)>0) glowC(c,u,p.acc,14,-21.5,-4+d,3.2); /* 卡住时锤头闪灯 */
+    bArm(c,u,p,-25,-27-sw,14,6.2);
+  }
+  if(k==='drill'){
+    /* 贴地大钻头 */
+    c.save(); c.translate(-2*u,0);
+    c.fillStyle=p.dk;
+    c.beginPath();
+    c.moveTo(-26*u,-25*u); c.lineTo(-12*u,-25*u); c.lineTo(-18.5*u,-3*u); c.closePath(); c.fill();
+    c.fillStyle=p.metal;
+    c.beginPath();
+    c.moveTo(-24.5*u,-23*u); c.lineTo(-13.5*u,-23*u); c.lineTo(-18.5*u,-6*u); c.closePath(); c.fill();
+    const da=(t*16)%7;
+    c.save();
+    c.beginPath();
+    c.moveTo(-26*u,-25*u); c.lineTo(-12*u,-25*u); c.lineTo(-18.5*u,-3*u); c.closePath(); c.clip();
+    c.fillStyle=hexA(p.dark,0.55);
+    for(let i=0;i<5;i++) c.fillRect(-27*u,(-25+i*7+da)*u,16*u,2.4*u);
+    c.restore();
+    glowC(c,u,p.trim,8,-18.5,-5.6,1.6);
+    c.restore();
+    bArm(c,u,p,-24,-41,12,6.2);
+    /* 火星前喷 */
+    for(let i=0;i<7;i++){
+      const pr=((t*1.25+i*0.143)%1);
+      const dir=(i%2?1:-1);
+      const sx=-19+dir*(4+18*pr);
+      const sy=-5-(13*pr-24*pr*pr);
+      c.globalAlpha=(1-pr)*0.9;
+      c.fillStyle=['#ffffff','#ffec62','#ff8a3c'][i%3];
+      c.fillRect(sx*u,Math.min(-1,sy)*u,1.6*u,1.6*u);
+    }
+    c.globalAlpha=1;
+    if(Math.abs(Math.sin(t*9))>0.75){
+      c.save(); c.shadowColor=p.acc; c.shadowBlur=14*u;
+      c.globalAlpha=0.6; c.fillStyle='#ff8a3c';
+      c.fillRect(-26*u,-1.2*u,16*u,1.2*u); c.restore(); c.globalAlpha=1;
+    }
+  }
+  if(k==='hangar'){
+    bArm(c,u,p,-28,-28-sw,17,7); bArm(c,u,p,-30,-36+sw,19,7);
+    c.fillStyle=p.dark; rr(c,-32*u,-30.5*u-sw,5*u,9.6*u,1.5*u); c.fill();
+  }
+
+  /* ===== 躯干 ===== */
+  bPlate(c,u,-15,-40,30,24,p,true);
+  c.fillStyle=hexA(p.dark,0.5); c.fillRect(-15*u,-30*u,30*u,1.8*u);
+  bReactor(c,u,0,-25,5.2,p.acc,gp);
+  warnStripe(c,u,-14.6,-20.6,29.2,3,p.trim,k==='piston'?'#263238':p.dark);
+  /* 大肩甲 */
+  bPlate(c,u,-25,-45,12,9.5,p,true);
+  bPlate(c,u,13,-45,12,9.5,p,true);
+
+  /* ===== 头 ===== */
+  bPlate(c,u,-14,-60,28,21,p,true);
+  bVisor(c,u,p,t,pulse);
+  c.fillStyle=p.dk; rr(c,-15.6*u,-60*u,31.2*u,3.6*u,1.6*u); c.fill(); /* 帽檐 */
+  /* 头顶能量宝石 */
+  glowC(c,u,p.trim,10*gp,0,-63,1.5+0.7*gp);
+  if(k==='piston'){ warnStripe(c,u,-12,-66,24,4.4,p.acc,'#263238'); }
+  if(k==='drill'){ c.fillStyle=p.trim; rr(c,-5*u,-65*u,10*u,5.6*u,1.4*u); c.fill(); }
+  if(k==='hangar'){ c.fillStyle=p.dark; rr(c,-9*u,-66*u,18*u,6.4*u,2*u); c.fill();
+    c.fillStyle=p.acc; c.globalAlpha=0.5+0.4*Math.sin(t*4);
+    c.fillRect(-7.4*u,-64.6*u,14.8*u,2*u); c.globalAlpha=1; }
+
+  c.restore();
+}
+
+/* ---------- 第三章场景背景工具（挑选页坐标系 420x250、地平线 222，BG 里用 transform 映射进来） ---------- */
+const RW=420, RH=250, RGY=222;
+function rnd(i){ const x=Math.sin(i*127.1+311.7)*43758.5453; return x-Math.floor(x); }
+function sky(c,stops){
+  const g=c.createLinearGradient(0,0,0,RH);
+  stops.forEach((s,i)=>g.addColorStop(i/(stops.length-1),s));
+  c.fillStyle=g; c.fillRect(0,0,RW,RH);
+}
+function glow(c,col,blur,x,y,r,alpha){
+  c.save();
+  if(alpha!=null) c.globalAlpha=alpha;
+  c.shadowColor=col; c.shadowBlur=blur; c.fillStyle=col;
+  c.beginPath(); c.arc(x,y,r,0,7); c.fill(); c.fill();
+  c.restore();
+}
+
+/* ---------- 第四章（终极篇章）背景工具：从挑选页原样搬来，坐标换成 RW/RH/RGY ---------- */
+const E12='#8bd450', E13='#ff6a2c', E14='#b47cff', E15='#ff2f5e';
+/* 烂楼顶：一条锯齿边，比纯方块更像被炸过 */
+function jag(c,x,w,top,col){
+  c.fillStyle=col; c.beginPath(); c.moveTo(x,RGY); c.lineTo(x,top+5);
+  for(let i=0;i<=4;i++){
+    const px=x+w*i/4, py=top+(i%2?8:(rnd(x+i)>0.6?1:0));
+    c.lineTo(px,py);
+  }
+  c.lineTo(x+w,RGY); c.closePath(); c.fill();
+}
+/* 落下来的灰（雪、孢子、烟灰都靠它） */
+function ash(c,T,n,col,spd,sway,size){
+  c.fillStyle=hexA(col,0.5);
+  for(let i=0;i<n;i++){
+    const y=((T*spd*(0.6+rnd(i)*0.9)+rnd(i+40)*RH)%(RH+18))-9;
+    const x=(rnd(i+80)*RW+Math.sin(T*0.9+i*1.3)*sway+RW)%RW;
+    c.fillRect(x,y,size,size);
+  }
+}
+/* 往上蹿的火星 */
+function embers(c,T,n,col,spd,drift){
+  for(let i=0;i<n;i++){
+    const k=(T*spd*(0.5+rnd(i)*0.9)+rnd(i+20)*RH)%RH;
+    const y=RH-6-k, x=(rnd(i+60)*RW+Math.sin(T*1.4+i*1.7)*drift+RW)%RW;
+    c.fillStyle=hexA(col,0.14+0.6*(1-k/RH));
+    c.beginPath(); c.arc(x,y,1.1+rnd(i+3)*1.5,0,7); c.fill();
+  }
+}
+/* 贴地的一层层雾 */
+function fog(c,T,y0,h,col,n){
+  for(let i=0;i<n;i++){
+    const x=((T*(8+i*5)+i*163)%(RW+240))-120;
+    c.fillStyle=hexA(col,0.10-0.014*i);
+    c.beginPath(); c.ellipse(x,y0+((i%3)-1)*h*0.7,120+i*16,h,0,0,7); c.fill();
+  }
+}
+/* 一道光柱 */
+function shaft(c,col,x,y,ang,len,wd,a){
+  c.save(); c.translate(x,y); c.rotate(ang);
+  c.fillStyle=hexA(col,a);
+  c.beginPath(); c.moveTo(0,0); c.lineTo(len,-wd); c.lineTo(len,wd); c.closePath(); c.fill();
+  c.restore();
+}
+/* 地上亮一下的裂缝 */
+function cracks(c,col,T,xs){
+  c.strokeStyle=hexA(col,0.28+0.16*Math.sin(T*2.2)); c.lineWidth=1.6;
+  xs.forEach((x,i)=>{
+    c.beginPath(); c.moveTo(x,RGY+2);
+    c.lineTo(x+(i%2?10:-9),RGY+11);
+    c.lineTo(x+(i%2?21:-18),RH-14);
+    c.stroke();
+  });
+}
+/* 风里啪啪响的破旗 */
+function flag(c,x,y,w,h,col,T,ph){
+  c.fillStyle=col; c.beginPath(); c.moveTo(x,y);
+  for(let i=0;i<=5;i++){ const k=i/5; c.lineTo(x+w*k, y+Math.sin(T*5+ph+k*4.2)*3.4*k); }
+  for(let i=5;i>=0;i--){ const k=i/5; c.lineTo(x+w*k, y+h+Math.sin(T*5+ph+k*4.2)*3.4*k); }
+  c.closePath(); c.fill();
+}
+
 /* ---------- 第二章三位大王：方块丧尸风（焕宸从两两对比里挑的 1B / 2B / 3B） ----------
    键名就是 ZB 表里的 mech：取到就画这套方块大王，取不到（第一章）还画原来的圆角绿大王。
    和第一章彻底分家：全直角、黑眼窝里一盏方灯、嘴里方块牙、绝不吐舌头。
@@ -1422,7 +3090,19 @@ const BOSS_ZK={
            gait:{bob:1.5,rot:0.06,lift:4.2,sw:1.6,sh:19},weak:[-2,-46]},
   drag   :{art:'drag',   skin:'#689f38',skinDark:'#33691e',cloth:'#4e342e',clothDark:'#3b2420',
            socket:'#1f1608',glow:'#e6ee9c',tooth:'#ece5d8',
-           gait:{bob:1.0,rot:0.03,lift:2.2,sw:0.7,sh:21},weak:[-6.5,-46]}
+           gait:{bob:1.0,rot:0.03,lift:2.2,sw:0.7,sh:21},weak:[-6.5,-46]},
+  /* 第三章三只机械大王：绘制走 RBOSS_SK/drawRobotBoss，这张表只存弱点坐标
+     （weakPos 按 BOSS_ZK[z.cfg.mech].weak 算破绽窗口的高亮位置，u=s/58 和 drawRobotBoss 同口径）。
+     piston＝头顶活塞缸盖；drill＝背上散热眼；hangar＝库门里的控制台。 */
+  piston :{weak:[0,-61]},
+  drill  :{weak:[24,-34]},
+  hangar :{weak:[28,-46]},
+  /* 末日总王（关 15）：三只大王身上最唬人的三个记号长到同一只身上，再扣一顶王冠。
+     破绽＝冠心那颗红宝石（weak 跟着王冠走，砸完锤／扫完臂亮起来的都是同一处脑门）。
+     皮色比三章任何一只都暗一档：紫黑的王袍 + 灰绿的僵尸皮，铁靴来自第四章的机甲残骸。 */
+  overlord:{art:'overlord',skin:'#8a9a6b',skinDark:'#5f6b4c',cloth:'#4a148c',clothDark:'#2e0b52',
+            socket:'#1a0033',glow:'#ff5d7a',tooth:'#efe9dc',
+            gait:{bob:1.2,rot:0.045,lift:3.4,sw:0.9,sh:23},weak:[-1,-60]}
 };
 /* 零件一律写成 [x,y,w,h,颜色]（u 单位），和小兵那套直角积木是同一个画法 */
 const bb =(c,u,b)=>{c.fillStyle=b[4];c.fillRect(b[0]*u,b[1]*u,b[2]*u,b[3]*u);};
@@ -1512,6 +3192,52 @@ const BOSS_ART={
     bb(c,u,[-11,-50,9,8,zk.socket]);bb(c,u,[-9,-48,4,4,zk.glow]);          // 只剩左边一只眼窝会发光
     bb(c,u,[2,-49,7,7,'#2b332b']);bb(c,u,[3.5,-47.5,4,4,'#eceff1']);       // 右边是个露骨头的空眼
     bmouth(c,u,zk,[-12,-43,20,6],[[-10,-43,4,3.4],[2,-43,4,3.4],[-4,-40,4,3,'#d7ccc8']]);
+  },
+  /* 末日总王：剪影记号＝背炉（火柱王）＋高举的巨骨棒（骨锤王）＋一条拖地的长臂（长臂王）
+     ＋头顶一圈王冠。画序从后往前：高举的那条手臂先画、整条压在头后面，
+     背炉压身体后面，躯干→头→王冠→拖地的近臂最后盖在上面。
+     高度上限照第二章那两只：骨棒最高点 72u，炉火压到 59u 以内，别跟骨棒抢天际线。 */
+  overlord(c,u,zk,t,g){
+    const {liftL,liftR}=g;
+    bb(c,u,[10,-44,11,8,zk.skinDark]);bb(c,u,[16,-54,8,12,zk.skinDark]);   // 高举巨骨棒的手臂
+    bbs(c,u,[[18,-60,6,18,'#cfd8dc'],[13,-72,20,14,'#eceff1'],             // 骨棒（棒头 72u＝全最高的零件）
+             [13,-72,20,3,'rgba(0,0,0,.12)'],[29,-72,4,14,'rgba(0,0,0,.2)'],
+             [16,-63,10,4,'#b0bec5']]);
+    bbs(c,u,[[6,-50,22,38,'#3e2723'],[6,-50,22,4,'#2b1a16'],               // 背上的方块熔炉（比火柱王那只矮一截）
+             [24,-50,4,38,'rgba(0,0,0,.25)'],[6,-16,22,4,'rgba(0,0,0,.3)']]);
+    bb(c,u,[9,-40,13,15,'#2b1a16']);                                       // 炉膛口
+    c.globalAlpha=0.6+0.4*Math.sin(t*4);                                   // 炉火一亮一暗
+    bbs(c,u,[[11,-38,9,11,'#ff7043'],[12,-34,7,2,'#ffca28']]);
+    bb(c,u,[8,-56-Math.sin(t*8)*2,8,8+Math.sin(t*8)*2,'#ff7043']);         // 炉顶两节小火苗：只往上窜顶端
+    bb(c,u,[17,-59-Math.sin(t*8+1)*2,7,11+Math.sin(t*8+1)*2,'#ffca28']);
+    c.globalAlpha=1;
+    bb(c,u,[6,-50,22,5,'#2b1a16']);                                        // 炉口暗边压在最上面
+    for(let i=0;i<3;i++){                                                  // 走路一路掉火星
+      const p=(t*0.7+i/3)%1;
+      c.globalAlpha=1-p;c.fillStyle=['#ff8a65','#ffb300','#ffca28'][i];
+      c.fillRect((16-i*7)*u,-1*u+p*9*u,2.4*u,2.4*u);
+    }
+    c.globalAlpha=1;
+    bbs(c,u,[[4,-18,11,18-liftR,'#546e7a'],[3,-5,12,5,zk.skinDark],        // 腿：一脚铁靴一脚破袍
+             [-14,-18,11,18-liftL,zk.cloth],[-15,-5,12,5,zk.skinDark]]);
+    bb(c,u,[-15,-40,30,26,zk.skin]);bb(c,u,[-15,-27,30,9,'rgba(0,0,0,.12)']);
+    [[-11,-36,10,8],[1,-23,9,6]].forEach(h=>{                              // 身上两个破洞，每个洞里两根骨条
+      bb(c,u,[h[0],h[1],h[2],h[3],'#2b332b']);
+      bb(c,u,[h[0]+0.7,h[1]+1.3,h[2]-1.4,1.6,'#eceff1']);
+      bb(c,u,[h[0]+0.7,h[1]+h[3]-2.8,h[2]-1.4,1.6,'#eceff1']);
+    });
+    bb(c,u,[-13,-58,26,18,zk.skin]);                                       // 头
+    bbs(c,u,[[-13,-58,6,2.4,'rgba(0,0,0,.26)'],[7,-58,6,18,'rgba(0,0,0,.1)'],
+             [6,-63,4,5,'#cfd8dc']]);                                      // 头上斜插一片碎骨
+    beyes(c,u,zk,[[-10,-54,8,6],[1,-53.5,7,5.5]]);
+    bmouth(c,u,zk,[-9,-47,16,5],[[-7,-47,3,2.6,'#eceff1'],[2,-47,3,2.6,'#ff7043']]);
+    /* 王冠：三尖一圈金，冠心一颗「世界尽头」的红宝石＝破绽窗口亮起来的那处 */
+    bbs(c,u,[[-13,-62,26,4,'#ffca28'],[-13,-62,26,1.4,'#ffe082'],
+             [-13,-68,5,6,'#ffca28'],[-4,-70,7,8,'#ffd54f'],[8,-68,5,6,'#ffca28']]);
+    bb(c,u,[-3,-66,5,5,(Math.sin(t*3)>0)?'#ff2f5e':'#ff6f91']);            // 宝石一亮一暗，隔着屏幕也认得出打哪儿
+    bb(c,u,[-31,-36,19,8,zk.skin]);bb(c,u,[-37,-29,8,17,zk.skin]);         // 拖地的近臂：前伸→下垂
+    bb(c,u,[-44,-13,14,10,zk.skinDark]);
+    bbs(c,u,[[-46,-4,4,4,'#eceff1'],[-40,-4,4,4,'#eceff1'],[-34,-3,4,3,'#cfd8dc']]);
   }
 };
 /* 大王外壳：只管站位、影子、步态，轮廓交给 BOSS_ART（步态参数来自 BOSS_ZK.gait） */
@@ -1535,8 +3261,10 @@ function ac(){
     const C=window.AudioContext||window.webkitAudioContext;
     if(!C)return null;
     try{AC=new C();}catch(e){return null;}
-    /* 音频总线：master ← { music ← bgmBoss, sfx }。
+    /* 音频总线：master ← { music ← bgm ← bgmBoss, sfx }。
        统一音量开关走 master；语音朗读时对 music 总线做 ducking；
+       bgm 是 BGM 各层的总入口——drone/风声这类长音一旦排进时间线就停不掉，
+       靠这条总线整体淡出才能把尾巴收干净；
        BOSS 战打击层走 bgmBoss（垂直分层，随战况淡入淡出）。
        语音本身是系统 TTS，不经过 WebAudio，所以不设 voice 总线。 */
     BUS={};
@@ -1544,7 +3272,8 @@ function ac(){
     BUS.master.gain.value=SND_ON?1:0;
     BUS.music=AC.createGain();BUS.music.connect(BUS.master);
     BUS.sfx=AC.createGain();BUS.sfx.connect(BUS.master);
-    BUS.bgmBoss=AC.createGain();BUS.bgmBoss.connect(BUS.music);
+    BUS.bgm=AC.createGain();BUS.bgm.connect(BUS.music);
+    BUS.bgmBoss=AC.createGain();BUS.bgmBoss.connect(BUS.bgm);
     BUS.bgmBoss.gain.value=0;
   }
   if(AC.state==='suspended'){try{AC.resume();}catch(e){}}
@@ -1669,27 +3398,62 @@ const SFX={
           tone({f:2093,f2:1568,dur:0.16,type:'sine',vol:0.11,atk:0.003,delay:0.03});
           noise({dur:0.06,vol:0.06,f:4200,ftype:'highpass'});}
 };
-const MELO={type:'triangle',vol:0.10,gap:300,notes:[196,0,262,0,196,0,294,262]};
+/* BGM：末日氛围版（对齐 APK 里的 voice/bgm.wav——低频 drone ＋ 风声铺底 ＋ 慢金属打击，
+   原来的八音盒小旋律在末日场景里太“卡通”，整条换掉）。
+   一个循环 16 步 × 250ms = 4 秒；和声、铃声这些长周期层按循环数轮换，避免听感单调。 */
+const MELO={gap:250,steps:16,
+  /* 55Hz 低音 pedal 之上只放没半音摩擦的音（避 G#/D#），三个双音循环：Am → G/C → Em */
+  chords:[[220,261.6],[196,261.6],[164.8,220]]};
 let bgmTimer=null;
-function stopBgm(){if(bgmTimer){clearTimeout(bgmTimer);bgmTimer=null;}if(IN_APK){if(bgmA){try{bgmA.pause();}catch(e){}}return;}busGain('bgmBoss',0,0.2);}
+function stopBgm(){
+  if(bgmTimer){clearTimeout(bgmTimer);bgmTimer=null;}
+  if(IN_APK){if(bgmA){try{bgmA.pause();}catch(e){}}return;}
+  busGain('bgmBoss',0,0.2);
+  busGain('bgm',0,0.6);   /* 排进时间线的长音靠 bgm 总线淡出收尾，不会在停播后继续轰鸣 */
+}
 /* BOSS 是否在场（自适应音乐的切换条件） */
 function bossLive(){try{return G.zs.some(z=>z.boss&&!z.die&&z.hp>0);}catch(e){return false;}}
 function startBgm(){
   if(IN_APK){if(bgmA&&SND_ON){const p=bgmA.play();if(p&&p.catch)p.catch(()=>{});}return;}
   if(bgmTimer)return;
+  busGain('bgm',1,0.8);   // 上一次 stopBgm 淡出过，重新起来
+  const CY=MELO.steps,SEC=MELO.gap/1000;
   let i=0;
   const step=()=>{
     if(SND_ON){
       try{
-        const f=MELO.notes[i%MELO.notes.length];
-        /* 基础旋律层：一直走 music 总线 */
-        if(f)tone({f,dur:MELO.gap/1000*1.6,type:MELO.type,vol:MELO.vol,atk:0.03,bus:'music'});
-        noise({dur:0.04,vol:0.022,f:5200,ftype:'highpass',bus:'music'});
-        /* 自适应分层：BOSS 战时 bgmBoss 层淡入，叠加咚咚打击；BOSS 死后淡出 */
+        const s=i%CY,cy=(i/CY)|0;
+        /* 1) 低频 drone：55Hz 与 55.7Hz 两个正弦相差 0.7Hz，拍频一秒钟起伏不到一次，
+              听起来像远处有台机器在震——氛围的底座，全程只有这一条不常换的东西 */
+        if(s===0){
+          tone({f:55,dur:CY*SEC+1.2,type:'sine',vol:0.13,atk:1.2,bus:'bgm'});
+          tone({f:55.7,dur:CY*SEC+1.2,type:'sine',vol:0.10,atk:1.6,bus:'bgm'});
+        }
+        /* 2) 和声铺底：两音缓慢起落的长音，每两个循环（8 秒）换一次，给气氛一点推进 */
+        if(s===0){
+          MELO.chords[cy%MELO.chords.length].forEach((f,k)=>
+            tone({f,dur:CY*SEC*2+0.6,type:'triangle',vol:k?0.020:0.032,atk:2.2,bus:'bgm'}));
+        }
+        /* 3) 风声：低通噪声“阵风”，长短和截止频率每次随机，才不会听出是同一处在响 */
+        if(s%4===0)noise({dur:1+Math.random()*1.2,vol:0.028,f:400+Math.random()*500,bus:'bgm'});
+        if(s===8&&cy%2===0)noise({dur:1.6,vol:0.012,f:3000,ftype:'highpass',bus:'bgm'});
+        /* 4) 慢金属打击：0/6/10 步各一下（第一下最重），像有人在远处砸铁轨 */
+        if(s===0||s===6||s===10){
+          tone({f:112,f2:46,dur:0.22,type:'sine',vol:s===0?0.20:0.13,atk:0.004,bus:'bgm'});
+          noise({dur:0.13,vol:0.045,f:2400,ftype:'highpass',bus:'bgm',delay:0.01});
+        }
+        /* 5) 每两个循环末尾一声很远的金属余响，给循环一个“句读” */
+        if(s===13)tone({f:cy%2?261.6:220,dur:2.2,type:'triangle',vol:0.026,atk:0.02,bus:'bgm'});
+        /* 自适应分层：BOSS 在场时 bgmBoss 淡入——打击加密成每一步、低音加倍、再加一层 41Hz 抖动；
+           BOSS 死后淡出，回到只有氛围的铺底 */
         busGain('bgmBoss',bossLive()?1:0,0.35);
-        if(bossLive()&&i%2===0){
-          tone({f:110,f2:44,dur:0.14,type:'sine',vol:0.30,atk:0.004,bus:'bgmBoss'});
-          noise({dur:0.05,vol:0.10,f:4200,ftype:'highpass',bus:'bgmBoss',delay:MELO.gap/2000});
+        if(bossLive()){
+          if(s%2===0)tone({f:110,f2:44,dur:0.14,type:'sine',vol:0.30,atk:0.004,bus:'bgmBoss'});
+          else noise({dur:0.05,vol:0.10,f:4200,ftype:'highpass',bus:'bgmBoss'});
+          if(s===0){
+            tone({f:41,f2:38,dur:CY*SEC+0.5,type:'sine',vol:0.16,atk:0.6,bus:'bgmBoss'});
+            noise({dur:0.30,vol:0.06,f:520,bus:'bgmBoss'});
+          }
         }
       }catch(e){}
     }
@@ -1706,7 +3470,7 @@ const LS={
   get(k,d){try{const v=localStorage.getItem(k);return v==null?d:v;}catch(e){return d;}},
   set(k,v){try{localStorage.setItem(k,v);}catch(e){}}
 };
-const SAVE_VER=2;                       // 存档结构变更时 +1，并在 migrateSave 里补一步
+const SAVE_VER=4;                       // 存档结构变更时 +1，并在 migrateSave 里补一步
 /* 迁移链：把旧存档逐步升级到当前版本。每步幂等，重复执行安全 */
 function migrateSave(){
   let v=parseInt(LS.get('moday_ver','0'),10)||0;
@@ -1722,6 +3486,19 @@ function migrateSave(){
     if(LS.get('moday_bgcur','')==='valley')LS.set('moday_bgcur','lava');
     v=2;
   }
+  if(v<3){
+    /* v2 → v3：藏宝图第三章扩四格（机甲坟场／霓虹流水线／峡谷旧油库／机核深渊）。
+       moday_map 存的仍是"已解锁到第几格"，数值不用换算，新格自然为锁——只扩容不迁移。 */
+    v=3;
+  }
+  if(v<4){
+    /* v3 → v4：第四章扩四格（落日废墟城／巨兽白骨地／机甲残骸长廊／世界尽头的王座），同样只扩容。
+       唯一要补的是老玩家：当年表只有 11 格，moday_map 被封顶在 11，打赢机核深渊也存不下第 12 格，
+       升级后新格永远锁着进不去。用"是否已解锁 lv3 衣服"认出他真打通了关 11，把格子抬到 12。 */
+    if(/(^|,)3(,|$)/.test(LS.get('moday_unlocked',''))
+       &&(parseInt(LS.get('moday_map','1'),10)||1)>=11)LS.set('moday_map','12');
+    v=4;
+  }
   /* 迁移完成后无条件写回当前版本号，保证下次启动不再重复迁移 */
   LS.set('moday_ver',String(SAVE_VER));
 }
@@ -1733,18 +3510,21 @@ let best=loadInt('moday_best',0,0,9999999);
 let curChar=LS.get('moday_char','thin')==='fat'?'fat':'thin';
 /* 藏宝图：格子按顺序解锁，打败本格 BOSS 解锁下一格。
    BG_ORDER ＝ 第一章「一块战场贯穿三关」的战场（难度跟着它走 SCENES）；
-   MAP_ORDER ＝ 藏宝图上的格子顺序＝第一章三格＋第二章四格。
-   第二章一格就是一关（熔岩谷 4／白骨地 5／寒冰谷 6／合体山谷 7），
-   背景跟关卡走、数值由 STAGES 写死，所以这四块不进 BG_ORDER：
+   MAP_ORDER ＝ 藏宝图上的格子顺序＝第一章三格＋第二章四格＋第三章四格＋第四篇章四格。
+   第二章起一格就是一关（熔岩谷 4 … 世界尽头的王座 15），
+   背景跟关卡走、数值由 STAGES 写死，所以这十二块不进 BG_ORDER：
    难度不乘场景系数、也不按 loopN 二次加码。 */
 const BG_ORDER=['forest','city','desert'];
-const MAP_ORDER=['forest','city','desert','lava','bone','ice','rift'];
-/* 藏宝图每一格对应的守关大王（点锁着的格子时，念出"该打赢谁"） */
-const MAP_BOSS=['boss_forest','boss_city','boss_desert','boss_furnace','boss_hammer','boss_drag','boss_finale'];
+const MAP_ORDER=['forest','city','desert','lava','bone','ice','rift','junk','neon','dome','core','ruin','giant','wreck','throne'];
+/* 藏宝图每一格对应的守关大王（点锁着的格子时，念出"该打赢谁"）。
+   第四章前三格没有大王（三章的老王降级成小兵守关），所以填 lock_*，念"先打赢这一关"。 */
+const MAP_BOSS=['boss_forest','boss_city','boss_desert','boss_furnace','boss_hammer','boss_drag','boss_finale','boss_piston','boss_drill','boss_hangar','boss_trio3','lock_ruin','lock_giant','lock_wreck','boss_overlord'];
 /* 点这一格从第几关打起：第一章三格都从第 1 关起（一块贯穿三关＋BOSS） */
-const MAP_STAGE={forest:1,city:1,desert:1,lava:4,bone:5,ice:6,rift:7};
+const MAP_STAGE={forest:1,city:1,desert:1,lava:4,bone:5,ice:6,rift:7,junk:8,neon:9,dome:10,core:11,ruin:12,giant:13,wreck:14,throne:15};
 const BG_NAME={forest:'发光森林',city:'破破城市',desert:'太阳沙漠',
-               valley:'丧尸山谷',lava:'熔岩谷',bone:'白骨地',ice:'寒冰谷',rift:'合体山谷'};
+               valley:'丧尸山谷',lava:'熔岩谷',bone:'白骨地',ice:'寒冰谷',rift:'合体山谷',
+               junk:'机甲坟场',neon:'霓虹流水线',dome:'峡谷旧油库',core:'机核深渊',
+               ruin:'落日废墟城',giant:'巨兽白骨地',wreck:'机甲残骸长廊',throne:'世界尽头的王座'};
 let mapN=loadInt('moday_map',1,1,MAP_ORDER.length);   // 藏宝图已解锁几格
 let pickBG=LS.get('moday_bgcur','forest');   // 小朋友选的战场：一个场景贯穿三关＋BOSS
 if(MAP_ORDER.indexOf(pickBG)<0||MAP_ORDER.indexOf(pickBG)>=mapN)pickBG='forest';
@@ -1752,8 +3532,8 @@ let curBG='forest';                          // 当前画的战场
 function curStage(){return STAGES[Math.min(G.stage,STAGES.length)-1];}
 function applyStageBG(){
   const d=curStage();
-  /* 第二章（关 4~7）：背景由关卡决定，一关一块，打完就换 */
-  if(d.ch===2){curBG=d.bg;return;}
+  /* 第二/三章（关 4~11）：背景由关卡决定，一关一块，打完就换 */
+  if(d.ch>=2){curBG=d.bg;return;}
   curBG=pickBG;                              // 选哪个场景，第 1~3 关＋BOSS 都在这个场景
   if(BG_ORDER.indexOf(curBG)>=mapN)curBG='forest';
 }
@@ -1769,6 +3549,39 @@ let coins=loadInt('moday_coin',0,0,9999999);
 const GIFT_COIN=40,GIFT_SHIELD=1;
 let giftN=loadInt('moday_gift',0,0,1);        // 0＝没开过，1＝宝藏已到手（存档 moday_gift）
 let giftNow=false;                             // 这一局刚开箱？结算面板才展示宝藏那一行
+/* 衣服层存档（4.12）：moday_outfit_thin＝焕宸当前衣服；moday_unlocked＝已解锁档位 CSV。
+   纯外观：不动任何数值，只给焕宸穿，爸爸永远原造型。
+   旧档回填一律看藏宝图进度（moday_map＝已解锁的格数，比"开没开过宝藏"准）：
+   解锁到第 4 格＝太阳沙漠（第 3 格）的大王已倒 → 补 lv1；解锁到第 8 格＝合体山谷（第 7 格）打完 → 补 lv2；
+   一格一关（FR-23）后 mapN 每打赢一格都会 +1，但这两条门槛数的仍是"这一篇章的最后一格开没开"，不用跟着改。
+   第三章与衣服层同版本上线，不存在需要回填的旧档；lv4（末日王铠）同理——它只能由关 15 当场发放，
+   而旧档迁过来最多也只有 12 格（v3→v4 只补到关 12 的门口），绝不可能已经偷偷打通过第四篇章。 */
+let outfitUnl=(()=>{
+  const s=new Set([0]);
+  String(LS.get('moday_unlocked','')||'').split(',').forEach(x=>{
+    const n=parseInt(x,10);if(n>=1&&n<=4)s.add(n);
+  });
+  const mp=loadInt('moday_map',1,1,MAP_ORDER.length);
+  if(mp>=4)s.add(1);
+  if(mp>=8)s.add(2);
+  return s;
+})();
+let curOutfit=(()=>{const o=LS.get('moday_outfit_thin','camo');return OUTFITS[o]?o:'camo';})();
+if(!outfitUnl.has(OUTFITS[curOutfit].lv))curOutfit='camo';
+let outfitNew='';                              // 这一局刚解锁的衣服 id（结算面板念一句、展示一行）
+function unlockOutfit(lv){
+  if(lv<1||outfitUnl.has(lv))return false;
+  outfitUnl.add(lv);
+  LS.set('moday_unlocked',Array.from(outfitUnl).filter(n=>n>=1).sort((a,b)=>a-b).join(','));
+  return true;
+}
+/* 当前造型：只有焕宸且衣服已解锁才叠衣服；爸爸一律原造型 */
+function curLook(ch){
+  const id=ch||curChar;
+  if(id!=='thin')return CHARS[id];
+  const o=OUTFITS[curOutfit];
+  return outfitUnl.has(o.lv)?o:CHARS.thin;
+}
 /* 武器表：switch＝买一次永久拥有、随时切换；once＝按个数买、战斗里点了立刻用。
    rate＝发射间隔(秒)、spd＝飞行速度、dmg＝单发伤害。
    弹速规范：常规 460、shot 560（一梭子排开的枪口初速）、fire 400、rocket 360；ice 620 和 fast 600 是唯二的快弹。
@@ -1796,22 +3609,35 @@ const WEAPONS=[
   {id:'triple',icon:ICO_TRIPLE, name:'二连飞镖', type:'switch', price:20, rate:0.55, spd:460, dmg:1, multi:1},
   {id:'boomer',icon:'🪃', name:'回旋镖',   type:'switch', price:18, rate:1.20, spd:460, dmg:1, pierce:1, back:1},
   {id:'ice',   icon:'❄️', name:'寒冰球',   type:'switch', price:22, rate:1.60, spd:620, dmg:4, frz:5},   // 快、疼、冻得久：控场武器就该一扔一片定住
-  {id:'bolt',  icon:'⚡', name:'雷电球',   type:'switch', price:30, rate:0.90, spd:460, dmg:2, chain:1},
+  /* 焕宸反馈：第四篇章（关 12~14）打不动，但**出厂射速一律保持原样**（0.90／0.85／1.10）——
+     提速只走武器库「强化武器」那条付费路线：rate＝两发之间的秒数，越小越快，
+     每级 ×0.85、最多 3 级，满级 0.553／0.522／0.676＝间隔缩到出厂的 61.4%（同样时间多打约 63%），靠金币换。 */
+  {id:'bolt',  icon:'⚡', name:'雷电球',   type:'switch', price:30, rate:0.90, spd:460, dmg:2, chain:1},   // 链跳本来就是打一片，嫌慢就强化
   {id:'fire',  icon:'🔥', name:'大火球',   type:'switch', price:25, rate:1.40, spd:400, dmg:3, blast:1},   // 命中即炸：三条路、爆心前后 110px 内全体挨烧
-  {id:'rocket',icon:'🚀', name:'火箭弹',   type:'switch', price:35, rate:0.85, spd:360, dmg:3, splash:1},
+  {id:'rocket',icon:'🚀', name:'火箭弹',   type:'switch', price:35, rate:0.85, spd:360, dmg:3, splash:1},  // 打厚血的主力
   {id:'bomb',  icon:'💥', name:'魔法炸弹', type:'once',   price:5},
   {id:'shield',icon:'🛡', name:'防护盾',   type:'once',   price:30, block:3},   // 用一次撑开一道盾，替焕宸挡掉 3 次攻击（同魔法炸弹一样要自己点才开）
   {id:'laser', icon:ICO_LASER, name:'超级激光', type:'switch', price:60, rate:1.10, dmg:3}   // 常驻光束：无弹体，开火沿本路贯穿、全体各 3 伤
 ];
 function weaponOf(id){for(const w of WEAPONS)if(w.id===id)return w;return null;}
-/* 拥有/持有存档：{sw:[买断的切换型 id], oc:{一次性 id:个数}}，坏档一律当空（防御性加载） */
-let OWN={sw:[],oc:{}};
+/* ---------- 武器强化（焕宸：「加一个强化武器的选项，购买以后可以增加这个武器的速度」）----------
+   WEAPONS 表里的 rate **一个都没改**：不买强化就和以前一模一样，提速只能靠金币。
+   一把枪最多强化 3 级，每级把「两发间隔」乘 0.85（满级间隔＝出厂的 61.4%，同样时间多打约 63%）；只改节奏，不改威力和弹速，
+   小朋友对「同一把枪打得更快」最有感，也不会顺手把平衡搞崩。价格跟着武器档位走：越贵的枪强化越贵。 */
+const UP_MAX=3,UP_MUL=0.85;
+function upLvl(id){const n=parseInt(OWN.up[id],10)||0;return Math.min(UP_MAX,Math.max(0,n));}
+function upPrice(w,lvl){return Math.max(10,Math.round(w.price*0.5))*(lvl+1);}
+function effRate(w){const l=upLvl(w.id);return l?Math.max(0.14,w.rate*Math.pow(UP_MUL,l)):w.rate;}
+/* 拥有/持有存档：{sw:[买断的切换型 id], oc:{一次性 id:个数}, up:{武器 id:强化等级}}，坏档一律当空（防御性加载） */
+let OWN={sw:[],oc:{},up:{}};
 (function loadOwn(){
   /* 一次性武器（炸弹、防护盾…）全部按 WEAPONS 表建键，加新的一次性武器不用再改这里 */
   for(const w of WEAPONS)if(w.type==='once')OWN.oc[w.id]=0;
   let o=null;try{o=JSON.parse(LS.get('moday_own',''));}catch(e){}
   if(o&&Array.isArray(o.sw))for(const id of o.sw){const w=weaponOf(id);if(w&&w.type==='switch'&&!OWN.sw.includes(id))OWN.sw.push(id);}
   if(o&&o.oc&&typeof o.oc==='object')for(const id of Object.keys(OWN.oc)){const w=weaponOf(id);if(w&&w.type==='once')OWN.oc[id]=Math.max(0,parseInt(o.oc[id],10)||0);}
+  /* 强化等级只认「已经买断的那把枪」：坏档/改档里给没买过的枪塞满级，不会白送一把满速枪 */
+  if(o&&o.up&&typeof o.up==='object')for(const id of Object.keys(o.up)){const w=weaponOf(id);if(w&&w.type==='switch'&&hasWeapon(id))OWN.up[id]=Math.max(0,Math.min(UP_MAX,parseInt(o.up[id],10)||0));}
 })();
 function saveOwn(){LS.set('moday_own',JSON.stringify(OWN));}
 function hasWeapon(id){const w=weaponOf(id);if(!w||w.type!=='switch')return false;return w.price===0||OWN.sw.indexOf(id)>=0;}
@@ -1842,15 +3668,24 @@ const VTEXT={
   char_thin:'迷彩小战士，焕宸',char_fat:'冲锋战士，焕宸爸爸',
   bg_forest:'发光森林',bg_city:'破破城市',bg_desert:'太阳沙漠',
   bg_valley:'丧尸山谷',bg_lava:'熔岩谷',bg_bone:'白骨地',bg_ice:'寒冰谷',bg_rift:'合体山谷',
+  bg_junk:'机甲坟场',bg_neon:'霓虹流水线',bg_dome:'峡谷旧油库',bg_core:'机核深渊',
+  bg_ruin:'落日废墟城',bg_giant:'巨兽白骨地',bg_wreck:'机甲残骸长廊',bg_throne:'世界尽头的王座',
   boss_forest:'藤蔓僵王',boss_city:'铁皮僵王',boss_desert:'沙暴僵王',
   boss_furnace:'背炉火柱王',boss_hammer:'骨锤独腿王',boss_drag:'拖地长臂王',boss_finale:'三王合体',
+  boss_piston:'活塞重锤王',boss_drill:'钻头臂王',boss_hangar:'机库王',boss_trio3:'三机王合体',
+  boss_overlord:'末日总王',
   /* unite 只用设计记录 4.5 的定稿句＋一句「谁会开枪」，压在 20 字左右：
      三只同场时登场串不能比单只大王（名字＋coming＋星星 ≈10 秒）更长，
      否则火柱、震波、横扫全在这句话念完前砸下来，小朋友是挨着打听完的。
      「现在是××王主攻」由接力轮换时的 zhugong 单独念，这里不重复。 */
   unite:'三只大王合在一起啦！只有头顶光环的会开枪！',
+  unite3:'三台机甲王合体啦！只有头顶光环的会开枪！',
   allok:'丧尸山谷全部打完！你就是末日小英雄！',
+  allok3:'机核深渊全部打完！你就是末日小英雄！',
+  /* 第四篇章「世界尽头的王座」——整个游戏到这里才算真打完 */
+  allok4:'世界尽头全部打完！你就是真正的末日小英雄！',
   choosewin:'选一个吧：回藏宝图，看看新的一块战场！',
+  chooseend:'选一个吧：回藏宝图，整个末日都被你打完啦！',
   coming:'来啦！它会发射子弹，看到冒烟就赶紧换路躲开！',
   /* 第二章三只大王的登场警告（文案见设计记录 4.2）：只讲它怎么打人、该怎么躲，
      名字由 boss_xxx 那一句先念，所以这里不再重复「××王」。 */
@@ -1860,13 +3695,37 @@ const VTEXT={
   warn_furnace:'它没有手，靠背上的炉子喷火：看到冒烟和地上发红，马上换路！',
   warn_hammer:'它只会一跳一跳，锤子举高高就是要砸，赶紧跑远一点！',
   warn_drag:'它的手拖在地上从右边扫到左边，看到路面压暗就换到没暗的那条路！',
+  warn_piston:'它的活塞臂越压越长，橙光一闪就是要砸脚下那条路，提前换路！砸完杆子卡住，趁那一下打它的头！',
+  warn_drill:'它的地面钻头会扫两条路，看到路面压暗就换到没暗的那条！扫完收回那一下打它背上的散热眼！',
+  warn_hangar:'它背上的库门开红光时，躲远子弹，趁门开着打库里的控制台！它会放浮游探针！',
+  /* 关 15 末日总王：三式轮换（骨锤连砸／贴地横扫／末日火柱），破绽始终是冠心那颗红宝石。
+     一句里把「怎么躲」和「什么时候打」都说全，比前三只的警告长半句也值——它是最后一只。 */
+  warn_overlord:'总王又砸锤又扫长臂，背上的炉子还喷火烧脚底下！路面发暗发红赶紧换路，它脑门红宝石一亮就使劲打！',
   zhugong:'现在是它主攻！盯住它头顶的光环！',
-  /* 五种丧尸兵种第一次上场时各报一次名（一只一句，念完就完，不刷屏） */
+  /* 兵种第一次上场时各报一次名（一只一句，念完就完，不刷屏）。
+     话只能说代码真做得到的事：下面九条「大王降级体」只剩走路＋吐弹，
+     锤／扫／火柱那套地面招式全留在关 15 总王身上，所以一句都不能提「它会砸下来」。 */
   zb_fire:'会炸火的火焰丧尸，别站太近！',
   zb_hole:'破了个洞的丧尸，走得慢，血多！',
   zb_notch:'缺牙丧尸，走路扭来扭去会换路！',
   zb_oneeye:'独眼丧尸，会突然加速冲过来！',
   zb_ice:'冰封丧尸，血最厚，用寒冰球冻它！',
+  zb_weld:'电焊兵，打死它会炸一圈焊花，别贴着它开枪！',
+  zb_armor:'重甲机兵，血厚走得慢，用大火球火箭弹揍它！',
+  zb_chain:'链锯突击兵，锯盘转快就会冲，血不多，冲之前解决它！',
+  zb_drone:'浮游探针，悬在天上乱换路，盯子弹别盯它！',
+  /* 第四章九种「大王降级体」：三个篇章的大王变小兵守关，块头大血厚，各自只留一条真机制。 */
+  zb_kvine:'藤蔓大王当小兵啦，走路扭来扭去会换路！',
+  zb_ksteel:'铁皮大王当小兵啦，又硬又慢，用寒冰球冻它更划算！',
+  zb_ksand:'沙暴大王当小兵啦，攒一会儿劲会猛地冲过来！',
+  zb_kfurnace:'火柱大王当小兵啦，打死它会炸一团火，别贴着它开枪！',
+  zb_khammer:'骨锤大王当小兵啦，块头大血又多，一梭子打不死它！',
+  zb_kdrag:'长臂大王当小兵啦，走两步就换路，看准了再打！',
+  zb_kpiston:'活塞大王当小兵啦，先慢慢走，然后猛地加速冲！',
+  zb_kdrill:'钻头大王当小兵啦，血厚还会换路，趁它离得远先揍它！',
+  zb_khangar:'机库大王当小兵啦，最硬最慢，用大火球火箭弹揍它！',
+  /* 点锁着的第四篇章格子：这三格没有大王守关（老王降级成小兵），只能念「先打赢哪一关」 */
+  lock_ruin:'落日废墟城那一关！',lock_giant:'巨兽白骨地那一关！',lock_wreck:'机甲残骸长廊那一关！',
   rage1:'小心！',rage2:'狂暴啦！',unlock:'还没解锁，先打赢',
   di:'第',guanwin:'关打赢啦！马上进入第',guan:'关',next:'马上进入下一关',
   congrats:'恭喜你！打败了',choose:'选一个吧：回首页，或者进下一关！',
@@ -1880,6 +3739,17 @@ const VTEXT={
   shieldup:'防护盾撑开啦，帮你挡三下！',
   /* 第一章宝藏开箱（说清楚具体拿到了什么，别只说「有宝藏」） */
   gift:'宝藏开箱啦！四十个金币，还有一面防护盾！',
+  unlock_a:'山谷游侠的衣服解锁啦！去首页给焕宸换上！',
+  unlock_b:'裂谷星铠的衣服解锁啦！去首页给焕宸换上！',
+  unlock_c:'星核机甲的衣服解锁啦！去首页给焕宸换上！',
+  unlock_d:'末日王铠的衣服解锁啦！去首页给焕宸换上！',
+  uf_ranger:'山谷游侠，焕宸！',
+  uf_rift:'裂谷星铠，焕宸！',
+  uf_mecha:'星核机甲，焕宸！',
+  uf_king:'末日王铠，焕宸！',
+  /* 选爸爸时衣服条整行置灰，但格子还能点（点了照样给焕宸换上）。
+     小朋友不知道行置灰是什么意思，所以要念一句解释，别让他以为坏了。 */
+  uf_only:'衣服是给焕宸穿的，爸爸还是老样子！',
   zaidian:'再点一下就买啦',maidaola:'买到啦',huancha:'还差',gejb:'个金币',jixu:'买好啦，继续加油！',
   n0:'零',n1:'一',n2:'二',n3:'三',n4:'四',n5:'五',n6:'六',n7:'七',n8:'八',n9:'九',
   n10:'十',n20:'二十',n30:'三十',n40:'四十',n50:'五十',n60:'六十',n70:'七十',
@@ -2047,14 +3917,35 @@ const STAGES=[
     {quota:28,v:78,gap:1.7,cap:8,p2:0.35,p3:0.18,boss:true},  // 第 3 关：又快又挤、多路齐发，打完出大 BOSS
     /* ── 第二章「丧尸来了」（关 4~7）：焕宸说前面的简单了点，所以整体难一档。
        这一章的数值全部写死（ch:2 ⇒ stCfg 直接返回，不乘 SCENES、不按 loopN 加码），
-       背景随关卡换（bg），大王用 ZB 表（boss），小兵按 kind 权重混编。 */
-    {ch:2,bg:'lava', boss:'furnace',quota:26,v:66,gap:2.0,cap:8, p2:0.40,p3:0.12,kind:{fire:100}},
-    {ch:2,bg:'bone', boss:'hammer', quota:32,v:78,gap:1.75,cap:9,p2:0.45,p3:0.20,kind:{hole:50,fire:35,oneeye:15}},
-    {ch:2,bg:'ice',  boss:'drag',   quota:38,v:90,gap:1.55,cap:10,p2:0.50,p3:0.28,kind:{notch:45,hole:25,ice:15,fire:15}},
+       背景随关卡换（bg），大王用 ZB 表（boss），小兵按 kind 权重混编。
+       2026-10-21 焕宸：「每一关打得有点短了，小兵尽量每一关时间可以弄长一点」
+       ⇒ 小兵配额 +40%（26/32/38 → 36/44/52，出怪节奏不动，靠杀更多只拉长小兵阶段）。 */
+    {ch:2,bg:'lava', boss:'furnace',quota:36,v:66,gap:2.0,cap:8, p2:0.40,p3:0.12,kind:{fire:100}},
+    {ch:2,bg:'bone', boss:'hammer', quota:44,v:78,gap:1.75,cap:9,p2:0.45,p3:0.20,kind:{hole:50,fire:35,oneeye:15}},
+    {ch:2,bg:'ice',  boss:'drag',   quota:52,v:90,gap:1.55,cap:10,p2:0.50,p3:0.28,kind:{notch:45,hole:25,ice:15,fire:15}},
     /* 终章：关卡自己不发兵（quota:0、cap:0），小兵只由大王召唤。
        kind 必须给权重：pickType 权重和为 0 会返回空串＝ spawning 第一章的普通绿僵尸。
        不排独眼冲刺兵（vm 2.0）——三只大王同场已经够满，再加一道冲刺身影小朋友读不过来。 */
-    {ch:2,bg:'rift', boss:'finale',finale:true,quota:0,v:66,gap:9,cap:0,p2:0,p3:0,kind:{fire:25,hole:25,notch:25,ice:25}}
+    {ch:2,bg:'rift', boss:'finale',finale:true,quota:0,v:66,gap:9,cap:0,p2:0,p3:0,kind:{fire:25,hole:25,notch:25,ice:25}},
+    /* ── 第三章「机器人来了」（关 8~11）：焕宸选定 场景8B 机甲坟场之夜 / 9A 霓虹流水线 / 10B 峡谷旧油库，终章机核深渊。
+       数值口径和第二章一样全部写死（ch>=2 ⇒ stCfg 直接返回），难度靠「防更高的机器人＋地面威胁＋大王招式」。
+       设计记录 5.3：这一章小兵防御整体上调一档（电焊兵 2 血、重甲机兵 5 血、链锯兵 3 血）。 */
+    {ch:3,bg:'junk', boss:'piston',quota:44,v:70,gap:2.0,cap:9, p2:0.42,p3:0.14,kind:{weld:100}},
+    {ch:3,bg:'neon', boss:'drill',  quota:52,v:82,gap:1.8,cap:10,p2:0.48,p3:0.20,kind:{armor:100}},
+    {ch:3,bg:'dome', boss:'hangar', quota:60,v:94,gap:1.6,cap:11,p2:0.52,p3:0.26,kind:{chain:100}},
+    /* 终章：关卡自己不发兵（quota:0、cap:0），小兵只由机库王召唤（固定浮游探针）。 */
+    {ch:3,bg:'core', boss:'finale3',finale:true,quota:0,v:70,gap:9,cap:0,p2:0,p3:0,kind:{drone:100}},
+    /* ── 第四章「世界尽头」（关 12~15）：焕宸定稿 12A 落日废墟城 / 13B 巨兽白骨地 / 14B 机甲残骸长廊 / 15B 世界尽头的王座。
+       这一章的「小兵」是前三章的大王降级体（KIND 里 k 开头的九种，外形照搬当大王时的画法）：
+       关 12＝第一章三王、关 13＝第二章三王、关 14＝第三章三王，关 15 是统管九王的末日总王。
+       数值仍全部写死（ch>=2 ⇒ stCfg 直接返回）。血量厚、体型大，所以同屏 cap 收到 4~6，
+       总量 16×7≈112 / 15×10≈150 / 14×12≈168，和关 10 的 60×3＝180 同量级。
+       注意：关 15 不写 finale——那是「三王合体」多 BOSS 的专用闸门，单大王写上会永远不出手。 */
+    {ch:4,bg:'ruin', quota:16,v:62,gap:2.2,cap:4,p2:0.45,p3:0.10,kind:{kvine:40,ksteel:35,ksand:25}},
+    {ch:4,bg:'giant',quota:15,v:66,gap:2.1,cap:5,p2:0.50,p3:0.15,kind:{kfurnace:40,khammer:35,kdrag:25}},
+    {ch:4,bg:'wreck',quota:14,v:72,gap:2.0,cap:6,p2:0.55,p3:0.18,kind:{kpiston:40,kdrill:35,khangar:25}},
+    {ch:4,bg:'throne',boss:'overlord',quota:0,v:70,gap:9,cap:0,p2:0,p3:0,
+     kind:{kvine:10,ksteel:10,ksand:10,kfurnace:10,khammer:10,kdrag:10,kpiston:12,kdrill:12,khangar:12}}
   ];
 /* 第二章五种丧尸兵种（设计记录 4.1：外形给的暗示 → 只此一条机制）。
    hp＝血量，vm＝本关基准移速的倍率，s＝体型（depthS 的基准值，第一章普通僵尸沿用 70）；
@@ -2068,7 +3959,30 @@ const KIND={
   hole  :{name:'破洞丧尸',hp:3,s:70, vm:0.7,frzMul:2.0},
   notch :{name:'缺牙丧尸',hp:1,s:54, vm:1.5,turn:1.4},
   oneeye:{name:'独眼丧尸',hp:1,s:58, vm:2.0,vm0:0.9,dash:1.0},
-  ice   :{name:'冰封丧尸',hp:4,s:64, vm:0.6,frzMul:1.5}
+  ice   :{name:'冰封丧尸',hp:4,s:64, vm:0.6,frzMul:1.5},
+  /* 第三章四种机器人兵种（设计记录 5.1，焕宸「增加一点他们的防御」⇒ 整体比第二章高一档）：
+     weld＝被打死炸一圈焊花（同 fire 的机制换皮，趁它在右边就解决）；
+     armor＝5 血慢步，专门教"用大火球/火箭弹打厚血"；
+     chain＝独眼同款蓄力冲刺（dash），但 3 血——冲之前解决它；
+     drone＝浮游探针：悬在半空，天然"不吃地面威胁"——地面威胁（火柱/震波/横扫）在代码里只判主角。
+     悬空的样子由 drawRobotUnit 按兵种自己画（影子收小、整体抬高＋上下浮动），不需要运行期标记。 */
+  weld :{name:'电焊兵',    hp:2,s:58,vm:1.2,boom:150},
+  armor:{name:'重甲机兵',  hp:5,s:64,vm:0.6},
+  chain:{name:'链锯突击兵',hp:3,s:58,vm:2.0,vm0:0.9,dash:1.0},
+  drone:{name:'浮游探针',  hp:1,s:52,vm:1.6,turn:1.8},
+  /* 第四章九种「大王降级体」（关 12~14 的小兵）。src＝它当大王时的键，drawZombie 拿它反查
+     RBOSS_SK / BOSS_ZK / BOSS_SK 三张外形表，照搬大王的画法，不再新写一套。
+     frzH＝冻住时的冰罩顶高（大王剪影比圆角僵尸高得多，写死的 0.98 会罩不住头）；
+     coin＝赏金（血厚体大，只掉 2 枚太抠）。机制仍沿用上面那几个字段，一视同仁。 */
+  kvine   :{name:'藤蔓僵王',hp:6, s:96, vm:0.85,src:'forest',frzH:1.20,coin:4,turn:2.4},
+  ksteel  :{name:'铁皮僵王',hp:7, s:104,vm:0.62,src:'city',  frzH:1.16,coin:4,frzMul:2.0},
+  ksand   :{name:'沙暴僵王',hp:8, s:110,vm:0.80,src:'desert',frzH:1.06,coin:5,dash:1.2,vm0:0.5},
+  kfurnace:{name:'背炉火柱王',hp:9, s:104,vm:0.80,src:'furnace',frzH:1.25,coin:5,boom:180},
+  khammer :{name:'骨锤独腿王',hp:10,s:108,vm:0.70,src:'hammer', frzH:1.25,coin:5},
+  kdrag   :{name:'拖地长臂王',hp:10,s:108,vm:0.66,src:'drag',   frzH:1.06,coin:5,turn:2.0},
+  kpiston :{name:'活塞重锤王',hp:11,s:106,vm:0.78,src:'piston',frzH:1.15,coin:6,dash:1.0,vm0:0.45},
+  kdrill  :{name:'钻头臂王',  hp:12,s:110,vm:0.70,src:'drill',  frzH:1.13,coin:6,turn:1.8},
+  khangar :{name:'机库王',    hp:13,s:112,vm:0.60,src:'hangar', frzH:1.15,coin:6,frzMul:1.6}
 };
 /* 小兵的特殊攻击（焕宸：「每一关的小兵反而太简单了，发出一点特殊攻击，比如火焰等等，
    需要发出后有音效提醒」）。三条铁律：
@@ -2080,7 +3994,18 @@ const SPIT={
   fire:{shot:'fireball',p:0.45,warn:0.50,v:170,gap:[5.0,8.0]},   // 火焰丧尸：吐小火球
   hole:{shot:'bone',    p:0.40,warn:0.55,v:150,gap:[6.0,9.0]},   // 破洞丧尸：从胸口那个洞里扔骨头
   ice :{shot:'icicle',  p:0.40,warn:0.55,v:175,gap:[6.0,9.0]},   // 冰封丧尸：吐冰棱
-  green:{shot:'slobber',p:0.12,warn:0.60,v:120,gap:[9.0,13.0]}   // 第一章普通僵尸：很低概率吐一口口水
+  green:{shot:'slobber',p:0.12,warn:0.60,v:120,gap:[9.0,13.0]},  // 第一章普通僵尸：很低概率吐一口口水
+  /* 第四章九种大王降级体：吐弹只从现成的四种弹里挑（ebs 的绘制分派只认这四种），
+     概率 p 比第二三章小兵略低、间隔 gap 略长——它们血厚体大，再频繁吐封路就没人躲得开了。 */
+  kvine   :{shot:'slobber', p:0.30,warn:0.62,v:130,gap:[8.0,12.0]},
+  ksteel  :{shot:'slobber', p:0.26,warn:0.62,v:135,gap:[8.5,12.5]},
+  ksand   :{shot:'bone',    p:0.30,warn:0.60,v:150,gap:[8.0,12.0]},
+  kfurnace:{shot:'fireball',p:0.40,warn:0.55,v:170,gap:[6.5,10.0]},
+  khammer :{shot:'bone',    p:0.36,warn:0.55,v:155,gap:[7.0,10.5]},
+  kdrag   :{shot:'slobber', p:0.32,warn:0.60,v:140,gap:[7.5,11.0]},
+  kpiston :{shot:'fireball',p:0.38,warn:0.55,v:175,gap:[7.0,10.5]},
+  kdrill  :{shot:'icicle',  p:0.34,warn:0.58,v:170,gap:[7.5,11.0]},
+  khangar :{shot:'slobber', p:0.34,warn:0.60,v:145,gap:[7.5,11.0]}
 };
 /* 场景分级：森林最轻松，城市略难，沙漠最难。同一关在不同场景里按下面的增量整体加码，
    保证「一个场景比前一个场景更难一点」，但幅度温和，仍在能通关的范围内 */
@@ -2097,24 +4022,46 @@ const BOSSCFG=[
     {name:'沙暴僵王',warnKey:'coming',hp:14,fireT:2.7,lanes:2,bspd:190,v:30,p2Fire:2.1,p2Lanes:2,minions:true, minionT:5.0,minionCap:2}  // 沙漠：同上，召兵也慢一档
   ];
 /* 第二章三只大王（焕宸选的 1B 背炉火柱王 / 2B 骨锤独腿王 / 3B 拖地长臂王）。
-   血 18/20/22 ＝ 第一章的约 1.5~1.6 倍，但因为多了武器，实际时长差不多。
+   血 24/26/28（2026-10-21 加厚，原 18/20/22 ≈ 第一章的约 1.5~1.6 倍；焕宸：「三个 BOSS 连在一起，血可以多一点」）。
    2026-10-20 整体削一档（焕宸：「骨锤有点难了，之前之后的 boss 也有点难了」）：
    lanes/p2Lanes 一律收到 2/2、弹幕与招式间隔放慢、弹速回收、地面预警加长。
    另外"能封几条路"不再由这里说了算——bossTargetLanes 上面压着一层安全路预算
    （平时 2 条 / 狂暴 3 条），弹幕和地面招式加起来的红路永远不会超过这个数。
-   finHp ＝ 终章合体时三只的血量（12/14/16，总 42）；合体后不再各自加血。
+   finHp ＝ 终章合体时三只的血量（2026-10-21 加厚：16/18/20，总 54）；合体后不再各自加血。
    finale 只提供名单 trio 与三只的血 finHp，招式/弹速/召唤全按上面三只各自的 cfg 走。
    弱点位置也不写在这儿，只有 BOSS_ZK.weak 一处（跟着外形零件走）。 */
 /* mech ＝这只大王的招式分派键（stepBossMech 按它走对应那套），
    atkT/atkT2 ＝这招隔几秒来一次（半血狂暴后），warn ＝地面预警秒数，
    warnKey ＝登场那句警告的语音 key（名字由 boss_xxx 先念，这里只讲怎么躲）。 */
 const ZB={
-  furnace:{name:'背炉火柱王',warnKey:'warn_furnace',mech:'furnace',hp:18,fireT:2.7,lanes:2,bspd:200,v:66,p2Fire:2.1,p2Lanes:2,minions:false,minionT:99,minionCap:0,atkT:4.0,atkT2:2.8,warn:1.0},
-  hammer :{name:'骨锤独腿王',warnKey:'warn_hammer', mech:'hammer', hp:20,fireT:2.6,lanes:2,bspd:205,v:66,p2Fire:1.9,p2Lanes:2,minions:false,minionT:99,minionCap:0,atkT:4.5,atkT2:3.2,warn:1.05},
-  drag   :{name:'拖地长臂王',warnKey:'warn_drag',   mech:'drag',   hp:22,fireT:2.4,lanes:2,bspd:210,v:66,p2Fire:1.7,p2Lanes:2,minions:true, minionT:6.0,minionCap:2,atkT:5.0,atkT2:3.6,warn:1.15},
-  finale :{name:'三王合体',trio:['furnace','hammer','drag'],finHp:[12,14,16]}
+  furnace:{name:'背炉火柱王',warnKey:'warn_furnace',mech:'furnace',hp:24,fireT:2.7,lanes:2,bspd:200,v:66,p2Fire:2.1,p2Lanes:2,minions:false,minionT:99,minionCap:0,atkT:4.0,atkT2:2.8,warn:1.0},
+  hammer :{name:'骨锤独腿王',warnKey:'warn_hammer', mech:'hammer', hp:26,fireT:2.6,lanes:2,bspd:205,v:66,p2Fire:1.9,p2Lanes:2,minions:false,minionT:99,minionCap:0,atkT:4.5,atkT2:3.2,warn:1.05},
+  drag   :{name:'拖地长臂王',warnKey:'warn_drag',   mech:'drag',   hp:28,fireT:2.4,lanes:2,bspd:210,v:66,p2Fire:1.7,p2Lanes:2,minions:true, minionT:6.0,minionCap:2,atkT:5.0,atkT2:3.6,warn:1.15},
+  finale :{name:'三王合体',trio:['furnace','hammer','drag'],finHp:[16,18,20]},
+  /* 第三章三只机械大王（设计记录 5.2，防御比第二章高一档）：
+     piston＝锤王的举/砸状态机去掉单脚蹦（双腿直走，换路交给 stepBoss 通用逻辑）；
+     drill＝长臂王的贴地横扫原样复用（只换皮）；
+     hangar＝背上库门开 2 秒＝打控制台窗口，同时放浮游探针。
+     hangar 的 minions 必须是 false：召唤由 mechHangar 自己管（固定召 drone），
+     若开 true，stepBoss 的通用召唤块会再按 pickType() 掺一遍，变成双召唤。 */
+  piston :{name:'活塞重锤王',warnKey:'warn_piston',mech:'piston',hp:28,fireT:2.6,lanes:2,bspd:210,v:66,p2Fire:2.0,p2Lanes:2,minions:false,minionT:99,minionCap:0,atkT:4.5,atkT2:3.0,warn:1.0},
+  drill  :{name:'钻头臂王',  warnKey:'warn_drill', mech:'drill',  hp:30,fireT:2.5,lanes:2,bspd:215,v:66,p2Fire:1.8,p2Lanes:2,minions:false,minionT:99,minionCap:0,atkT:5.0,atkT2:3.6,warn:1.15},
+  hangar :{name:'机库王',    warnKey:'warn_hangar',mech:'hangar', hp:32,fireT:2.3,lanes:2,bspd:220,v:66,p2Fire:1.6,p2Lanes:2,minions:false,minionT:99,minionCap:2,atkT:6.0,atkT2:4.0,warn:0.8},
+  /* 终章 trio 顺序对应 spawnBoss 的 lanes=[2,4,0]：机库王走中排、钻头臂王走下排、活塞王走上排。 */
+  finale3:{name:'三机王合体',trio:['hangar','drill','piston'],finHp:[16,18,20],uniteKey:'unite3'},
+  /* 关 15「世界尽头的王座」——末日总王：前三个篇章的大王合体成的最终一只。
+     三式按 ovSeq 轮换（骨锤连砸→贴地横扫→末日火柱），砸/扫两式直接把进行中的状态机
+     交回 mechHammer／mechDrag，火柱照 mechFurnace 那行 addGt 写（见 mechOverlord）。
+     血量比第三章最硬的机库王（32）高一档，但低于终章三王的总和（54）——
+     它是独自挨打的一只，招式密度已经比任何前王都高。
+     minions=true 走 stepBoss 现成的通用召唤块：召的就是本关 kind 里那九种「大王降级体」，
+     同屏不超过 2 只（这三篇章的王当小兵已经够唬人，多了就淹了）。 */
+  overlord:{name:'末日总王',warnKey:'warn_overlord',mech:'overlord',hp:44,fireT:2.4,lanes:2,bspd:225,v:66,
+            p2Fire:1.8,p2Lanes:2,minions:true,minionT:8.5,minionCap:2,atkT:4.2,atkT2:3.0,warn:1.1}
 };
-const ZB_KEY={'背炉火柱王':'boss_furnace','骨锤独腿王':'boss_hammer','拖地长臂王':'boss_drag','三王合体':'boss_finale'};
+const ZB_KEY={'背炉火柱王':'boss_furnace','骨锤独腿王':'boss_hammer','拖地长臂王':'boss_drag','三王合体':'boss_finale',
+              '活塞重锤王':'boss_piston','钻头臂王':'boss_drill','机库王':'boss_hangar','三机王合体':'boss_trio3',
+              '末日总王':'boss_overlord'};
 function bossVoiceKey(name){return BOSS_KEY[name]||ZB_KEY[name]||'boss_forest';}
 let zid=1;            // 僵尸编号：穿透弹/回旋镖靠它记住"打过谁"，一只只吃一次伤害
 const G={
@@ -2134,21 +4081,35 @@ const G={
 };
 function sceneIdx(){const i=BG_ORDER.indexOf(curBG);return i<0?0:i;}
 function isBossStage(){return !!curStage().boss;}          // 本关结尾有大王（一章的关3／二章的关4~7）
-function isFinalStage(){return !!curStage().finale;}       // 终章：三王合体，打掉才算通关
-/* 要不要弹结算面板：第一章打完大王＝章末（解锁藏宝图下一块）；
-   第二章的关 4/5/6 打完大王只是过一关，只有终章三王合体全倒才通关 */
-function isChapterEnd(){const d=curStage();return !!d.finale||(d.ch!==2&&!!d.boss);}
-/* 本关大王配置：第二章查 ZB，第一章仍按当前战场查 BOSSCFG */
+function isFinalStage(){return !!curStage().finale;}       // 章终合体战：二章「三王合体」、三章「三机王合体」都算
+/* 整个游戏打完＝打到 STAGES 的最后一条（第四章「世界尽头的王座」，关 15）。
+   不能再用 finale＋ch 判断：finale 是"三王合体"多 BOSS 的专用闸门（给单大王写上会让它
+   永远不出手，见 stepBoss 的 act 条件），第四篇章的终关是一只末日总王，所以按表尾判定。 */
+function isGameEnd(){return curStage()===STAGES[STAGES.length-1];}
+/* 篇章的最后一关＝表里下一条的 ch 和这条不一样（或已经是表尾）。
+   lv N＝打完第 N 篇章按这条判定，不靠 finale 猜：第一章关 3、二章关 7、三章关 11、四章关 15。 */
+function isChapterLast(){
+  const i=Math.min(G.stage,STAGES.length)-1,n=STAGES[i+1];
+  return !n||(n.ch||1)!==(STAGES[i].ch||1);
+}
+/* 打完这一关要不要停下来回藏宝图（规格 FR-21/23：一格一关、拆格不串关）。
+   口径＝本格有没有大王：有大王就是这一格的最后一战，倒下去就庆祝＋解锁下一格＋把 ⭐ 挪过去，
+   由孩子自己在地图上点下一块；第一章一块战场贯穿关 1~3，关 1、关 2 没有 boss，照旧横幅后自动进下一关。
+   旧口径把二、三章的关 4/5/6、8/9/10 甩进自动串关，而解锁只在 celebrate 里做，
+   结果孩子人已经打到白骨地/寒冰谷，地图上那两块还锁着、⭐ 还停在熔岩谷 —— 地图和实机对不上。
+   终章一定带 boss，`||!!d.finale` 只是把"这一格打完了"这层意思写全，不额外改变判定。 */
+function isChapterEnd(){const d=curStage();return !!d.boss||!!d.finale;}
+/* 本关大王配置：第二/三章查 ZB，第一章仍按当前战场查 BOSSCFG */
 function bossCfg(){
   const d=curStage();
-  return (d.ch===2&&ZB[d.boss])||BOSSCFG[sceneIdx()]||BOSSCFG[0];
+  return (d.ch>=2&&ZB[d.boss])||BOSSCFG[sceneIdx()]||BOSSCFG[0];
 }
 /* 本关实际配置＝关卡基准 × 场景增量（每次返回新对象，只读属性，安全） */
 function stCfg(){
   const b=curStage();
-  /* 第二章：数值按定稿 v1 写死，不再乘场景系数、不随轮次加码——
-     这一章的难度靠「血厚的小兵＋地面威胁＋大王招式」堆，不靠数字膨胀 */
-  if(b.ch===2)return {quota:b.quota,v:b.v,gap:b.gap,cap:b.cap,p2:b.p2,p3:b.p3,kind:b.kind,ch:2};
+  /* 第二/三章：数值按定稿写死，不再乘场景系数、不随轮次加码——
+     这两章的难度靠「血厚的小兵＋地面威胁＋大王招式」堆，不靠数字膨胀 */
+  if(b.ch>=2)return {quota:b.quota,v:b.v,gap:b.gap,cap:b.cap,p2:b.p2,p3:b.p3,kind:b.kind,ch:b.ch};
   const s=SCENES[sceneIdx()]||SCENES[0];
   const lv=Math.max(1,Math.min(10,loopN));      // 每进一块新战场只加一点点
   return {
@@ -2240,7 +4201,7 @@ function stepMinion(z,dt){
     z.turnT-=dt;
     if(z.turnT<=0){
       let nl;do{nl=Math.floor(Math.random()*LANES);}while(nl===z.lane);
-      z.tY=laneY(nl);z.turnT=KIND.notch.turn*(0.7+Math.random()*0.8);
+      z.tY=laneY(nl);z.turnT=KIND[z.type].turn*(0.7+Math.random()*0.8);   // 各按各的换路节奏（缺牙 1.4s、浮游探针 1.8s）
       puffFX(G.ps,z.x,z.y-z.s*0.4,0.5);             // 挪之前冒一团烟＝沿用大王「我要动了」那套预警语言
     }
   }
@@ -2270,9 +4231,13 @@ function stepSpit(z,dt){
   puffFX(G.ps,z.x-z.s*0.24,z.y-z.s*0.30,z.s/80);
   sfx('spitwarn');
 }
+/* 小兵弹的视觉倍率：第四篇章（关 12~14）的降级体体型 s=96~112，弹还按第一章的小尺寸画，
+   焕宸反馈「子弹太小不太清楚」。按体型等比放大弹体（70 为第一章基准，上限 1.6 倍免得糊屏）；
+   只改绘制尺寸，命中判定与弹速不动 ⇒ 放大纯粹更易读，不会变相变难。 */
+function bulletK(z){const s=z.s||70;return Math.max(1,Math.min(1.6,s/70));}
 function minionSpit(z,c){
   const y=laneY(z.lane)-8;
-  G.ebs.push({x:z.x-z.s*0.30,y,lane:z.lane,vx:-c.v,rot:0,shot:c.shot});
+  G.ebs.push({x:z.x-z.s*0.30,y,lane:z.lane,vx:-c.v,rot:0,shot:c.shot,k:bulletK(z)});
   z.spitCd=c.gap[0]+Math.random()*(c.gap[1]-c.gap[0]);
   puffFX(G.ps,z.x-z.s*0.34,y-2,z.s/90);
   sfx('spit');
@@ -2302,6 +4267,9 @@ function makeBoss(cfg,hp,lane,xOff){
        swpSt＝长臂；aura/auraHp＝终章接力主攻。第一章大王没有 mech，这些字段只是躺着不动。 */
     weakT:0,weakMul:1,weakHits:0,furnT:0,emberT:1.2,
     atkT:(cfg.atkT||99)*0.7,hopT:1.6,slamSt:0,slamT:0,slamLeft:0,
+    /* ovSeq＝总王「上一式」的序号，写死 2（火柱）→ 首招就是 (2+1)%3=0 骨锤连砸，
+       和 FR-114 的一二三式顺序对上；其余大王不进这个轮换，字段只是躺着不动。 */
+    ovSeq:2,
     swpSt:0,swpT:0,aura:0,auraHp:0,trioI:0};
   G.zs.push(z);
   return z;
@@ -2314,10 +4282,10 @@ function spawnBoss(){
   }
   G.ebs.length=0;
   clearGts();                                 // 大王登场前把地面火苗/震波全部抹掉，进场那一下是干净的
-  /* BOSS 战礼物：第一章按战场送 1/2/3 颗星星；第二章大王送 2 颗，终章三只合体送 3 颗。
+  /* BOSS 战礼物：第一章按战场送 1/2/3 颗星星；第二/三章大王送 2 颗，终章三只合体送 3 颗。
      星星＝多出来的命（挨打先扣星星，扣完才扣红心），
      小朋友输得起才敢练走位，不会一挨打就崩 */
-  const starN=d.ch===2?(cfg.trio?3:2):sceneIdx()+1;
+  const starN=d.ch>=2?(cfg.trio?3:2):sceneIdx()+1;
   if(cfg.trio){
     /* 终章：三只大王同场，上/中/下三路各一只，x 前后错开（谁当主攻由 stepFinale 轮换）。
        lanes 按 trio 的顺序取：火柱王→路 2、骨锤王→路 4、拖地长臂王→路 0。
@@ -2330,12 +4298,12 @@ function spawnBoss(){
       b.minX=GW*(0.68+i*0.07);                   // 越往下站得越靠右，三只错开成阶梯，一眼分得清谁是谁
     }
     /* 狂暴线用「开局三只的总血」当分母，不是「当前存活大王的总血」——
-       否则先打死一只，存活总血从 42 掉到 30，一进场就已经过半，第二只还没打就突然狂暴。 */
+       否则先打死一只，存活总血从 54 掉到 38，一进场就已经过半，第二只还没打就突然狂暴。 */
     let finSum=0;for(const h of cfg.finHp)finSum+=h;
     G.finTotal=finSum;
     G.bossName=cfg.name;
   }else{
-    const hp=d.ch===2?cfg.hp:Math.min(99,Math.round(cfg.hp*(1+(lv-1)*0.05)));
+    const hp=d.ch>=2?cfg.hp:Math.min(99,Math.round(cfg.hp*(1+(lv-1)*0.05)));
     makeBoss(cfg,hp,1+Math.floor(Math.random()*(LANES-2)),150);
     G.bossName=cfg.name;
   }
@@ -2355,7 +4323,7 @@ function spawnBoss(){
   banner('💀 '+cfg.name+' 来啦！⭐×'+starN,3.5);   // 比原来 1.5 秒长一倍，名字看得清；但打斗中大字不能久留，免得挡住子弹
   sfx('boss');
   /* 台词缩短：原来 34 字要读 9.5 秒，期间打到半血就会被"狂暴"那句顶掉，安全提示听不完 */
-  if(cfg.trio)say(['boss_finale','unite','star3']);
+  if(cfg.trio)say([bossVoiceKey(cfg.name),cfg.uniteKey||'unite','star'+starN]);   // 第二章合体＝boss_finale+unite，第三章＝boss_trio3+unite3
   else say([bossVoiceKey(cfg.name),cfg.warnKey,'star'+starN]);
 }
 /* ========== 安全路预算（2026-10-20 削弱大王的总闸）==========
@@ -2521,6 +4489,9 @@ function mechHammer(z,dt){
   }
   z.atkT-=dt;
   if(z.atkT<=0){if(raiseHammer(z))z.slamLeft=z.phase===2?1:0;else z.atkT=0.3;return;}
+  /* 单脚蹦是骨锤王独有的移动方式；活塞重锤王是机甲双腿，不蹦——
+     它出招间隙的换路交给 stepBoss 的通用随机换路（piston 不在 lock 名单里）。 */
+  if(z.cfg.mech!=='hammer')return;
   z.hopT-=dt;
   if(z.hopT<=0&&z.y===z.tY){                          // 只蹦隔壁一条路，不会满场乱跳
     const nl=Math.max(0,Math.min(LANES-1,z.lane+(Math.random()<0.5?-1:1)));
@@ -2552,10 +4523,79 @@ function mechDrag(z,dt){
   z.swpT=w+0.85+0.3;
   sfx('bossshoot');
 }
+/* 10B 机库王：背上库门先亮 0.8 秒红光（预警音），门开 2 秒＝打控制台窗口（×2），
+   开门同时放浮游探针（常规 1 只、狂暴 2 只，全场 drone 同屏不超 minionCap=2）。
+   门的状态复用锤王举/砸的 slamSt/slamT 字段：slamSt=1 红光预警、slamSt=2 门开挨打——
+   「先预警后生效」的语言和其他大王一模一样，小朋友不用重新学。
+   它不封任何路（威胁来自子弹和探针），所以不占安全路预算、也不需要查闸门。 */
+function mechHangar(z,dt){
+  if(z.slamSt===1){                                   // 库门红光预警中：它什么都不干，小朋友只听"呜——"
+    z.slamT-=dt;
+    if(z.slamT<=0){
+      z.slamSt=2;z.slamT=2.0;openWeak(z,2,2.0);
+      const w=weakPos(z);                             // 门开的瞬间红圈炸开＝看得见的"现在打这里"
+      G.ps.push({kind:'ring',x:w.x,y:w.y,vx:0,vy:0,life:0.32,t:0,c:'#ff5252',r:10,gr:220,g:0});
+      let m=0;for(const o of G.zs)if(!o.boss&&!o.die&&o.type==='drone')m++;
+      const n=z.phase===2?2:1;
+      for(let i=0;i<n;i++){
+        if(m>=(isFinalStage()?1:z.cfg.minionCap))break;   // 终章机库王同场还有俩，探针只留 1 只
+        spawnZombie(null,'drone');m++;
+      }
+    }
+    return;
+  }
+  if(z.slamSt===2){                                   // 门开着：站着挨打
+    z.slamT-=dt;
+    if(z.slamT<=0){z.slamSt=0;z.atkT=(z.phase===2?z.cfg.atkT2:z.cfg.atkT)*(0.9+Math.random()*0.25);}
+    return;
+  }
+  z.atkT-=dt;
+  if(z.atkT>0)return;
+  z.slamSt=1;z.slamT=gWarn(z,z.cfg.warn);sfx('spitwarn');
+}
+/* 关 15 末日总王：把前面三章的招牌招式串成一整套连击，三式按 ovSeq 轮换——
+   一式骨锤连砸（照搬骨锤王／活塞王那套举→砸→卡地挨打）、二式灭世横扫（照搬长臂王／钻头臂王）、
+   三式末日火柱（照搬火柱王那行 addGt，地面自己会先发红，不必再造第二阶段）。
+   关键：正在进行中的招式交回原函数收尾，只在 slamSt／swpSt 为真时才进去，
+   原函数的 idle 分支就永远不会跑——两套 atkT 计时器同一时刻只有一套在走，不会互相抢发招。
+   破绽窗口都由原函数开（砸完 ×3、扫完 ×2、吐完 ×2），亮的都是冠心那颗红宝石。 */
+function mechOverlord(z,dt){
+  if(z.slamSt){mechHammer(z,dt);return;}
+  if(z.swpSt){mechDrag(z,dt);return;}
+  z.atkT-=dt;
+  if(z.atkT>0)return;
+  /* 狂暴连砸欠下来的第二锤：上一锤卡地结束时红路占满预算，raiseHammer 没举手，
+     这一下记在 slamLeft 里没清掉。换招之前先把它补上——补锤不算换式，ovSeq 不动，
+     补完下一轮照旧从横扫接上。少了这段，欠的这锤会被下面的轮换直接跳过。 */
+  if(z.slamLeft>0){
+    if(!raiseHammer(z)){z.atkT=0.3;return;}
+    z.slamLeft--;return;
+  }
+  const nx=(z.ovSeq+1)%3;
+  if(nx===0){                                     // 一式 末日骨锤：狂暴＝连砸两下
+    /* 红路占满预算时举不了锤，0.3 秒后再来问一次；这一下不算它换招，轮换序号留着下次照砸 */
+    if(!raiseHammer(z)){z.atkT=0.3;return;}
+    z.ovSeq=0;z.slamLeft=z.phase===2?1:0;return;
+  }
+  if(nx===1){                                     // 二式 灭世横扫：整条路都不能站，只封 2 条
+    z.ovSeq=1;z.swpSt=1;
+    const w=gWarn(z,z.cfg.warn);
+    addGt({kind:'sweep',lanes:bossTargetLanes(2),x:GW+50,w:54,warn:w,dur:0.85});
+    z.swpT=w+0.85+0.3;sfx('bossshoot');return;
+  }
+  z.ovSeq=2;                                      // 三式 末日火柱：狂暴＝一次烧两条路，柱更高
+  z.atkT=(z.phase===2?z.cfg.atkT2:z.cfg.atkT)*(0.9+Math.random()*0.25);
+  for(const ln of bossTargetLanes(z.phase===2?2:1))
+    addGt({kind:'pillar',lane:ln,x:Math.max(XMIN+40,Math.min(GW-80,G.hero.x)),warn:gWarn(z,z.cfg.warn),dur:z.phase===2?0.85:0.6,tall:z.phase===2?1:0});
+  openWeak(z,2,1.8);
+  sfx('bossshoot');
+}
 function stepBossMech(z,dt){
-  if(z.cfg.mech==='furnace')mechFurnace(z,dt);
-  else if(z.cfg.mech==='hammer')mechHammer(z,dt);
-  else if(z.cfg.mech==='drag')mechDrag(z,dt);
+  if(z.cfg.mech==='overlord')mechOverlord(z,dt);                 // 关 15：三式连击，见 mechOverlord
+  else if(z.cfg.mech==='furnace')mechFurnace(z,dt);
+  else if(z.cfg.mech==='hammer'||z.cfg.mech==='piston')mechHammer(z,dt);  // 活塞重锤王＝锤王举/砸原样复用，去掉单脚蹦（见 mechHammer 内部分岔）
+  else if(z.cfg.mech==='drag'||z.cfg.mech==='drill')mechDrag(z,dt);       // 钻头臂王＝长臂王的贴地横扫原样复用，只换皮
+  else if(z.cfg.mech==='hangar')mechHangar(z,dt);
 }
 /* ---------- 终章：三只大王同场，接力当主攻；三只总血过半一起狂暴 ---------- */
 function pickAura(cur){
@@ -2570,6 +4610,10 @@ function setAura(next,cur){
   if(cur)cur.aura=0;
   next.aura=1;next.auraHp=next.hp;G.auraT=12;
   if(!cur||!isFinalStage())return;
+  /* 接力交接这 1.5 秒是刻意给的「喘息」：在飞的子弹清掉（ebs），刚冒烟还没射出的那发也一并撤销（tele）。
+     小朋友这会儿该盯的是新主攻头顶那颗星＋听报名，不是旧主攻的烟；
+     停手期内三只的 fireT 都不走（act 为假），交接后由新主攻自己重新倒计时、重新冒烟，不存在补射。
+     单只大王的关卡走不到这里（isFinalStage 拦掉），它的预警照旧兑现，见 stepBoss。 */
   G.ebs.length=0;G.bossHold=1.5;                                 // 轮换那一下全场停手 1.5 秒：看得清是谁、听得清是谁
   for(const z of G.zs)if(z.boss)z.tele=0;
   banner('⭐ 现在是 '+next.cfg.name+' 主攻！',2.8);sfx('coin');
@@ -2585,8 +4629,8 @@ function stepFinale(dt){
   if(!G.finRage&&hp<=G.finTotal/2){                              // 三只总血过半＝合体狂暴：三招连着来
     G.finRage=true;
     for(const z of bs){z.phase=2;z.fireT=Math.min(z.fireT,1.0);z.atkT=Math.min(z.atkT,1.2);}
-    banner('🔥 三王合体狂暴啦！',3.2);sfx('boss');
-    sayWhenFree(['rage1','boss_finale','rage2'],()=>mode==='play'||mode==='pause');
+    banner('🔥 '+G.bossName+'狂暴啦！',3.2);sfx('boss');   // 第二章＝三王合体、第三章＝三机王合体，名字跟着本关大王走
+    sayWhenFree(['rage1',bossVoiceKey(bossCfg().name),'rage2'],()=>mode==='play'||mode==='pause');
   }
   if(!cur){const n=pickAura(null);if(n)setAura(n,null);}          // 主攻刚被打倒：安静交棒，不重复播报
   else if(G.auraT<=0||cur.auraHp-cur.hp>=5){                      // 12 秒到点，或它已被打掉 5 血＝换人
@@ -2603,7 +4647,8 @@ function stepBoss(z,dt){
   z.x=Math.max(z.x,z.minX);                    // 靠右站位，贴脸时子弹也有反应时间（终章三只各停各的线）
   if(z.weakT>0)z.weakT-=dt;                    // 破绽窗口到点自己关上
   /* 终章：只有头顶星星的「主攻」会出手；交接那 1.5 秒全场停手。
-     已经亮起的预警（tele）照旧兑现——小朋友看见烟了就一定要等到那发子弹，不能骗他。 */
+     已经亮起的预警（tele）照旧兑现——小朋友看见烟了就一定要等到那发子弹，不能骗他。
+     唯一例外是三王接力交接：setAura 会把没兑现的预警连同子弹一起清掉当作喘息（那里写明了理由）。 */
   const act=!isFinalStage()||(z.aura&&G.bossHold<=0);
   /* E：血量过半 → 狂暴（射得更快、路数更多） */
   if(z.phase===1&&z.hp<=z.hpMax/2){
@@ -2656,13 +4701,14 @@ function stepBoss(z,dt){
 }
 
 /* ---------- 打击 / 受伤 ---------- */
-/* 火焰丧尸的死法：原地炸一小团火，只烧「同一条路 + 贴身范围」的主角。
+/* 会炸兵种的死法（火焰丧尸／电焊兵共用）：原地炸一小团，只烧「同一条路 + 贴身范围」的主角。
    教的那件事：别等它走到脸上了才打死它——趁它还在右边就解决。 */
 function fireBoom(z){
-  const R=KIND.fire.boom;
-  G.ps.push({kind:'ring',x:z.x,y:z.y,vx:0,vy:0,life:0.22,t:0,c:'#ff8a65',r:8,gr:150,g:0});
-  for(let i=0;i<10;i++){                              // 贴地摊开的橙红火舌＋往上蹿的火星，不用白光
-    const c=i%3===0?'#ffca28':(i%3===1?'#ff7043':'#ff5722');
+  const R=KIND[z.type].boom;
+  const wl=z.type==='weld';                           // 电焊兵炸的是一簇白蓝焊花，火焰丧尸炸的是橙红火
+  G.ps.push({kind:'ring',x:z.x,y:z.y,vx:0,vy:0,life:0.22,t:0,c:wl?'#b3e5fc':'#ff8a65',r:8,gr:150,g:0});
+  for(let i=0;i<10;i++){                              // 贴地摊开的火舌＋往上蹿的火星
+    const c=wl?(i%3===0?'#ffffff':(i%3===1?'#ffe082':'#81d4fa')):(i%3===0?'#ffca28':(i%3===1?'#ff7043':'#ff5722'));
     G.ps.push({kind:'smoke',x:z.x+(Math.random()-0.5)*R*0.7,y:z.y+(Math.random()-0.5)*10,
       vx:(Math.random()-0.5)*50,vy:-50-Math.random()*80,life:0.28+Math.random()*0.2,t:0,
       c,r:4+Math.random()*5,gr:14,g:0});
@@ -2694,8 +4740,10 @@ function hitZ(z,bx,by,dmg,quiet){
   }
   z.die=z.boss?1.6:0.34; z.dieT=0;   // BOSS 倒下慢一点，庆祝动画才看得清
   /* 掉金币（弹出后飞进 HUD 金币盘）：普通＋1、厚血兵＋2、第一章 BOSS＋15、第二章大王＋20、终章每倒一只＋15 */
-  coinBurst(z,z.boss?(curStage().ch===2&&!isFinalStage()?20:15):(z.hpMax>1?2:1));
-  if(!z.boss&&z.type==='fire')fireBoom(z);   // 火焰丧尸：死的时候「啪」炸一团火，站得近就烧到（所以趁它在右边打死）
+  /* 赏金：大王 15~20；第四章的大王降级体按 KIND.coin（4~6）；其余照旧（血厚 2 枚、血薄 1 枚） */
+  coinBurst(z,z.boss?(curStage().ch>=2&&!isFinalStage()?20:15)
+            :((KIND[z.type]&&KIND[z.type].coin)||(z.hpMax>1?2:1)));
+  if(!z.boss&&KIND[z.type]&&KIND[z.type].boom)fireBoom(z);   // 会炸的兵种（火焰丧尸/电焊兵）：死时炸一团，站得近就打到（所以趁它在右边打死）
   const k=z.s/52;
   if(!quiet)puffFX(G.ps,z.x,z.y-z.s*0.5,k);   // 噗！一团烟
   G.kills++;
@@ -2752,7 +4800,7 @@ function stepCoins(dt){
 /* ---------- 武器机制：每种武器生成什么样的子弹、命中后做什么 ---------- */
 let tripleAlt=0,boomerAlt=0;                   // 中间路的交替标志：二连飞镖/回旋镖轮流选上、下相邻路
 function fireWeapon(w,bx,by,ln){
-  const h=G.hero;h.cd=w.rate;                   // 发射节奏由当前武器决定
+  const h=G.hero;h.cd=effRate(w);                // 发射节奏由当前武器决定（买了强化就更快，见 effRate）
   if(w.id==='laser'){fireLaser(w.dmg);return;}  // 超级激光：无弹体，从枪口沿本路一道贯穿光束（本路全体各 dmg 伤）
   if(w.multi){                                  // 二连飞镖：本路＋一条相邻路各一颗（边路只有一条相邻路可配，中间路用交替标志轮换）
     tripleAlt=1-tripleAlt;
@@ -2932,18 +4980,25 @@ function stepFlags(dt){
 }
 
 /* ---------- 关卡流程 ---------- */
+/* 打赢一格 → 藏宝图解锁下一格（第一章＝打完本格 BOSS；第四章前三格没有 BOSS，由 stageClear 补） */
+function unlockNextMapSlot(){
+  const bi=MAP_ORDER.indexOf(curBG);             // 打败哪块战场，就解锁地图下一块
+  if(bi>=0&&bi+2>mapN){mapN=Math.min(MAP_ORDER.length,bi+2);LS.set('moday_map',String(mapN));}
+}
 function stageClear(){
   if(G.score>best){best=G.score;LS.set('moday_best',String(best));}
-  const wasBoss=isChapterEnd();                    // 打完这一章的最后一战（第一章＝关3大王，第二章＝终章合体）
+  const wasBoss=isChapterEnd();                    // 打完本格的最后一战（第一章＝关3大王；二、三章＝每格自己的大王）
   if(!wasBoss){
     sfx('win');
-    /* 普通关打赢：不弹任何页面，大字横幅＋语音，约 2 秒后自动进下一关（同一场景） */
+    /* 同格内的普通关打赢（第一章关 1→2→3、第四章关 12→13→14 会走到这儿）：不弹任何页面，大字横幅＋语音，约 2 秒后自动进下一关 */
     mode='inter';interT=2.2;
     G.zs.length=0;G.bls.length=0;G.ps.length=0;G.ebs.length=0;    // 清场，过渡画面干净
     G.gts.length=0;
     banner('🎉 第 '+G.stage+' 关打赢啦！',2.6);   // 2.2 秒后就进下一关，字幕跟着收尾即可（语音不会被下一句顶掉）
     const c1=numClips(G.stage),c2=numClips(G.stage+1);
     say(c1&&c2?['di'].concat(c1,['guanwin'],c2,['guan']):['next']);
+    /* 第四章一格一关：串关的同时要把藏宝图跟着推进一格，否则打完 12，地图上 13 还锁着点不进去 */
+    if(curStage().ch>=4)unlockNextMapSlot();
     return;
   }
   celebrate();                                     // 打完 BOSS：定格＋烟花＋面板浮现
@@ -2952,9 +5007,10 @@ function stageClear(){
    第一章打完把武器库的货全买得起，再送一把已有武器等于没送，
    所以宝藏给的是库里买不到的防护盾；只开一次，moday_gift 落盘后再打第一章不重复发。 */
 function openChapterGift(){
-  /* STAGES 里第一章三关没写 ch（只有第二章写 ch:2），判断口径和 isChapterEnd 的 d.ch!==2 保持一致；
-     celebrate 只在章节最后一战触发，所以这里＝第一章打完 */
-  if(giftN||curStage().ch===2)return false;
+  /* STAGES 里第一章三关没写 ch（第二、三章写 ch:2 / ch:3）：宝藏只属于第一章那 40 金币＋1 面盾。
+     celebrate 现在每格大王倒下都触发（一格一关），这里必须自己按 ch 挡住，
+     否则关 4、关 5……每打赢一格都开一次箱。第一章只有关 3 有大王，所以这里＝第一章打完。 */
+  if(giftN||curStage().ch>=2)return false;
   giftN=1;LS.set('moday_gift','1');
   OWN.oc.shield=onceCnt('shield')+GIFT_SHIELD;saveOwn();
   const bz=G.zs.find(z=>z.boss);                 // 大王此刻还在仰倒动画里，金币就从它身上弹出
@@ -2979,32 +5035,54 @@ function celebrate(){
   }
   stopBgm();sfx('win');
   G.hero.inv=0;                                  // 防止定格时主角正处在受伤闪烁的"灭"帧
-  const bi=MAP_ORDER.indexOf(curBG);             // 打败哪块战场的 BOSS，就解锁地图下一块
-  if(bi>=0&&bi+2>mapN){mapN=Math.min(MAP_ORDER.length,bi+2);LS.set('moday_map',String(mapN));}
+  unlockNextMapSlot();
   giftNow=openChapterGift();                      // 第一章的大王倒下＝当场开宝藏（只开这一次）
+  /* 衣服层发放（4.12）：只有篇章的最后一战才发 lv——一格一关（FR-23）后关 4/5/6、8/9/10 的
+     大王也会走到这里，照关卡 ch 发会把 lv2 在篇章第一格（关 4）就发出去。
+     lv N＝打完第 N 篇章：关 3→lv1、关 7 终章→lv2、关 11 终章→lv3、关 15 末日总王→lv4；
+     只记录不自动穿上，回首页自由换。哪些是篇章末由 isChapterLast() 按表判定。 */
+  outfitNew='';
+  const sd=curStage();
+  if(isChapterLast()){
+    const oLv=sd.ch||1;
+    if(unlockOutfit(oLv)){
+      for(const k in OUTFITS)if(OUTFITS[k].lv===oLv)outfitNew=k;
+      renderFits();
+    }
+  }
   confetti(70);
   const bname=G.bossName||'大BOSS';              // 终章是三王合体，不能用 find(z=>z.boss) 只认一只
   banner('🎉 恭喜你打败了 '+bname+'！',5.5);   // 定格画面没有打斗，字幕陪着语音读完（实测 4.2 秒，慢引擎更久）
   winVoiceDone=false;
   /* 读完置位，stepWin 看到才弹结算面板：语音引擎有快有慢，猜秒数一定会被打断 */
   say(['congrats',bossVoiceKey(bname)],()=>{winVoiceDone=true});
-  /* 第二章全通关：恭喜那句读完再补一句"全部打完"，横幅不抢「恭喜你打败了」的字幕 */
-  if(isFinalStage())sayWhenFree(['allok'],()=>mode==='win');
+  /* 章终全通关：恭喜那句读完再补一句"全部打完"，横幅不抢「恭喜你打败了」的字幕；
+     第二、三章终章各念各的（'丧尸山谷全部打完' / '机核深渊全部打完'），第四篇章念'世界尽头全部打完' */
+  if(isFinalStage()||isGameEnd())
+    sayWhenFree([isGameEnd()?'allok4':curStage().ch>=3?'allok3':'allok'],()=>mode==='win');
 }
 /* 烟花继续放，结算面板浮现：回首页 或 进下一关 */
 function showWinPanel(){
   const ni=BG_ORDER[(BG_ORDER.indexOf(curBG)+1)%BG_ORDER.length];
   $('winSub').textContent='分数 '+G.score+' · 还剩 '+G.hearts+' 颗心'+(G.bonus>0?'、'+G.bonus+' 颗星':'')+' · 最高分 '+best;
   /* 刚开过宝藏就补一行战利品，再撒一拨彩花；数字跟着常量走，以后改奖励不会说错 */
-  $('winGift').textContent='🎁 宝藏开箱：🪙×'+GIFT_COIN+' ＋ 🛡 防护盾×'+GIFT_SHIELD;
-  $('winGift').classList.toggle('show',giftNow);
-  if(giftNow)confetti(60);
-  /* 终章打完＝整个游戏通关，没有"下一块战场"可去，按钮回藏宝图 */
-  $('btnWinNext').textContent=isFinalStage()?'🏆 全通关啦 · 回藏宝图'
-    :(curStage().ch===2?'🗺 回藏宝图 · 点下一块':'➡ 进下一关 · '+BG_NAME[ni]);
+  const loot=[];
+  if(giftNow)loot.push('🎁 宝藏开箱：🪙×'+GIFT_COIN+' ＋ 🛡 防护盾×'+GIFT_SHIELD);
+  if(outfitNew)loot.push('👕 新衣服解锁：'+OUTFITS[outfitNew].name);
+  $('winGift').textContent=loot.join('　');
+  $('winGift').classList.toggle('show',loot.length>0);
+  if(loot.length>0)confetti(60);
+  /* 二~四章一格一关：每打赢一格都是"回藏宝图点下一块"；只有最后一格（关 15 末日总王）才说"全通关"——
+     前面每一格后面都还有关，说全通关会把小朋友劝退 */
+  $('btnWinNext').textContent=isGameEnd()?'🏆 全通关啦 · 回藏宝图'
+    :(curStage().ch>=2?'🗺 回藏宝图 · 点下一块':'➡ 进下一关 · '+BG_NAME[ni]);
   $('scrWin').classList.add('show');
   /* 开箱那句先念，再接「选一个吧」：say 会顶掉当前语音，所以一次把两句排进同一条队列 */
-  say(giftNow?['gift',isFinalStage()?'choosewin':'choose']:[isFinalStage()?'choosewin':'choose']);
+  const vs=[];
+  if(giftNow)vs.push('gift');
+  if(outfitNew)vs.push('unlock_'+'abcd'[OUTFITS[outfitNew].lv-1]);
+  vs.push(curStage().ch>=2?(isGameEnd()?'chooseend':'choosewin'):'choose');
+  say(vs);
 }
 function hideWinPanel(){$('scrWin').classList.remove('show');winPanelOn=false;}
 /* 定格庆祝期间：BOSS 仰倒冒烟、烟花先密后疏一直放、彩花飘，恭喜语音读完后面板浮现 */
@@ -3252,16 +5330,30 @@ function drawZombie(z){
     ctx.scale(1+wob,1-wob);
   }
   if(z.leave)ctx.scale(-1,1);                   // 撤退中：水平镜像＝真的转身朝右走，而不是倒着滑
-  if(z.boss){                                   // 第二章三只大王＝方块丧尸风；第一章没有 mech，照旧画圆角绿大王
-    const bzk=BOSS_ZK[z.cfg.mech];
-    if(bzk)drawBlockBoss(ctx,0,0,z.s,bzk,T,z.ph);
-    else drawZombieV(ctx,0,0,z.s,BOSS_SK[curBG]||BOSS_SK.forest,T,z.ph);
+  if(z.boss){                                   // 第二/三章大王各有画法；第一章没有 mech，照旧画圆角绿大王
+    const rzk=RBOSS_SK[z.cfg.mech];
+    if(rzk)drawRobotBoss(ctx,0,0,z.s,rzk,T,z.ph);                       // 第三章：方块机器人大王（自带地面影子）
+    else{
+      const bzk=BOSS_ZK[z.cfg.mech];
+      if(bzk)drawBlockBoss(ctx,0,0,z.s,bzk,T,z.ph);                     // 第二章：方块丧尸风大王
+      else drawZombieV(ctx,0,0,z.s,BOSS_SK[curBG]||BOSS_SK.forest,T,z.ph);
+    }
   }
-  else if(KIND_SK[z.type])drawBlockZombie(ctx,0,0,z.s,KIND_SK[z.type],T,z.ph);  // 第二章：直角方块丧尸，五种各有记号
-  else drawZombieV(ctx,0,0,z.s,ZK,T,z.ph);                                     // 第一章：圆角绿僵尸，一字不变
+  else if(KIND[z.type]&&KIND[z.type].src){        // 第四章：大王降级体，照搬它当大王时的画法
+    const b=KIND[z.type].src;
+    if(RBOSS_SK[b])drawRobotBoss(ctx,0,0,z.s,RBOSS_SK[b],T,z.ph);
+    else if(BOSS_ZK[b])drawBlockBoss(ctx,0,0,z.s,BOSS_ZK[b],T,z.ph);
+    else drawZombieV(ctx,0,0,z.s,BOSS_SK[b],T,z.ph);
+  }
+  else if(KIND_SK[z.type])drawBlockZombie(ctx,0,0,z.s,KIND_SK[z.type],T,z.ph);   // 第二章：直角方块丧尸，五种各有记号
+  else if(ROBOT_SK[z.type])drawRobotUnit(ctx,0,0,z.s,ROBOT_SK[z.type],T,z.ph);   // 第三章：四种机器人（探针自带悬空）
+  else drawZombieV(ctx,0,0,z.s,ZK,T,z.ph);                                       // 第一章：圆角绿僵尸，一字不变
+  /* 罩子（冰罩／吐弹红罩）的顶高：写死的 0.98 只够第一章圆角僵尸（头 56u），
+     大王降级体背着炉子、举着骨棒，剪影能到 72u，得按 KIND.frzH 单独抬。 */
+  const fh=(KIND[z.type]&&KIND[z.type].frzH)||0.98;
   if(z.frz>0&&!z.die){                          // 被冻住：罩一层冰蓝＋一片雪花
     ctx.save();ctx.globalAlpha=.5;ctx.fillStyle='#81d4fa';
-    rrect(ctx,-z.s*0.42,-z.s*0.98,z.s*0.84,z.s*1.02,8);ctx.fill();
+    rrect(ctx,-z.s*0.42,-z.s*fh,z.s*0.84,z.s*(fh+0.04),8);ctx.fill();
     ctx.globalAlpha=.95;ctx.font='900 '+Math.round(z.s*0.36)+'px system-ui,sans-serif';
     ctx.textAlign='center';ctx.fillText('❄',0,-z.s*0.32);
     ctx.restore();
@@ -3273,7 +5365,7 @@ function drawZombie(z){
     const p=Math.max(0,Math.min(1,1-z.spitW/wn)), u=z.s/58;
     ctx.save();
     ctx.globalAlpha=.14+p*.20;ctx.fillStyle='#ff7043';
-    rrect(ctx,-z.s*0.42,-z.s*0.98,z.s*0.84,z.s*1.02,8);ctx.fill();
+    rrect(ctx,-z.s*0.42,-z.s*fh,z.s*0.84,z.s*(fh+0.04),8);ctx.fill();
     ctx.globalAlpha=.9;ctx.fillStyle=p>0.55?'#ffee58':'#ffab40';
     ctx.beginPath();ctx.arc(-13*u,-42*u,(2.2+p*4.6)*u,0,7);ctx.fill();
     ctx.restore();
@@ -3308,7 +5400,7 @@ function drawBossBar(){
 function drawHero(){
   const h=G.hero;
   if(!(h.inv>0&&Math.floor(h.inv*12)%2===0)){   // 受伤闪烁只闪小人本身
-    const c=CHARS[curChar];
+    const c=curLook();
     c.draw(ctx,h.x,h.y,heroS(),c.sk,mode==='win'?freezeT:T,h.fire);   // 庆祝定格：主角姿势也停住
   }
   /* 盾是立在身前的一件实物，不跟着小人一块儿闪：
@@ -3467,7 +5559,32 @@ const FIELD={
         haze:'rgba(210,240,255,.18)'},
   rift:{top:'rgba(40,8,40,0)',mid:'rgba(48,10,44,.24)',low:'rgba(26,4,26,.46)',
         strip:'rgba(220,150,255,.09)',line:'rgba(235,170,255,.32)',glow:'rgba(255,110,160,.15)',
-        haze:'rgba(215,170,230,.16)'}
+        haze:'rgba(215,170,230,.16)'},
+  junk:{top:'rgba(10,14,26,0)',mid:'rgba(14,20,34,.22)',low:'rgba(8,12,22,.42)',
+        strip:'rgba(150,240,255,.09)',line:'rgba(160,240,255,.32)',glow:'rgba(95,240,255,.14)',
+        haze:'rgba(170,215,240,.15)'},
+  neon:{top:'rgba(18,22,38,0)',mid:'rgba(26,32,54,.22)',low:'rgba(14,18,34,.42)',
+        strip:'rgba(255,150,240,.09)',line:'rgba(255,160,240,.32)',glow:'rgba(255,95,215,.13)',
+        haze:'rgba(210,190,240,.15)'},
+  dome:{top:'rgba(58,30,16,0)',mid:'rgba(74,42,24,.22)',low:'rgba(40,22,12,.42)',
+        strip:'rgba(255,200,150,.09)',line:'rgba(255,190,130,.32)',glow:'rgba(255,138,60,.15)',
+        haze:'rgba(255,210,170,.16)'},
+  core:{top:'rgba(10,16,22,0)',mid:'rgba(16,26,34,.22)',low:'rgba(6,12,18,.44)',
+        strip:'rgba(160,255,205,.08)',line:'rgba(170,255,215,.30)',glow:'rgba(105,240,174,.13)',
+        haze:'rgba(190,230,240,.15)'},
+  /* 第四章四块路面：同样跟着各自场景的色温走（废墟绿 / 干沙橙 / 机甲紫 / 王座血红） */
+  ruin:{top:'rgba(34,20,32,0)',mid:'rgba(48,30,38,.24)',low:'rgba(24,14,22,.44)',
+        strip:'rgba(200,255,150,.09)',line:'rgba(180,235,130,.34)',glow:'rgba(139,212,80,.15)',
+        haze:'rgba(255,190,140,.16)'},
+  giant:{top:'rgba(44,34,22,0)',mid:'rgba(62,48,32,.22)',low:'rgba(32,24,16,.44)',
+        strip:'rgba(240,226,190,.10)',line:'rgba(245,232,200,.34)',glow:'rgba(255,106,44,.14)',
+        haze:'rgba(238,214,170,.18)'},
+  wreck:{top:'rgba(10,16,28,0)',mid:'rgba(16,24,42,.24)',low:'rgba(6,10,20,.46)',
+        strip:'rgba(200,178,255,.09)',line:'rgba(190,160,255,.34)',glow:'rgba(180,124,255,.15)',
+        haze:'rgba(170,200,240,.14)'},
+  throne:{top:'rgba(28,8,14,0)',mid:'rgba(42,12,22,.26)',low:'rgba(20,4,10,.48)',
+        strip:'rgba(255,170,150,.09)',line:'rgba(255,120,150,.36)',glow:'rgba(255,47,94,.16)',
+        haze:'rgba(240,170,140,.16)'}
 };
 function drawField(){
   const f=FIELD[curBG]||FIELD.forest;
@@ -3755,34 +5872,50 @@ function render(){
       ctx.restore();
     }
   }
-  for(const b of G.ebs){                        // 空中飞来的东西：大王弹＝橙红大星；小兵吐的按弹种各画各的、都小一圈
+  for(const b of G.ebs){                        // 空中飞来的东西：大王弹＝橙红大星；小兵吐的按弹种各画各的
     if(!b.shot){
       ctx.save();ctx.globalAlpha=.35;
       star(ctx,b.x+15,b.y,7,'#ff8a65',b.rot);
       ctx.restore();
       star(ctx,b.x,b.y,11,'#ff5722',b.rot);
-    }else if(b.shot==='fireball'){              // 火焰丧尸的小火球：橙核黄心，尾巴一跳一跳
-      const f=Math.sin(T*16+b.x*0.06)*1.6;
-      ctx.save();ctx.globalAlpha=.45;ctx.fillStyle='#ff8a65';
-      ctx.beginPath();ctx.arc(b.x+7,b.y,5.6+f*0.3,0,7);ctx.fill();ctx.restore();
-      ctx.fillStyle='#ff7043';ctx.beginPath();ctx.arc(b.x,b.y,7,0,7);ctx.fill();
-      ctx.fillStyle='#ffd54f';ctx.beginPath();ctx.arc(b.x-1.4,b.y-1.2,3.6,0,7);ctx.fill();
-    }else if(b.shot==='bone'){                  // 破洞丧尸扔的骨头：白条条两头圆球，一边飞一边转
-      ctx.save();ctx.translate(b.x,b.y);ctx.rotate(b.rot);
-      ctx.fillStyle='#eceff1';rrect(ctx,-6,-1.9,12,3.8,1.9);ctx.fill();
-      [[-6,-2.6],[-6,2.6],[6,-2.6],[6,2.6]].forEach(p=>{ctx.beginPath();ctx.arc(p[0],p[1],2.2,0,7);ctx.fill();});
-      ctx.fillStyle='#b0bec5';ctx.fillRect(-1.2,-1.4,2.4,2.8);
-      ctx.restore();
-    }else if(b.shot==='icicle'){                // 冰封丧尸的冰棱：尖头朝左的淡蓝锥子
-      ctx.fillStyle='#81d4fa';
-      ctx.beginPath();ctx.moveTo(b.x-9,b.y);ctx.lineTo(b.x+4,b.y-4.6);ctx.lineTo(b.x+4,b.y+4.6);ctx.closePath();ctx.fill();
-      ctx.fillStyle='#e1f5fe';ctx.fillRect(b.x+2,b.y-3.4,4.2,6.8);
-    }else{                                      // 第一章僵尸的绿口水：晃悠的黏液滴
-      ctx.save();ctx.globalAlpha=.45;ctx.fillStyle='#aed581';
-      ctx.beginPath();ctx.arc(b.x+6,b.y,5.2,0,7);ctx.fill();ctx.restore();
-      ctx.fillStyle='#7cb342';ctx.beginPath();ctx.ellipse(b.x,b.y,6.6,5,0,0,7);ctx.fill();
-      ctx.fillStyle='#dcedc8';ctx.beginPath();ctx.arc(b.x-1.8,b.y-1.4,1.7,0,7);ctx.fill();
+      continue;
     }
+    /* 焕宸：「12、13、14 关敌人发射出来的子弹太小、不太清楚，敌人题型较大」。
+       做法：把弹心平移到原点再按体型缩放（k 见 bulletK），四种弹全部改用局部坐标绘制，
+       并统一加「同色柔光底 + 一圈亮色描边」——小兵弹最远只放大到 1.6 倍，BOSS 的大星弹不动。
+       只动像素，命中判定/弹速/伤害都不在这里，所以放大只会更好认，不会变相更难躲。 */
+    const k=b.k||1;
+    ctx.save();ctx.translate(b.x,b.y);if(k!==1)ctx.scale(k,k);
+    ctx.lineWidth=2.2;
+    if(b.shot==='fireball'){                    // 火焰丧尸的小火球：橙核黄心，尾巴一跳一跳
+      const f=Math.sin(T*16+b.x*0.06)*1.6;
+      ctx.globalAlpha=.5;ctx.fillStyle='#ff8a65';
+      ctx.beginPath();ctx.arc(8,f*0.3,6.4+f*0.3,0,7);ctx.fill();
+      ctx.globalAlpha=1;ctx.fillStyle='#ff7043';ctx.strokeStyle='#fff176';
+      ctx.beginPath();ctx.arc(0,0,7.4,0,7);ctx.fill();ctx.stroke();
+      ctx.fillStyle='#ffe082';ctx.beginPath();ctx.arc(-1.6,-1.4,3.8,0,7);ctx.fill();
+    }else if(b.shot==='bone'){                  // 破洞丧尸扔的骨头：白条条两头圆球，一边飞一边转（深灰描边才衬得出来）
+      ctx.globalAlpha=.4;ctx.fillStyle='#b0bec5';
+      ctx.beginPath();ctx.arc(0,0,10.5,0,7);ctx.fill();
+      ctx.globalAlpha=1;ctx.rotate(b.rot);
+      ctx.fillStyle='#f5f7f8';ctx.strokeStyle='#37474f';ctx.lineWidth=1.8;
+      rrect(ctx,-7.4,-2.4,14.8,4.8,2.4);ctx.fill();ctx.stroke();
+      [[-7.4,-3],[-7.4,3],[7.4,-3],[7.4,3]].forEach(p=>{ctx.beginPath();ctx.arc(p[0],p[1],2.7,0,7);ctx.fill();ctx.stroke();});
+      ctx.fillStyle='#90a4ae';ctx.fillRect(-1.4,-1.6,2.8,3.2);
+    }else if(b.shot==='icicle'){                // 冰封丧尸的冰棱：尖头朝左的淡蓝锥子
+      ctx.globalAlpha=.42;ctx.fillStyle='#4fc3f7';
+      ctx.beginPath();ctx.arc(0,0,10,0,7);ctx.fill();
+      ctx.globalAlpha=1;ctx.fillStyle='#4fc3f7';ctx.strokeStyle='#ffffff';
+      ctx.beginPath();ctx.moveTo(-10.5,0);ctx.lineTo(5,-6);ctx.lineTo(5,6);ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.fillStyle='#e1f5fe';ctx.fillRect(2.4,-4.4,5,8.8);
+    }else{                                      // 僵尸的绿口水：晃悠的黏液滴
+      ctx.globalAlpha=.5;ctx.fillStyle='#aed581';
+      ctx.beginPath();ctx.arc(7,0,6,0,7);ctx.fill();
+      ctx.globalAlpha=1;ctx.fillStyle='#64dd17';ctx.strokeStyle='#ffffff';
+      ctx.beginPath();ctx.ellipse(0,0,7.4,5.6,0,0,7);ctx.fill();ctx.stroke();
+      ctx.fillStyle='#f1f8e9';ctx.beginPath();ctx.arc(-2,-1.6,2,0,7);ctx.fill();
+    }
+    ctx.restore();
   }
   for(const b of G.bolts){                      // 雷电链：亮黄折线，中点抖一下更像闪电
     ctx.save();ctx.globalAlpha=Math.max(0,Math.min(1,b.t/0.16));
@@ -3845,8 +5978,32 @@ function drawPreview(x,ch){
   }
   x.fillStyle='#14382a';x.fillRect(0,198,PW,PH-198);
   x.fillStyle='#1d4c37';x.fillRect(0,198,PW,4);
-  const c=CHARS[ch];
+  const c=curLook(ch);
   c.draw(x,PW/2,208,124,c.sk,T,0);
+}
+/* 衣服条渲染（4.12）：每件衣服一枚 chip，静态立绘冻结在 t=0；
+   未解锁＝置灰＋🔒＋「打完第N篇章解锁」。整行 dim＝当前选的是爸爸（衣服只给焕宸穿） */
+function renderFits(){
+  const row=$('fitRow');
+  row.innerHTML='<span class="tag">👕 衣服 · 焕宸</span>';
+  for(const id in OUTFITS){
+    const o=OUTFITS[id],unl=outfitUnl.has(o.lv);
+    const d=document.createElement('div');
+    d.className='fit'+(unl&&id===curOutfit?' sel':'')+(unl?'':' lock');
+    d.dataset.o=id;
+    const cv=document.createElement('canvas');
+    cv.width=104;cv.height=120;
+    const x=cv.getContext('2d');
+    x.setTransform(2,0,0,2,0,0);
+    o.draw(x,26,57,54,o.sk,0,0);
+    d.appendChild(cv);
+    const fn=document.createElement('div');
+    fn.className='fn';
+    fn.textContent=unl?o.name:'打完第'+'一二三四'[o.lv-1]+'篇章解锁';
+    d.appendChild(fn);
+    row.appendChild(d);
+  }
+  row.classList.toggle('dim',curChar!=='thin');
 }
 
 let last=0,hitStop=0;
@@ -3928,11 +6085,10 @@ $('btnStart').onclick=()=>{sfx('click');startRun();};
 $('btnWinHome').onclick=()=>{sfx('click');toMenu();};
 $('btnWinNext').onclick=()=>{                        // 打败BOSS＝去藏宝图下一块战场，新一轮略难点
   sfx('click');
-  /* 终章全通关：回藏宝图（给焕宸的新主角外观奖励以后接在这里） */
-  if(isFinalStage()){hideWinPanel();toMenu();return;}
-  /* 第二章＝藏宝图上一格一关：打完本格大王不自动串关（下一格是地图上的另一块战场，
-     得让小朋友自己点）。回地图前把⭐挪到刚解锁的那一格，指针和"点下一块"说的是同一块。 */
-  if(curStage().ch===2){
+  /* 第二~四章＝藏宝图上一格一关：打完本格大王不自动串关（下一格是地图上的另一块战场，
+     得让小朋友自己点）。回地图前把⭐挪到刚解锁的那一格，指针和"点下一块"说的是同一块。
+     第四篇章终章（关 15）没有下一格可挪（ni 取到最后一格本身），⭐原地不动＝全通关停在终章格。 */
+  if(curStage().ch>=2){
     const ni=MAP_ORDER[Math.min(MAP_ORDER.length-1,MAP_ORDER.indexOf(curBG)+1)];
     if(MAP_ORDER.indexOf(ni)<mapN){pickBG=ni;LS.set('moday_bgcur',pickBG);}
     hideWinPanel();toMenu();return;}
@@ -3959,7 +6115,27 @@ document.querySelectorAll('.chc').forEach(el=>{
     LS.set('moday_char',curChar);
     document.querySelectorAll('.chc').forEach(o=>o.classList.toggle('sel',o===el));
     say([curChar==='fat'?'char_fat':'char_thin']);
+    $('fitRow').classList.toggle('dim',curChar!=='thin');   // 选爸爸→衣服条整行置灰
   };
+});
+/* 衣服条点击（4.12）：锁定→念「还没解锁」；解锁→给焕宸换上并存档。纯外观，不动数值。
+   选爸爸时整行置灰但格子照样能点——衣服是给焕宸换的（换完点焕宸就能看到），
+   不拦这笔操作，只补一句「衣服是给焕宸穿的」，免得小朋友以为按钮坏了。 */
+$('fitRow').addEventListener('click',e=>{
+  const el=e.target.closest('.fit');
+  if(!el)return;
+  const id=el.dataset.o,o=OUTFITS[id];
+  sfx('click');
+  if(!outfitUnl.has(o.lv)){say(['unlock']);return;}
+  if(id!==curOutfit){
+    curOutfit=id;
+    LS.set('moday_outfit_thin',id);
+    renderFits();
+  }
+  const clips=[];
+  if(curChar!=='thin'){clips.push('uf_only');banner('👕 衣服是给焕宸穿的，爸爸还是老样子',3.2);}
+  clips.push(o.voice);
+  say(clips);
 });
 /* 标题/副标题也能点：报游戏名，小朋友点哪儿都有声音。
    长按标题 0.8 秒＝家长诊断面板（短按仍然只是报游戏名） */
@@ -4095,6 +6271,45 @@ function renderArsenal(){
     card.onclick=()=>tapWeapon(w);
     g.appendChild(card);
   }
+  renderUpgrades(g);                            // 下面是「强化武器」区：只列已经买断的切换型武器
+}
+/* ---------- 强化武器区：焕宸「购买以后可以增加这个武器的速度」。
+   每张强化卡 = 一把已拥有的枪 + 3 格等级点 + 价格，点两下成交（和买枪同一套两段式确认）。
+   强化只改射速（effRate），威力/弹速/价格表都不动，满级后卡片变灰不再收钱。 ---------- */
+function renderUpgrades(g){
+  const mine=WEAPONS.filter(w=>w.type==='switch'&&hasWeapon(w.id)&&w.rate);
+  if(!mine.length)return;                       // 一把切换型武器都没有（只有免费默认枪时也要能强化，所以这里几乎不会为空）
+  const sep=document.createElement('div');sep.className='arsep';
+  sep.textContent='⚡ 强化武器（打得更快）';
+  g.appendChild(sep);
+  for(const w of mine){
+    const lvl=upLvl(w.id),full=lvl>=UP_MAX,pr=upPrice(w,lvl);
+    const card=document.createElement('div');
+    card.className='wcard upc'+(full?' full':'');
+    const dots='●'.repeat(lvl)+'○'.repeat(UP_MAX-lvl);
+    card.innerHTML='<span class="wi">⚡</span><span class="wn">'+w.name+' 强化</span>'+
+      '<span class="wvl">'+dots+'</span><span class="wp'+(full?' own':'')+'">'+(full?'✔ 已满级':'🪙 '+pr)+'</span>';
+    if(pendBuy==='up:'+w.id)card.classList.add('pend');
+    card.onclick=()=>tapUpgrade(w);
+    g.appendChild(card);
+  }
+}
+function tapUpgrade(w){
+  const lvl=upLvl(w.id),key='up:'+w.id;
+  if(lvl>=UP_MAX){sfx('click');say(['w_'+w.id]);return;}  // 满级：只报个枪名，不再报价
+  const pr=upPrice(w,lvl);
+  if(pendBuy===key){                            // 再点同一张＝确认强化
+    pendBuy=null;
+    if(coins<pr){sfx('click');say(['huancha'].concat(numClips(pr-coins),['gejb']));renderArsenal();return;}
+    coins-=pr;LS.set('moday_coin',String(coins));
+    OWN.up[w.id]=lvl+1;saveOwn();
+    updateHUD();                                // 战斗中逛店：HUD 金币立刻同步
+    sfx('win');say(['w_'+w.id,'jixu']);
+    renderArsenal();return;
+  }
+  pendBuy=key;sfx('click');                     // 第一次点：语音报价「火箭弹，30个金币，再点一下就买啦」
+  say(['w_'+w.id].concat(numClips(pr),['gejb','zaidian']));
+  renderArsenal();
 }
 function tapWeapon(w){
   if(w.type==='switch'&&hasWeapon(w.id)){      // 已拥有：点一下直接装备并报名
@@ -4218,6 +6433,7 @@ checkOrient();
 pvA=setupPreview('cvA');
 pvB=setupPreview('cvB');
 document.querySelectorAll('.chc').forEach(el=>el.classList.toggle('sel',el.dataset.c===curChar));
+renderFits();                                       // 衣服条首帧（4.12）
 $('uiBest').textContent=best;
 $('uiMenuCoin').textContent=coins;
 syncSound();

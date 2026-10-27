@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>焕宸的新装扮 · 三版挑一版</title>
+<style>
+:root{
+  --night:#171a2b; --night2:#101426; --paper:#222842; --edge:#323a5c;
+  --ink:#eef2ff; --muted:#a6b0cf; --star:#ffd54f; --green:#7d8f6b; --cyan:#7ee8ff; --mag:#ff6ea1; --orange:#ff8a3c;
+  --r:18px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:
+    radial-gradient(1100px 520px at 12% -8%, #23284a 0%, rgba(35,40,74,0) 60%),
+    radial-gradient(900px 480px at 88% 4%, #2a2140 0%, rgba(42,33,64,0) 58%),
+    var(--night);
+  color:var(--ink);
+  font-family:"PingFang SC","HarmonyOS Sans SC","Microsoft YaHei","Noto Sans CJK SC",system-ui,sans-serif;
+  -webkit-text-size-adjust:100%;
+  padding-bottom:150px;
+}
+.wrap{max-width:1400px;margin:0 auto;padding:22px 20px 0}
+header{margin-bottom:18px}
+.eyebrow{
+  display:inline-block;margin:0 0 12px;padding:6px 14px 7px;border-radius:999px;
+  border:1.5px solid rgba(255,213,79,.5);color:var(--star);
+  font-size:15px;font-weight:700;letter-spacing:.06em;background:rgba(255,213,79,.08)
+}
+h1{margin:0;font-size:clamp(30px,4.4vw,54px);line-height:1.12;font-weight:800;letter-spacing:-.01em}
+h1 em{font-style:normal;color:var(--star)}
+.sub{margin:12px 0 0;max-width:70ch;font-size:clamp(16px,1.5vw,20px);line-height:1.65;color:var(--muted)}
+.sub b{color:var(--ink);font-weight:700}
+.refbar{
+  margin-top:20px;display:flex;align-items:center;gap:16px;
+  background:rgba(34,40,66,.72);border:1.5px solid var(--edge);border-radius:var(--r);padding:12px 18px
+}
+.refbar canvas{width:130px;height:150px;flex:0 0 auto;image-rendering:auto}
+.refbar .t1{font-size:14px;color:var(--muted);letter-spacing:.04em}
+.refbar .t2{font-size:22px;font-weight:800;margin-top:2px}
+.refbar .t3{font-size:14.5px;color:var(--muted);margin-top:5px;line-height:1.5}
+h2{font-size:clamp(22px,2.6vw,31px);margin:34px 0 4px;font-weight:800}
+h2 + p{margin:6px 0 16px;color:var(--muted);font-size:16px}
+.grid{display:grid;grid-template-columns:1fr;gap:20px}
+@media (min-width:1180px){.grid{grid-template-columns:1fr 1fr 1fr}}
+.card{
+  position:relative;background:linear-gradient(180deg,rgba(37,43,71,.96),rgba(28,33,56,.96));
+  border:2px solid var(--edge);border-radius:22px;padding:16px 16px 18px;overflow:hidden
+}
+.card::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(600px 260px at 50% 0%,rgba(255,255,255,.07),rgba(255,255,255,0) 70%)}
+.tag{position:absolute;top:16px;left:16px;padding:5px 12px;border-radius:999px;font-weight:800;font-size:15px;
+  background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18)}
+.card h3{margin:0 0 2px;padding-left:78px;font-size:clamp(23px,2.5vw,31px);font-weight:800;line-height:1.2}
+.card h3 span{display:block;font-size:15.5px;font-weight:600;color:var(--muted);margin-top:4px;letter-spacing:.02em}
+.stage{margin:8px -4px 0;border-radius:16px;overflow:hidden;background:#0d1020}
+.stage canvas{display:block;width:100%;height:auto;aspect-ratio:700/440}
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 2px}
+.pills button{
+  font:inherit;font-size:16px;font-weight:700;color:var(--ink);cursor:pointer;
+  padding:10px 18px;border-radius:999px;border:2px solid var(--edge);background:rgba(255,255,255,.05);
+  transition:transform .12s ease,background .12s ease,border-color .12s ease;min-height:44px
+}
+.pills button:hover{background:rgba(255,255,255,.11)}
+.pills button:active{transform:scale(.96)}
+.pills button.on{background:rgba(255,213,79,.16);border-color:var(--star);color:#ffe89a}
+.pills .zoom{margin-left:auto;border-style:dashed;font-weight:600;color:var(--muted)}
+.notes{list-style:none;margin:12px 0 14px;padding:0;display:grid;gap:9px}
+.notes li{position:relative;padding-left:26px;font-size:16.5px;line-height:1.55;color:#d9e0f7}
+.notes li::before{content:"";position:absolute;left:2px;top:8px;width:12px;height:12px;background:var(--star);
+  clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)}
+.card[data-skin="rift"] .notes li::before{background:var(--cyan)}
+.card[data-skin="mecha"] .notes li::before{background:var(--orange)}
+.pick{
+  font:inherit;width:100%;font-size:22px;font-weight:800;cursor:pointer;color:#20242f;
+  padding:16px 20px;border-radius:16px;border:0;background:linear-gradient(180deg,#ffe082,#f6c145);
+  box-shadow:0 8px 0 rgba(0,0,0,.28);transition:transform .12s ease,box-shadow .12s ease;min-height:60px
+}
+.card[data-skin="rift"] .pick{background:linear-gradient(180deg,#9beaff,#4fc3e8)}
+.card[data-skin="mecha"] .pick{background:linear-gradient(180deg,#ffc07a,#f57c1f)}
+.pick:hover{transform:translateY(-2px);box-shadow:0 10px 0 rgba(0,0,0,.3)}
+.pick:active{transform:translateY(4px);box-shadow:0 3px 0 rgba(0,0,0,.3)}
+.sticker{
+  position:absolute;top:14px;right:14px;padding:7px 15px;border-radius:12px;font-size:19px;font-weight:900;
+  color:#20242f;background:var(--star);transform:rotate(-6deg);opacity:0;transition:opacity .25s ease;
+  box-shadow:0 4px 14px rgba(0,0,0,.35);letter-spacing:.04em
+}
+.grid.has-pick .card{opacity:.5;filter:saturate(.45)}
+.grid.has-pick .card.is-picked{
+  opacity:1;filter:none;border-color:var(--star);box-shadow:0 0 0 4px rgba(255,213,79,.16) inset
+}
+.grid.has-pick .card.is-picked .sticker{opacity:1}
+.grid.is-zoom .card{display:none}
+.grid.is-zoom .card.is-zoomed{display:block}
+@media (min-width:900px){
+  .grid.is-zoom{grid-template-columns:1fr}
+  .grid.is-zoom .card.is-zoomed{max-width:820px;margin:0 auto;width:100%}
+}
+.tiles{display:grid;grid-template-columns:1fr;gap:16px}
+@media (min-width:760px){.tiles{grid-template-columns:1fr 1fr}}
+.tile{background:var(--paper);border:2px solid var(--edge);border-radius:20px;padding:12px 14px 8px}
+.tile h4{margin:0 0 2px;font-size:20px;font-weight:800}
+.tile p{margin:0;font-size:14.5px;color:var(--muted);line-height:1.5}
+.tile canvas{display:block;width:100%;height:auto;aspect-ratio:560/250;margin-top:8px;border-radius:14px;background:#0d1020}
+.legend{display:flex;gap:16px;margin:2px 0 0;font-size:14.5px;color:var(--muted)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:middle}
+.bar{
+  position:fixed;left:0;right:0;bottom:0;z-index:20;
+  background:linear-gradient(180deg,rgba(16,19,35,.82),rgba(13,16,28,.98));
+  border-top:2px solid var(--edge);backdrop-filter:blur(6px);padding:8px 20px calc(10px + env(safe-area-inset-bottom))
+}
+.bar .row{max-width:1400px;margin:0 auto;display:flex;align-items:center;gap:14px}
+.bar .msg{font-size:clamp(16px,1.7vw,21px);font-weight:800;white-space:nowrap}
+.bar .msg small{display:block;font-size:14px;font-weight:600;color:var(--muted);margin-top:3px}
+#runner{flex:1 1 auto;height:104px;width:100%;min-width:0}
+.reset{
+  font:inherit;font-size:16px;font-weight:700;color:var(--ink);cursor:pointer;padding:11px 18px;min-height:46px;
+  border-radius:999px;border:2px solid var(--edge);background:rgba(255,255,255,.06)
+}
+.reset:hover{background:rgba(255,255,255,.13)}
+button:focus-visible{outline:3px solid var(--cyan);outline-offset:3px}
+footer{max-width:1400px;margin:26px auto 0;color:var(--muted);font-size:14.5px;line-height:1.7}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <p class="eyebrow">三个篇章的通关奖励 · 新装扮三版</p>
+  <h1>打完一章，<em>换一身新的</em></h1>
+  <p class="sub">三版都会<b>站着、走路、开枪</b>，星星飞镖枪还是照打，打怪一点不受影响。<b>让焕宸自己点一版</b>，点完下面那条就会记住。</p>
+  <div class="refbar">
+    <canvas id="ref"></canvas>
+    <div>
+      <div class="t1">现在的样子</div>
+      <div class="t2">焕宸 · 迷彩小战士</div>
+      <div class="t3">新装扮只换外观，第一章的小战士还在，随时可以换回去。</div>
+    </div>
+  </div>
+</header>
+
+<main class="grid" id="grid">
+  <article class="card" data-skin="ranger">
+    <div class="tag">A 版</div>
+    <h3>山谷游侠<span>灰绿斗篷 + 额头护目镜</span></h3>
+    <div class="stage"><canvas id="stageRanger"></canvas></div>
+    <div class="pills" role="group" aria-label="A 版动作">
+      <button data-act="auto" class="on">自动</button>
+      <button data-act="idle">站着</button>
+      <button data-act="walk">走路</button>
+      <button data-act="shoot">开枪</button>
+      <button class="zoom" data-zoom="ranger">放大看</button>
+    </div>
+    <ul class="notes">
+      <li>走路时斗篷会往后摆，下摆露出米色线头</li>
+      <li>护目镜推在额头上，镜片会一道道反光</li>
+      <li>灰绿色和熔岩谷、白骨地、寒冰谷都最搭</li>
+    </ul>
+    <button class="pick" data-pick="ranger">我偏好这套！</button>
+    <div class="sticker">最喜欢</div>
+  </article>
+
+  <article class="card" data-skin="rift">
+    <div class="tag">B 版</div>
+    <h3>裂谷星铠<span>银色铠甲 + 发光星星 + 粉紫披风</span></h3>
+    <div class="stage"><canvas id="stageRift"></canvas></div>
+    <div class="pills" role="group" aria-label="B 版动作">
+      <button data-act="auto" class="on">自动</button>
+      <button data-act="idle">站着</button>
+      <button data-act="walk">走路</button>
+      <button data-act="shoot">开枪</button>
+      <button class="zoom" data-zoom="rift">放大看</button>
+    </div>
+    <ul class="notes">
+      <li>胸口那颗大星星会一亮一亮，铠甲缝里冒青光</li>
+      <li>披风边是合体山谷的粉紫色光，走路带小星星</li>
+      <li>头盔下面眼睛和腮红都露着，还是焕宸的脸</li>
+    </ul>
+    <button class="pick" data-pick="rift">我偏好这套！</button>
+    <div class="sticker">最喜欢</div>
+  </article>
+
+  <article class="card" data-skin="mecha">
+    <div class="tag">C 版</div>
+    <h3>星核机甲<span>银灰机甲 + 胸口反应堆 + 右臂臂炮</span></h3>
+    <div class="stage"><canvas id="stageMecha"></canvas></div>
+    <div class="pills" role="group" aria-label="C 版动作">
+      <button data-act="auto" class="on">自动</button>
+      <button data-act="idle">站着</button>
+      <button data-act="walk">走路</button>
+      <button data-act="shoot">开枪</button>
+      <button class="zoom" data-zoom="mecha">放大看</button>
+    </div>
+    <ul class="notes">
+      <li>走路时肩下两个推进器往下喷火，胸口反应堆一亮一亮</li>
+      <li>枪装在右胳膊上，是臂炮，开枪时炮口冒青光</li>
+      <li>面罩是半透的，眼睛、腮红、笑都在里面，还是焕宸</li>
+    </ul>
+    <button class="pick" data-pick="mecha">我偏好这套！</button>
+    <div class="sticker">最喜欢</div>
+  </article>
+</main>
+
+<h2>放进第二章的四条路里看搭不搭</h2>
+<p>每个小图里从左到右是 A 版、B 版、C 版，用的都是游戏里真实的路面配色。</p>
+<div class="tiles" id="tiles"></div>
+
+<footer>
+  这三套都已经做进游戏了，按篇章一件件解锁：打完第一章最后一关（关 3）得 A 版山谷游侠，打完第二章最后一关（关 7「三王合体」）得 B 版裂谷星铠，打完第三章最后一关（关 11「三机王合体」）得 C 版星核机甲。解锁以后在选人界面随时能换，迷彩小战士也一直都在。这一页记下的是你最喜欢哪套——选了它不会把另外两套关掉。
+</footer>
+</div>
+
+<div class="bar">
+  <div class="row">
+    <div class="msg" id="msg">还没选好<small>点上面任意一张卡的「我偏好这套！」</small></div>
+    <canvas id="runner"></canvas>
+    <button class="reset" id="reset">重新选</button>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var DPR=Math.min(3,window.devicePixelRatio||1);
+var RM=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- 与游戏同一套工具函数与比例（u = s/84，原点在脚底） ---------- */
+function rrect(ctx,x,y,w,h,r){
+  r=Math.min(r,Math.abs(w)/2,Math.abs(h)/2);
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+function star(ctx,x,y,r,c,rot){
+  ctx.save();ctx.translate(x,y);if(rot)ctx.rotate(rot);ctx.fillStyle=c;ctx.beginPath();
+  for(var i=0;i<10;i++){
+    var a=-Math.PI/2+i*Math.PI/5, rr=i%2?r*0.45:r;
+    ctx.lineTo(Math.cos(a)*rr,Math.sin(a)*rr);
+  }
+  ctx.closePath();ctx.fill();ctx.restore();
+}
+function ell(ctx,x,y,rx,ry){ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,7);ctx.fill();}
+
+/* 现在的主角（迷彩小战士），从游戏里照搬做对照 */
+var HERO={body:'#6d7f52',bodyDark:'#55663f',leg:'#5b6b45',boot:'#2f2f24',tone:'#ffe0b2',
+  hatC:'#6d7f52',hatB:'#4a5a36',starC:'#e53935',
+  camo:['#4a5a33','#8a6f47','#33402a'],belt:'#26261c',buckle:'#c0a060'};
+function drawSoldier(ctx,x,y,s,t,act){
+  var u=s/84, R=rig(t,act);
+  ctx.save();ctx.translate(x,y);
+  ctx.fillStyle='rgba(0,0,0,.22)';ell(ctx,0,1,15*u,3.4*u);
+  ctx.translate(0,R.bob*u);
+  ctx.fillStyle=HERO.leg;
+  rrect(ctx,-9*u,-24*u,7*u,20*u-R.liftL*u,2.5*u);ctx.fill();
+  rrect(ctx,2*u,-24*u,7*u,20*u-R.liftR*u,2.5*u);ctx.fill();
+  ctx.fillStyle=HERO.boot;
+  rrect(ctx,-10*u,-5*u-R.liftL*u,9*u,5*u,2*u);ctx.fill();
+  rrect(ctx,1*u,-5*u-R.liftR*u,9*u,5*u,2*u);ctx.fill();
+  ctx.fillStyle=HERO.body;rrect(ctx,-10*u,-54*u,20*u,31*u,4*u);ctx.fill();
+  ctx.fillStyle=HERO.bodyDark;rrect(ctx,-10*u,-32*u,20*u,9*u,3*u);ctx.fill();
+  ctx.fillStyle=HERO.camo[0];rrect(ctx,-8*u,-50*u,7*u,5*u,1.5*u);ctx.fill();
+  ctx.fillStyle=HERO.camo[1];rrect(ctx,1*u,-45*u,6*u,4*u,1.5*u);ctx.fill();
+  ctx.fillStyle=HERO.camo[2];rrect(ctx,-6*u,-40*u,5*u,4*u,1.5*u);ctx.fill();
+  ctx.fillStyle=HERO.camo[1];rrect(ctx,3*u,-52*u,4*u,4*u,1.5*u);ctx.fill();
+  ctx.fillStyle=HERO.belt;ctx.fillRect(-10*u,-30*u,20*u,4*u);
+  ctx.fillStyle=HERO.buckle;ctx.fillRect(-2.6*u,-30.6*u,5.2*u,5.2*u);
+  ctx.fillStyle=HERO.body;
+  rrect(ctx,-13.5*u,-52*u,4.5*u,14*u,2.2*u);ctx.fill();
+  rrect(ctx,5*u,-50*u,11*u,5*u,2.2*u);ctx.fill();
+  ctx.fillStyle=HERO.tone;rrect(ctx,14*u,-51*u,5.5*u,6.5*u,2.2*u);ctx.fill();
+  gun(ctx,u,R,'#8d6e63','#6d4c41');
+  ctx.fillStyle=HERO.tone;rrect(ctx,-10*u,-74*u,20*u,20*u,5*u);ctx.fill();
+  eyes(ctx,u,R);
+  ctx.fillStyle='#a1503c';ctx.fillRect(-1*u,-60.5*u,5*u,1.8*u);
+  ctx.fillStyle=HERO.hatB;rrect(ctx,-11*u,-79*u,22*u,5.5*u,2*u);ctx.fill();
+  ctx.fillStyle=HERO.hatC;rrect(ctx,-12*u,-85*u,24*u,7.5*u,3*u);ctx.fill();
+  ctx.fillStyle=HERO.hatB;rrect(ctx,-13*u,-74.6*u,26*u,3*u,1.5*u);ctx.fill();
+  star(ctx,0,-80.6*u,4.4*u,HERO.starC);
+  ctx.restore();
+}
+
+/* ---------- 动作状态机 ---------- */
+function rig(t,act){
+  var R={bob:0,liftL:0,liftR:0,sway:0,fire:0,blink:Math.sin(t*1.6+1)>0.985,wph:t*7.4};
+  if(act==='walk'){
+    R.bob=-Math.abs(Math.sin(R.wph))*2.4;
+    R.liftL=Math.max(0,Math.sin(R.wph))*4.2;
+    R.liftR=Math.max(0,-Math.sin(R.wph))*4.2;
+    R.sway=1;
+  }else{
+    R.bob=RM?0:Math.sin(t*2.2)*0.5;
+    R.sway=RM?.5:.45+.45*Math.sin(t*1.1);
+  }
+  if(act==='shoot'){
+    var sd=(t*1.7)%1.6; R.fire=sd<0.26?1-sd/0.26:0;
+    R.bob-=R.fire*1.2;
+  }
+  return R;
+}
+function eyes(ctx,u,R){
+  ctx.fillStyle='#2b2b2b';
+  if(R.blink){ctx.fillRect(-5.5*u,-66.5*u,4*u,1.4*u);ctx.fillRect(2*u,-66.5*u,4*u,1.4*u);}
+  else{ell(ctx,-3.5*u,-66*u,1.9*u,1.9*u);ell(ctx,4*u,-66*u,1.9*u,1.9*u);}
+}
+function blush(ctx,u){
+  ctx.fillStyle='rgba(244,143,117,.55)';
+  ell(ctx,-7*u,-61*u,2*u,2*u);ell(ctx,7.5*u,-61*u,2*u,2*u);
+}
+function smile(ctx,u){
+  ctx.strokeStyle='#a1503c';ctx.lineWidth=1.6*u;ctx.lineCap='round';
+  ctx.beginPath();ctx.arc(1.2*u,-62*u,3.4*u,Math.PI*0.16,Math.PI*0.84);ctx.stroke();
+}
+function gun(ctx,u,R,c1,c2){
+  ctx.fillStyle=c1;rrect(ctx,12*u,-49*u,20*u,3.2*u,1.6*u);ctx.fill();
+  ctx.fillStyle=c2;ctx.fillRect(15*u,-45.5*u,3.5*u,6*u);
+  var f=R.fire;
+  if(f>0){
+    ctx.save();ctx.globalAlpha=Math.min(1,f)*0.55;
+    ctx.shadowColor='#fff176';ctx.shadowBlur=14*u;ctx.fillStyle='#fff176';
+    ell(ctx,33.5*u,-47.4*u,6*u,6*u);ctx.restore();
+  }
+  star(ctx,33.5*u,-47.4*u,5.5*u+f*1.6*u,'#ffd54f');
+}
+function arms(ctx,u,bodyC,toneC){
+  ctx.fillStyle=bodyC;rrect(ctx,-13.5*u,-52*u,4.5*u,14*u,2.2*u);ctx.fill();
+  rrect(ctx,5*u,-50*u,11*u,5*u,2.2*u);ctx.fill();
+  ctx.fillStyle=toneC;rrect(ctx,14*u,-51*u,5.5*u,6.5*u,2.2*u);ctx.fill();
+}
+
+/* ---------- A 版：山谷游侠（灰绿斗篷 + 护目镜） ---------- */
+var RA={cloak:'#6b7f63',cloakDark:'#4f6152',body:'#7d8f6b',bodyDark:'#5d6f4f',
+  leg:'#5d6f4f',boot:'#4e342e',leather:'#4e342e',leatherLt:'#6d4c41',
+  cream:'#d7c9a7',tone:'#ffe0b2',hair:'#4a3728',strap:'#2f3b42',lens:'#7ee8ff'};
+function drawRanger(ctx,x,y,s,t,act){
+  var u=s/84,R=rig(t,act);
+  ctx.save();ctx.translate(x,y);
+  ctx.fillStyle='rgba(0,0,0,.25)';ell(ctx,0,1,15*u,3.4*u);
+  ctx.translate(0,R.bob*u);
+  /* 斗篷（画在身体后面，下摆到大腿，腿和靴子要露出来） */
+  var sw=(act==='walk')?(3.2+R.sway*2.4):(0.5+R.sway*1.1);
+  var hem=-sw*u;
+  ctx.fillStyle=RA.cloakDark;
+  ctx.beginPath();
+  ctx.moveTo(-8*u,-54*u);
+  ctx.bezierCurveTo(-15.5*u,-48*u,-16.5*u,-36*u,-13.5*u+hem,-25*u);
+  ctx.quadraticCurveTo(-6*u+hem,-21*u,0,-25.5*u+hem*0.4);
+  ctx.quadraticCurveTo(6.5*u,-28.5*u,10*u+hem*0.5,-31*u);
+  ctx.bezierCurveTo(11*u,-40*u,9.5*u,-49*u,8*u,-54*u);
+  ctx.closePath();ctx.fill();
+  ctx.fillStyle=RA.cloak;
+  ctx.beginPath();
+  ctx.moveTo(-7.5*u,-54*u);
+  ctx.bezierCurveTo(-14.5*u,-48.5*u,-15.5*u,-37.5*u,-12.5*u+hem,-27*u);
+  ctx.quadraticCurveTo(-5.5*u+hem,-23.5*u,0.5*u,-27.5*u+hem*0.4);
+  ctx.quadraticCurveTo(6*u,-30.5*u,9.2*u+hem*0.5,-32.5*u);
+  ctx.bezierCurveTo(10*u,-41*u,9*u,-49*u,7.5*u,-54*u);
+  ctx.closePath();ctx.fill();
+  /* 下摆深色边 + 米色缝线 */
+  ctx.strokeStyle=RA.cloakDark;ctx.lineWidth=2.6*u;ctx.lineJoin='round';ctx.lineCap='round';
+  ctx.beginPath();
+  ctx.moveTo(-12.5*u+hem,-27*u);
+  ctx.quadraticCurveTo(-5.5*u+hem,-23.5*u,0.5*u,-27.5*u+hem*0.4);
+  ctx.quadraticCurveTo(6*u,-30.5*u,9.2*u+hem*0.5,-32.5*u);
+  ctx.stroke();
+  ctx.strokeStyle=RA.cream;ctx.lineWidth=1*u;ctx.setLineDash([2.4*u,2.2*u]);
+  ctx.beginPath();
+  ctx.moveTo(-11.5*u+hem,-30.5*u);
+  ctx.quadraticCurveTo(-5*u+hem,-27*u,0.5*u,-31*u+hem*0.4);
+  ctx.quadraticCurveTo(5.8*u,-33.8*u,8.8*u+hem*0.5,-35.8*u);
+  ctx.stroke();ctx.setLineDash([]);
+  /* 颈后卷起的兜帽 */
+  ctx.fillStyle=RA.cloakDark;rrect(ctx,-8.5*u,-58.5*u,17*u,6.5*u,3*u);ctx.fill();
+  ctx.fillStyle=RA.cloak;rrect(ctx,-8.5*u,-58.5*u,17*u,3.2*u,1.6*u);ctx.fill();
+  /* 腿、靴 */
+  ctx.fillStyle=RA.leg;
+  rrect(ctx,-9*u,-24*u,7*u,20*u-R.liftL*u,2.5*u);ctx.fill();
+  rrect(ctx,2*u,-24*u,7*u,20*u-R.liftR*u,2.5*u);ctx.fill();
+  ctx.fillStyle=RA.cream;
+  rrect(ctx,-9*u,-15*u-R.liftL*u,7*u,2.6*u,1.2*u);ctx.fill();
+  rrect(ctx,2*u,-15*u-R.liftR*u,7*u,2.6*u,1.2*u);ctx.fill();
+  ctx.fillStyle=RA.boot;
+  rrect(ctx,-10*u,-5*u-R.liftL*u,9*u,5*u,2*u);ctx.fill();
+  rrect(ctx,1*u,-5*u-R.liftR*u,9*u,5*u,2*u);ctx.fill();
+  /* 上身 */
+  ctx.fillStyle=RA.body;rrect(ctx,-10*u,-54*u,20*u,31*u,4*u);ctx.fill();
+  ctx.fillStyle=RA.bodyDark;rrect(ctx,-10*u,-32*u,20*u,9*u,3*u);ctx.fill();
+  /* 胸前星扣 */
+  star(ctx,0,-49.5*u,3.4*u,'#ffd54f');
+  /* 皮质斜背带 + 胯部皮袋 */
+  ctx.strokeStyle=RA.leather;ctx.lineWidth=3*u;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(-7.5*u,-50*u);ctx.lineTo(6.5*u,-31*u);ctx.stroke();
+  ctx.fillStyle=RA.leatherLt;rrect(ctx,3.5*u,-33*u,7.5*u,6.5*u,2*u);ctx.fill();
+  ctx.fillStyle=RA.leather;rrect(ctx,3.5*u,-33*u,7.5*u,2.4*u,1.2*u);ctx.fill();
+  /* 腰带 */
+  ctx.fillStyle=RA.leather;ctx.fillRect(-10*u,-30.5*u,20*u,4.2*u);
+  ctx.fillStyle='#c0a060';ctx.fillRect(-2.6*u,-31*u,5.2*u,5.2*u);
+  /* 肩上的叶子 */
+  ctx.save();ctx.translate(-10.5*u,-55*u);ctx.rotate(-0.5);
+  ctx.fillStyle='#7cb342';ell(ctx,0,0,2.2*u,4*u);
+  ctx.strokeStyle='#558b2f';ctx.lineWidth=0.8*u;
+  ctx.beginPath();ctx.moveTo(0,-3.6*u);ctx.lineTo(0,3.6*u);ctx.stroke();ctx.restore();
+  /* 手臂与枪 */
+  arms(ctx,u,RA.cloak,RA.tone);
+  gun(ctx,u,R,'#8d6e63','#6d4c41');
+  /* 头 */
+  ctx.fillStyle=RA.tone;rrect(ctx,-10*u,-74*u,20*u,20*u,5*u);ctx.fill();
+  /* 头发（不戴军帽） */
+  ctx.fillStyle=RA.hair;rrect(ctx,-11*u,-80.5*u,22*u,10.5*u,5*u);ctx.fill();
+  ctx.fillStyle='#3d2d21';rrect(ctx,-11*u,-73.5*u,3.4*u,4.5*u,1.6*u);ctx.fill();
+  rrect(ctx,7.6*u,-73.5*u,3.4*u,4.5*u,1.6*u);ctx.fill();
+  /* 护目镜推在额头 */
+  ctx.fillStyle=RA.strap;rrect(ctx,-11.6*u,-76.5*u,23.2*u,4.4*u,2*u);ctx.fill();
+  var gl=RM?0:Math.sin(t*1.3);
+  ctx.fillStyle='#243038';ell(ctx,-5*u,-74.6*u,3.9*u,3.9*u);ell(ctx,5*u,-74.6*u,3.9*u,3.9*u);
+  ctx.fillStyle=RA.lens;ell(ctx,-5*u,-74.6*u,3.1*u,3.1*u);ell(ctx,5*u,-74.6*u,3.1*u,3.1*u);
+  ctx.fillStyle='rgba(255,255,255,.85)';
+  ell(ctx,-5*u+gl*1.3*u,-75.6*u,1*u,1.5*u);ell(ctx,5*u+gl*1.3*u,-75.6*u,1*u,1.5*u);
+  /* 脸 */
+  eyes(ctx,u,R);blush(ctx,u);smile(ctx,u);
+  ctx.restore();
+}
+
+/* ---------- B 版：裂谷星铠（银色铠甲 + 发光星星 + 粉紫披风） ---------- */
+var RF={cape:'#6a3a99',capeEdge:'#ff6ea1',plate:'#cfd8e8',plateDark:'#9aa8c6',
+  inner:'#2a2f45',boot:'#232838',tone:'#ffe0b2',cyan:'#7ee8ff',star:'#ffd54f',helm:'#cfd8e8'};
+function drawRift(ctx,x,y,s,t,act){
+  var u=s/84,R=rig(t,act);
+  var gp=RM?0.75:0.55+0.45*Math.sin(t*3.1);
+  ctx.save();ctx.translate(x,y);
+  ctx.fillStyle='rgba(0,0,0,.25)';ell(ctx,0,1,15*u,3.4*u);
+  ctx.translate(0,R.bob*u);
+  /* 能量披风（下摆到膝盖上方，小腿和靴子露出来） */
+  var sw=(act==='walk')?(2.6+R.sway*2):(0.4+R.sway*0.9), hem=-sw*u;
+  ctx.fillStyle='#3f1f63';
+  ctx.beginPath();
+  ctx.moveTo(-8.6*u,-53*u);
+  ctx.bezierCurveTo(-15*u,-42*u,-16*u,-28*u,-12.4*u+hem,-18*u);
+  ctx.quadraticCurveTo(-4.4*u+hem,-13.4*u,0.6*u,-18*u+hem*0.4);
+  ctx.quadraticCurveTo(6.5*u,-21.6*u,9.6*u+hem*0.5,-23.6*u);
+  ctx.bezierCurveTo(10.6*u,-35*u,9.4*u,-46*u,8.6*u,-53*u);
+  ctx.closePath();ctx.fill();
+  ctx.fillStyle=RF.cape;
+  ctx.beginPath();
+  ctx.moveTo(-8*u,-53*u);
+  ctx.bezierCurveTo(-14*u,-42*u,-15*u,-26*u,-11.5*u+hem,-20*u);
+  ctx.quadraticCurveTo(-4*u+hem,-15.5*u,0.5*u,-20*u+hem*0.4);
+  ctx.quadraticCurveTo(6*u,-23.5*u,9*u+hem*0.5,-25.5*u);
+  ctx.bezierCurveTo(10*u,-34*u,9*u,-46*u,8*u,-53*u);
+  ctx.closePath();ctx.fill();
+  /* 披风上的青色星纹 */
+  ctx.globalAlpha=0.5+0.4*gp;ctx.fillStyle=RF.cyan;
+  star(ctx,-7.5*u,-38*u,1.7*u,RF.cyan);star(ctx,-4.5*u,-27*u,1.3*u,RF.cyan);
+  star(ctx,3*u,-32*u,1.4*u,RF.cyan);
+  ctx.globalAlpha=1;
+  ctx.globalAlpha=0.5+0.5*gp;ctx.fillStyle=RF.capeEdge;
+  ctx.beginPath();
+  ctx.moveTo(-11.5*u+hem,-20*u);
+  ctx.quadraticCurveTo(-4*u+hem,-15.5*u,0.5*u,-20*u+hem*0.4);
+  ctx.quadraticCurveTo(6*u,-23.5*u,9*u+hem*0.5,-25.5*u);
+  ctx.lineTo(9.6*u+hem*0.5,-28.5*u);
+  ctx.quadraticCurveTo(6*u,-26.5*u,0.4*u,-23*u+hem*0.4);
+  ctx.quadraticCurveTo(-4.4*u+hem,-18.5*u,-11*u+hem,-23*u);
+  ctx.closePath();ctx.fill();ctx.globalAlpha=1;
+  if(!RM&&act!=='idle'){
+    for(var i=0;i<3;i++){
+      var p=((t*0.7+i*0.33)%1);
+      ctx.globalAlpha=(1-p)*0.55;ctx.fillStyle=RF.capeEdge;
+      ell(ctx,-6*u+hem*p-i*2*u+p*3*u,-21*u-p*13*u,0.9*u,0.9*u);
+    }
+    ctx.globalAlpha=1;
+  }
+  /* 腿 */
+  ctx.fillStyle=RF.inner;
+  rrect(ctx,-9*u,-24*u,7*u,20*u-R.liftL*u,2.5*u);ctx.fill();
+  rrect(ctx,2*u,-24*u,7*u,20*u-R.liftR*u,2.5*u);ctx.fill();
+  ctx.fillStyle=RF.plateDark;
+  rrect(ctx,-9.4*u,-19*u-R.liftL*u,7.8*u,4.4*u,1.8*u);ctx.fill();
+  rrect(ctx,1.6*u,-19*u-R.liftR*u,7.8*u,4.4*u,1.8*u);ctx.fill();
+  ctx.fillStyle=RF.boot;
+  rrect(ctx,-10*u,-5*u-R.liftL*u,9*u,5*u,2*u);ctx.fill();
+  rrect(ctx,1*u,-5*u-R.liftR*u,9*u,5*u,2*u);ctx.fill();
+  ctx.fillStyle=RF.cyan;ctx.globalAlpha=0.55+0.3*gp;
+  ctx.fillRect(-10*u,-6.6*u-R.liftL*u,9*u,1.1*u);
+  ctx.fillRect(1*u,-6.6*u-R.liftR*u,9*u,1.1*u);
+  ctx.globalAlpha=1;
+  /* 胸甲 */
+  ctx.fillStyle=RF.plate;rrect(ctx,-10.5*u,-54*u,21*u,31*u,4*u);ctx.fill();
+  ctx.fillStyle=RF.plateDark;rrect(ctx,6*u,-53*u,4.5*u,29*u,2.4*u);ctx.fill();
+  ctx.fillStyle=RF.inner;rrect(ctx,-10.5*u,-32*u,21*u,9*u,3*u);ctx.fill();
+  /* 甲缝青光 */
+  ctx.fillStyle=RF.cyan;ctx.globalAlpha=0.3+0.5*gp;
+  ctx.fillRect(-8*u,-44*u,16*u,1.3*u);
+  ctx.fillRect(-8*u,-38.5*u,16*u,1.3*u);
+  ctx.fillRect(-10.5*u,-31.5*u,21*u,1.6*u);
+  ctx.globalAlpha=1;
+  /* 腰带 */
+  ctx.fillStyle=RF.boot;ctx.fillRect(-10.5*u,-30*u,21*u,4.2*u);
+  ctx.fillStyle=RF.capeEdge;ctx.fillRect(-2.8*u,-30.6*u,5.6*u,5.4*u);
+  /* 胸口大星徽 */
+  ctx.save();ctx.shadowColor=RF.cyan;ctx.shadowBlur=10*u*gp;ctx.fillStyle=RF.cyan;
+  ell(ctx,0,-45*u,7.6*u+gp*u,7.6*u+gp*u);ctx.restore();
+  ctx.fillStyle='#2b3350';ell(ctx,0,-45*u,6.4*u,6.4*u);
+  star(ctx,0,-45*u,5.6*u+gp*0.7*u,RF.star);
+  /* 肩甲 */
+  ctx.fillStyle=RF.plateDark;
+  rrect(ctx,-16*u,-55*u,7.5*u,7.5*u,2.6*u);ctx.fill();
+  rrect(ctx,8.5*u,-55*u,7.5*u,7.5*u,2.6*u);ctx.fill();
+  ctx.fillStyle=RF.cyan;ctx.globalAlpha=0.45+0.4*gp;
+  rrect(ctx,-16*u,-55*u,7.5*u,1.8*u,0.9*u);ctx.fill();
+  rrect(ctx,8.5*u,-55*u,7.5*u,1.8*u,0.9*u);ctx.fill();
+  ctx.globalAlpha=1;
+  /* 手臂与枪 */
+  ctx.fillStyle=RF.plate;rrect(ctx,-13.5*u,-50*u,4.6*u,13*u,2.2*u);ctx.fill();
+  rrect(ctx,5*u,-50*u,11*u,5*u,2.2*u);ctx.fill();
+  ctx.fillStyle=RF.tone;rrect(ctx,14*u,-51*u,5.5*u,6.5*u,2.2*u);ctx.fill();
+  gun(ctx,u,R,'#5c6b8a','#3d4763');
+  if(R.fire>0.2){
+    ctx.globalAlpha=R.fire;star(ctx,39*u,-44*u,2.2*u,'#fff59d');
+    star(ctx,36*u,-51.5*u,1.8*u,'#fff59d');ctx.globalAlpha=1;
+  }
+  /* 头与脸 */
+  ctx.fillStyle=RF.tone;rrect(ctx,-10*u,-74*u,20*u,20*u,5*u);ctx.fill();
+  eyes(ctx,u,R);blush(ctx,u);smile(ctx,u);
+  /* 头盔（宽扁圆顶，只压住头顶，露出眼睛和脸） */
+  ctx.fillStyle=RF.helm;rrect(ctx,-12*u,-81*u,24*u,10.6*u,5.2*u);ctx.fill();
+  ctx.fillStyle=RF.plateDark;rrect(ctx,6.2*u,-80*u,5.8*u,9.6*u,2.9*u);ctx.fill();
+  /* 两侧颊甲 */
+  ctx.fillStyle=RF.plateDark;
+  rrect(ctx,-11.8*u,-71.6*u,3.2*u,11*u,1.6*u);ctx.fill();
+  rrect(ctx,8.6*u,-71.6*u,3.2*u,11*u,1.6*u);ctx.fill();
+  ctx.fillStyle='#2b3350';rrect(ctx,-11.6*u,-73*u,23.2*u,2.6*u,1.3*u);ctx.fill();
+  ctx.fillStyle=RF.cyan;ctx.globalAlpha=0.6+0.4*gp;
+  rrect(ctx,-10.2*u,-75.4*u,20.4*u,1.9*u,0.95*u);ctx.fill();ctx.globalAlpha=1;
+  /* 顶冠（三角鳍） + 额前小星 */
+  ctx.fillStyle=RF.capeEdge;
+  ctx.beginPath();ctx.moveTo(-3.4*u,-80.4*u);ctx.lineTo(0,-88.8*u);ctx.lineTo(3.4*u,-80.4*u);
+  ctx.closePath();ctx.fill();
+  ctx.fillStyle=RF.plate;rrect(ctx,-1.4*u,-82.4*u,2.8*u,2*u,1*u);ctx.fill();
+  star(ctx,0,-77.8*u,2.8*u,RF.star);
+  ctx.restore();
+}
+
+/* ---------- C 版：星核机甲（银灰机甲 + 胸口反应堆 + 右臂臂炮） ---------- */
+var MC={shell:'#e3e9f5',shellLt:'#f5f8ff',shellDark:'#aab5cd',metal:'#39415a',dark:'#262c3e',
+  cyan:'#5ff0ff',cyanDeep:'#0b1a24',orange:'#ff8a3c',tone:'#ffe0b2',star:'#ffd54f'};
+function drawMecha(ctx,x,y,s,t,act){
+  var u=s/84,R=rig(t,act);
+  var gp=RM?0.75:0.55+0.45*Math.sin(t*3.4);
+  ctx.save();ctx.translate(x,y);
+  ctx.fillStyle='rgba(0,0,0,.25)';ell(ctx,0,1,16*u,3.6*u);
+  ctx.translate(0,R.bob*u);
+  /* 背后背包（推进器喷口与尾焰画在手臂之上，见下方） */
+  var jl=(act==='walk')?(12+4.5*Math.abs(Math.sin(t*11))):(act==='shoot'?6:3.4);
+  var fa=RM?0.5:(0.6+0.4*Math.sin(t*14));
+  ctx.fillStyle=MC.metal;
+  rrect(ctx,-17.5*u,-66*u,7.5*u,17*u,2.8*u);ctx.fill();
+  rrect(ctx,10*u,-66*u,7.5*u,17*u,2.8*u);ctx.fill();
+  ctx.fillStyle=MC.dark;
+  rrect(ctx,-16.6*u,-52*u,5.8*u,3.4*u,1.6*u);ctx.fill();
+  rrect(ctx,10.8*u,-52*u,5.8*u,3.4*u,1.6*u);ctx.fill();
+  ctx.fillStyle=MC.orange;
+  rrect(ctx,-16.6*u,-65.2*u,5.8*u,2.2*u,1.1*u);ctx.fill();
+  rrect(ctx,10.8*u,-65.2*u,5.8*u,2.2*u,1.1*u);ctx.fill();
+  ctx.globalAlpha=0.55+0.35*gp;ctx.fillStyle=MC.cyan;
+  ell(ctx,-13.7*u,-50.3*u,1.5*u,1.5*u);ell(ctx,13.7*u,-50.3*u,1.5*u,1.5*u);
+  ctx.globalAlpha=1;
+  /* 机械腿：深枪灰 + 亮银膝甲 + 方块重靴 + 青色靴底光 */
+  ctx.fillStyle=MC.metal;
+  rrect(ctx,-9.5*u,-26*u,7.5*u,21*u-R.liftL*u,2.6*u);ctx.fill();
+  rrect(ctx,2*u,-26*u,7.5*u,21*u-R.liftR*u,2.6*u);ctx.fill();
+  ctx.fillStyle=MC.shell;
+  rrect(ctx,-10.2*u,-22*u-R.liftL*u,8.8*u,5.6*u,2*u);ctx.fill();
+  rrect(ctx,1.4*u,-22*u-R.liftR*u,8.8*u,5.6*u,2*u);ctx.fill();
+  ctx.fillStyle=MC.metal;
+  rrect(ctx,-8.4*u,-33.5*u,5.2*u,9*u,2*u);ctx.fill();
+  rrect(ctx,3.2*u,-33.5*u,5.2*u,9*u,2*u);ctx.fill();
+  ctx.fillStyle=MC.dark;
+  rrect(ctx,-12*u,-7*u-R.liftL*u,11*u,7*u,2.4*u);ctx.fill();
+  rrect(ctx,1*u,-7*u-R.liftR*u,11*u,7*u,2.4*u);ctx.fill();
+  ctx.fillStyle=MC.shell;
+  rrect(ctx,-12*u,-7*u-R.liftL*u,11*u,3.2*u,1.6*u);ctx.fill();
+  rrect(ctx,1*u,-7*u-R.liftR*u,11*u,3.2*u,1.6*u);ctx.fill();
+  ctx.globalAlpha=0.5+0.4*gp;ctx.fillStyle=MC.cyan;
+  rrect(ctx,-11.2*u,-2.2*u-R.liftL*u,9.4*u,1.6*u,0.8*u);ctx.fill();
+  rrect(ctx,1.8*u,-2.2*u-R.liftR*u,9.4*u,1.6*u,0.8*u);ctx.fill();
+  ctx.globalAlpha=1;
+  /* 躯干（比 A/B 更宽更方） */
+  ctx.fillStyle=MC.shell;rrect(ctx,-12.5*u,-56*u,25*u,32*u,4.6*u);ctx.fill();
+  ctx.fillStyle=MC.shellDark;rrect(ctx,6.6*u,-54*u,5.6*u,28*u,2.6*u);ctx.fill();
+  ctx.fillStyle=MC.metal;rrect(ctx,-9*u,-34*u,18*u,8*u,2.6*u);ctx.fill();
+  /* 腰线警示橙 */
+  ctx.fillStyle=MC.orange;rrect(ctx,-11.8*u,-38.6*u,23.6*u,2.2*u,1.1*u);ctx.fill();
+  /* 胸口反应堆核心 */
+  ctx.save();ctx.shadowColor=MC.cyan;ctx.shadowBlur=13*u*gp;
+  ctx.fillStyle=MC.dark;ell(ctx,0,-47*u,6.2*u,6.2*u);ctx.restore();
+  ctx.strokeStyle=MC.cyan;ctx.lineWidth=1.9*u;ctx.globalAlpha=0.65+0.35*gp;
+  ctx.beginPath();ctx.arc(0,-47*u,6.2*u,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;
+  ctx.fillStyle=MC.cyanDeep;ell(ctx,0,-47*u,4.1*u,4.1*u);
+  ctx.globalAlpha=0.5+0.5*gp;ctx.fillStyle=MC.cyan;ell(ctx,0,-47*u,2.9*u,2.9*u);ctx.globalAlpha=1;
+  star(ctx,0,-47*u,2.3*u+gp*0.7*u,'#eafcff');
+  /* 肩甲（大方块 + 亮面 + 橙色警示条） */
+  ctx.fillStyle=MC.shell;
+  rrect(ctx,-19.4*u,-58.8*u,10.4*u,10.4*u,3.4*u);ctx.fill();
+  rrect(ctx,9*u,-58.8*u,10.4*u,10.4*u,3.4*u);ctx.fill();
+  ctx.fillStyle=MC.shellLt;
+  rrect(ctx,-18.6*u,-58*u,8.8*u,3.4*u,1.7*u);ctx.fill();
+  rrect(ctx,9.8*u,-58*u,8.8*u,3.4*u,1.7*u);ctx.fill();
+  ctx.fillStyle=MC.orange;
+  rrect(ctx,-17.8*u,-53*u,7.2*u,2.2*u,1.1*u);ctx.fill();
+  rrect(ctx,10.6*u,-53*u,7.2*u,2.2*u,1.1*u);ctx.fill();
+  /* 左臂（机械拳） */
+  ctx.fillStyle=MC.metal;rrect(ctx,-16.8*u,-49*u,6.6*u,14*u,2.4*u);ctx.fill();
+  ctx.fillStyle=MC.shell;rrect(ctx,-17.2*u,-36.5*u,7.2*u,6.4*u,2.4*u);ctx.fill();
+  /* 右臂＝臂炮（不开手里那把枪） */
+  ctx.fillStyle=MC.metal;rrect(ctx,9.6*u,-49.5*u,6.6*u,9*u,2.4*u);ctx.fill();
+  ctx.fillStyle=MC.shell;rrect(ctx,7*u,-53*u,20.5*u,9.4*u,3*u);ctx.fill();
+  ctx.fillStyle=MC.shellLt;rrect(ctx,8.6*u,-52*u,17*u,2.8*u,1.4*u);ctx.fill();
+  ctx.fillStyle=MC.orange;rrect(ctx,13.2*u,-52.6*u,3*u,8.6*u,1.4*u);ctx.fill();
+  ctx.fillStyle=MC.dark;rrect(ctx,24.6*u,-52.2*u,4.4*u,8*u,2.2*u);ctx.fill();
+  ctx.globalAlpha=0.45+0.35*gp;ctx.fillStyle=MC.cyan;
+  ell(ctx,29.2*u,-48.2*u,2.3*u,3.2*u);ctx.globalAlpha=1;
+  var mf=R.fire;
+  if(mf>0){
+    ctx.save();ctx.globalAlpha=Math.min(1,mf)*0.6;
+    ctx.shadowColor=MC.cyan;ctx.shadowBlur=16*u;ctx.fillStyle='#dffcff';
+    ell(ctx,29.6*u,-48.2*u,6.6*u,6.6*u);ctx.restore();
+  }
+  star(ctx,29.6*u,-48.2*u,5.5*u+mf*1.8*u,MC.star);
+  /* 肩下推进器喷口 + 尾焰（画在手臂之上，走路时往下喷） */
+  for(var sd=-1;sd<=1;sd+=2){
+    ctx.fillStyle=MC.metal;
+    rrect(ctx,(sd<0?-25.4:19.8)*u,-46.8*u,5.6*u,3.6*u,1.5*u);ctx.fill();
+    ctx.fillStyle=MC.dark;
+    rrect(ctx,(sd<0?-24.4:20.6)*u,-45.8*u,3.8*u,2.4*u,1.1*u);ctx.fill();
+    ctx.globalAlpha=fa*0.8;ctx.fillStyle=MC.orange;
+    ctx.beginPath();ctx.moveTo(sd*20.4*u,-44.6*u);ctx.lineTo(sd*24.8*u,-44.6*u);
+    ctx.lineTo(sd*23.8*u,-44.6*u+jl*u);ctx.lineTo(sd*21.2*u,-44.6*u+jl*0.6*u);
+    ctx.closePath();ctx.fill();
+    ctx.globalAlpha=fa;ctx.fillStyle='#ffec62';
+    ctx.beginPath();ctx.moveTo(sd*21*u,-44.6*u);ctx.lineTo(sd*24.2*u,-44.6*u);
+    ctx.lineTo(sd*23.2*u,-44.6*u+jl*0.6*u);ctx.lineTo(sd*21.8*u,-44.6*u+jl*0.3*u);
+    ctx.closePath();ctx.fill();
+    ctx.globalAlpha=fa*0.95;ctx.fillStyle=MC.cyan;
+    ctx.beginPath();ctx.moveTo(sd*21.6*u,-44.6*u);ctx.lineTo(sd*23.6*u,-44.6*u);
+    ctx.lineTo(sd*22.6*u,-44.6*u+jl*0.3*u);ctx.closePath();ctx.fill();
+    ctx.globalAlpha=1;
+  }
+  /* 头（先画焕宸的脸，再压头盔和面罩） */
+  ctx.fillStyle=MC.dark;rrect(ctx,-6*u,-57*u,12*u,4.5*u,2*u);ctx.fill();
+  ctx.fillStyle=MC.tone;rrect(ctx,-10*u,-74*u,20*u,20*u,5*u);ctx.fill();
+  ctx.fillStyle=MC.shell;rrect(ctx,-11.4*u,-80.6*u,22.8*u,12.4*u,5.4*u);ctx.fill();
+  ctx.fillStyle=MC.shellDark;rrect(ctx,6.2*u,-80*u,5.2*u,11.4*u,2.4*u);ctx.fill();
+  ctx.fillStyle=MC.metal;
+  rrect(ctx,-13.8*u,-77.5*u,3*u,8.6*u,1.4*u);ctx.fill();
+  rrect(ctx,10.8*u,-77.5*u,3*u,8.6*u,1.4*u);ctx.fill();
+  ctx.globalAlpha=0.6+0.4*gp;ctx.fillStyle=MC.cyan;
+  ell(ctx,-12.3*u,-73.2*u,1.1*u,1.1*u);ell(ctx,12.3*u,-73.2*u,1.1*u,1.1*u);ctx.globalAlpha=1;
+  /* 面罩（深色底 + 眼睛 + 半透青光玻璃） */
+  ctx.fillStyle=MC.dark;rrect(ctx,-10.4*u,-69.8*u,20.8*u,7.6*u,3*u);ctx.fill();
+  eyes(ctx,u,R);
+  ctx.globalAlpha=0.3+0.16*gp;ctx.fillStyle=MC.cyan;
+  rrect(ctx,-10.4*u,-69.8*u,20.8*u,7.6*u,3*u);ctx.fill();ctx.globalAlpha=1;
+  ctx.strokeStyle=MC.cyan;ctx.lineWidth=1.2*u;ctx.globalAlpha=0.55+0.35*gp;
+  rrect(ctx,-10.4*u,-69.8*u,20.8*u,7.6*u,3*u);ctx.stroke();ctx.globalAlpha=1;
+  /* 两侧颊甲 + 头顶橙色鳍冠 */
+  ctx.fillStyle=MC.shellDark;
+  rrect(ctx,-11.6*u,-68*u,2.8*u,8*u,1.4*u);ctx.fill();
+  rrect(ctx,8.8*u,-68*u,2.8*u,8*u,1.4*u);ctx.fill();
+  ctx.fillStyle=MC.orange;
+  ctx.beginPath();ctx.moveTo(-3.4*u,-80*u);ctx.lineTo(0,-87.6*u);ctx.lineTo(3.4*u,-80*u);
+  ctx.closePath();ctx.fill();
+  ctx.fillStyle=MC.shell;rrect(ctx,-1.5*u,-82*u,3*u,2.2*u,1*u);ctx.fill();
+  blush(ctx,u);smile(ctx,u);
+  ctx.restore();
+}
+
+var SKINS={ranger:drawRanger,rift:drawRift,mecha:drawMecha};
+
+/* ---------- 第二章四块路面配色（照游戏里的 FIELD） ---------- */
+var FIELD={
+  lava:{top:'rgba(28,8,4,0)',mid:'rgba(40,12,6,.26)',low:'rgba(22,6,4,.46)',strip:'rgba(255,180,120,.09)',line:'rgba(255,170,110,.34)',glow:'rgba(255,140,80,.16)',haze:'rgba(255,190,150,.18)',hill:'#2a1210',hill2:'#4a1d14'},
+  bone:{top:'rgba(30,34,28,0)',mid:'rgba(52,56,46,.22)',low:'rgba(30,34,26,.42)',strip:'rgba(232,228,200,.10)',line:'rgba(240,236,210,.32)',glow:'rgba(226,222,180,.14)',haze:'rgba(238,234,212,.16)',hill:'#20251d',hill2:'#3a4033'},
+  ice:{top:'rgba(12,32,52,0)',mid:'rgba(20,50,76,.22)',low:'rgba(10,28,46,.44)',strip:'rgba(190,235,255,.10)',line:'rgba(205,242,255,.34)',glow:'rgba(150,220,255,.15)',haze:'rgba(210,240,255,.18)',hill:'#101c30',hill2:'#24415f'},
+  rift:{top:'rgba(40,8,40,0)',mid:'rgba(48,10,44,.24)',low:'rgba(26,4,26,.46)',strip:'rgba(220,150,255,.09)',line:'rgba(235,170,255,.32)',glow:'rgba(255,110,160,.15)',haze:'rgba(215,170,230,.16)',hill:'#1e0a20',hill2:'#3b1450'}
+};
+var NAMES={lava:'熔岩谷',bone:'白骨地',ice:'寒冰谷',rift:'合体山谷'};
+
+function decor(ctx,W,gy,t,key){
+  var i,x,y;
+  ctx.save();
+  if(key==='lava'){
+    ctx.fillStyle=FIELD.lava.hill2;ctx.beginPath();ctx.moveTo(0,gy);
+    for(i=0;i<=10;i++){x=i*W/10;y=gy-(10+26*Math.abs(Math.sin(i*1.9)));ctx.lineTo(x,y);}
+    ctx.lineTo(W,gy);ctx.closePath();ctx.fill();
+    for(i=0;i<3;i++){x=W*(0.18+i*0.31);ctx.fillStyle=FIELD.lava.glow;
+      ell(ctx,x,gy+6,16+7*Math.sin(t*1.4+i),4);
+      ctx.fillStyle='rgba(255,150,80,.32)';ell(ctx,x,gy+2,4+2*Math.sin(t*2+i),6+3*Math.sin(t*2+i));}
+  }else if(key==='bone'){
+    ctx.fillStyle=FIELD.bone.hill2;
+    for(i=0;i<4;i++){x=W*(0.12+i*0.26);ell(ctx,x,gy-2,26,10+3*Math.sin(i));}
+    ctx.strokeStyle=FIELD.bone.line;ctx.lineWidth=3;ctx.lineCap='round';
+    for(i=0;i<5;i++){x=W*(0.1+i*0.2);ctx.beginPath();ctx.arc(x,gy+16,22+i*2,Math.PI*1.15,Math.PI*1.85);ctx.stroke();}
+  }else if(key==='ice'){
+    ctx.fillStyle=FIELD.ice.hill2;
+    for(i=0;i<6;i++){var h=30+22*Math.abs(Math.cos(i*1.3));x=W*(0.08+i*0.16);
+      ctx.beginPath();ctx.moveTo(x-16,gy);ctx.lineTo(x,gy-h);ctx.lineTo(x+16,gy);ctx.closePath();ctx.fill();}
+    ctx.fillStyle='rgba(190,235,255,.22)';
+    for(i=0;i<3;i++){x=W*(0.2+i*0.3);ell(ctx,x,gy-8,3,9);}
+  }else{
+    ctx.fillStyle=FIELD.rift.hill2;
+    for(i=0;i<5;i++){x=W*(0.1+i*0.2);var h=24+18*Math.abs(Math.sin(i*2.1));
+      ctx.save();ctx.translate(x,gy);ctx.rotate(-0.22+i*0.11);
+      ctx.beginPath();ctx.moveTo(-9,0);ctx.lineTo(0,-h);ctx.lineTo(9,0);ctx.closePath();ctx.fill();ctx.restore();}
+    if(!RM)for(i=0;i<4;i++){var p=((t*0.5+i*0.25)%1);ctx.fillStyle='rgba(255,110,160,'+(0.5*(1-p))+')';
+      ell(ctx,W*(0.15+i*0.24),gy-10-p*46,2.4,2.4);}
+  }
+  ctx.restore();
+}
+
+/* 路面 + 远处剪影；ratio 决定地平线高低 */
+function drawStage(ctx,W,H,key,t,scroll){
+  var F=FIELD[key], gy=Math.round(H*0.58);
+  ctx.clearRect(0,0,W,H);
+  var g=ctx.createLinearGradient(0,0,0,gy);
+  g.addColorStop(0,'#12152a');g.addColorStop(0.45,F.mid);g.addColorStop(1,F.top);
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,gy);
+  ctx.fillStyle=F.hill;ctx.beginPath();ctx.moveTo(0,gy);
+  for(var i=0;i<=12;i++){var x=i*W/12,yy=gy-(14+30*Math.abs(Math.sin(i*0.8+1.2)));ctx.lineTo(x,yy);}
+  ctx.lineTo(W,gy);ctx.closePath();ctx.fill();
+  decor(ctx,W,gy,t,key);
+  var g2=ctx.createLinearGradient(0,gy,0,H);
+  g2.addColorStop(0,F.low);g2.addColorStop(1,'rgba(8,9,18,.92)');
+  ctx.fillStyle=g2;ctx.fillRect(0,gy,W,H-gy);
+  ctx.fillStyle=F.line;ctx.fillRect(0,gy-1,W,2);
+  ctx.save();
+  var span=H-gy;
+  for(i=0;i<7;i++){
+    var p=((scroll*0.09+i/7)%1);
+    var y=gy+p*span, ww=W*(0.22+p*0.9);
+    ctx.globalAlpha=0.55*(1-p)+0.18;
+    ctx.fillStyle=F.strip;
+    ctx.fillRect(W/2-ww/2,y,ww,3+p*4);
+  }
+  ctx.globalAlpha=1;
+  ctx.fillStyle=F.glow;ell(ctx,W/2,gy+2,W*0.44,14);
+  ctx.restore();
+}
+
+/* ---------- 画布管理 ---------- */
+function setup(cv,lw,lh){
+  cv.__lw=lw;cv.__lh=lh;
+  cv.width=Math.round(lw*DPR);cv.height=Math.round(lh*DPR);
+  var ctx=cv.getContext('2d');
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  return ctx;
+}
+/* 卡片舞台 */
+var stages=[];
+[['stageRanger','ranger','bone'],['stageRift','rift','rift'],['stageMecha','mecha','ice']].forEach(function(cfg){
+  var cv=document.getElementById(cfg[0]);
+  stages.push({cv:cv,ctx:setup(cv,700,440),skin:cfg[1],bg:cfg[2],act:'auto',mode:'auto',parts:[],seed:Math.random()*10});
+});
+/* 现在的样子 */
+var refCv=document.getElementById('ref');
+var refCtx=setup(refCv,130,150);
+
+/* 四块路面 mini */
+var tileWrap=document.getElementById('tiles');
+var minis=[];
+['lava','bone','ice','rift'].forEach(function(k){
+  var d=document.createElement('div');d.className='tile';
+  d.innerHTML='<h4>'+NAMES[k]+'</h4><p>'+({lava:'第一章之后第一条路，火红地面',bone:'骨捶独腿王的地盘，灰白骨头地',ice:'寒冰谷底，蓝冰路面',rift:'三王合体的最终山谷，粉紫裂谷'})[k]+
+    '</p><canvas></canvas><div class="legend"><span><i style="background:#7d8f6b"></i>A 山谷游侠</span><span><i style="background:#cfd8e8"></i>B 裂谷星铠</span><span><i style="background:#ff8a3c"></i>C 星核机甲</span></div>';
+  tileWrap.appendChild(d);
+  var cv=d.querySelector('canvas');
+  minis.push({cv:cv,ctx:setup(cv,560,250),key:k});
+});
+
+/* ---------- 交互 ---------- */
+var pick=null;
+try{var saved=localStorage.getItem('moday_skin_pick');if(saved==='ranger'||saved==='rift'||saved==='mecha')pick=saved;}catch(e){}
+var grid=document.getElementById('grid');
+var msg=document.getElementById('msg');
+var SKINNAME={ranger:'A 版 · 山谷游侠',rift:'B 版 · 裂谷星铠',mecha:'C 版 · 星核机甲'};
+function syncPicked(){
+  Array.prototype.forEach.call(grid.children,function(c){c.classList.remove('is-picked');});
+  grid.classList.toggle('has-pick',!!pick);
+  if(pick){
+    var card=grid.querySelector('[data-skin="'+pick+'"]');
+    if(card)card.classList.add('is-picked');
+  }
+  msg.innerHTML=pick
+    ?'焕宸最喜欢：'+SKINNAME[pick]+'<small>三套都会按篇章一件件解锁，解锁后随时能换</small>'
+    :'还没选好<small>点上面任意一张卡的「我偏好这套！」</small>';
+  document.querySelectorAll('.pick').forEach(function(b){b.setAttribute('aria-pressed',pick===b.dataset.pick?'true':'false');});
+}
+function burst(st){
+  if(RM)return;
+  for(var i=0;i<16;i++){
+    var a=Math.random()*Math.PI*2,sp=1.2+Math.random()*2.6;
+    st.parts.push({x:350,y:250,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1.2,l:1,c:i%2?'#ffd54f':'#fff59d'});
+  }
+}
+document.querySelectorAll('.pills [data-act]').forEach(function(b){
+  b.addEventListener('click',function(){
+    var card=b.closest('.card'),sk=card.dataset.skin;
+    var st=stages.filter(function(s){return s.skin===sk;})[0];
+    st.act=b.dataset.act;
+    card.querySelectorAll('.pills [data-act]').forEach(function(o){o.classList.remove('on');});
+    b.classList.add('on');
+  });
+});
+document.querySelectorAll('.zoom').forEach(function(b){
+  b.addEventListener('click',function(){
+    var sk=b.dataset.zoom, on=grid.classList.contains('is-zoom')&&grid.querySelector('.card.is-zoomed')===grid.querySelector('[data-skin="'+sk+'"]');
+    grid.classList.remove('is-zoom');
+    document.querySelectorAll('.card').forEach(function(c){c.classList.remove('is-zoomed');});
+    document.querySelectorAll('.zoom').forEach(function(o){o.textContent='放大看';});
+    if(!on){
+      grid.classList.add('is-zoom');
+      grid.querySelector('[data-skin="'+sk+'"]').classList.add('is-zoomed');
+      b.textContent='退出放大';
+    }
+  });
+});
+document.querySelectorAll('.pick').forEach(function(b){
+  b.addEventListener('click',function(){
+    pick=b.dataset.pick;
+    try{localStorage.setItem('moday_skin_pick',pick);}catch(e){}
+    syncPicked();
+    runner.x=RM?runnerResetX():-40;
+  runner.steps.length=0;
+  var st=stages.filter(function(s){return s.skin===pick;})[0];
+    burst(st);
+  });
+});
+document.getElementById('reset').addEventListener('click',function(){
+  pick=null;
+  try{localStorage.removeItem('moday_skin_pick');}catch(e){}
+  syncPicked();
+  grid.classList.remove('is-zoom');
+  document.querySelectorAll('.card').forEach(function(c){c.classList.remove('is-zoomed');});
+  document.querySelectorAll('.zoom').forEach(function(o){o.textContent='放大看';});
+});
+
+/* ---------- 底部：选中的人沿结果条走一遍（签名动效） ---------- */
+var runnerCv=document.getElementById('runner');
+var runCtx=null,runner={x:0,steps:[],w:900};
+function runnerResetX(){return runner.w*0.62;}
+function fitRunner(){
+  var w=Math.max(240,runnerCv.clientWidth||900), h=104;
+  runCtx=setup(runnerCv,w,h);
+  runner.w=w;
+}
+fitRunner();
+window.addEventListener('resize',fitRunner);
+runner.x=runnerResetX();
+
+/* ---------- 主循环 ---------- */
+var T0=performance.now();
+function autoAct(t){var p=t%6.3;if(p<2.6)return 'idle';if(p<5.2)return 'walk';return 'shoot';}
+
+function drawStageCard(st,t){
+  var ctx=st.ctx,W=700,H=440;
+  var scroll=RM?0.4:t*10;
+  drawStage(ctx,W,H,st.bg,t,scroll);
+  var act=st.act==='auto'?autoAct(t+st.seed):st.act;
+  /* 地面标记 */
+  ctx.fillStyle='rgba(255,255,255,.09)';ell(ctx,350,362,54,7);
+  ctx.save();ctx.globalAlpha=.2;ctx.fillStyle='#ffd54f';ell(ctx,350,362,3,3);ctx.restore();
+  SKINS[st.skin](ctx,350,362,285,t,act);
+  /* 点击选中的星星迸发 */
+  if(st.parts.length){
+    for(var i=st.parts.length-1;i>=0;i--){
+      var p=st.parts[i];
+      p.x+=p.vx;p.y+=p.vy;p.vy+=0.06;p.l-=0.016;
+      if(p.l<=0){st.parts.splice(i,1);continue;}
+      ctx.globalAlpha=Math.max(0,p.l);
+      star(ctx,p.x,p.y,5+8*(1-p.l),p.c,p.l*4);
+    }
+    ctx.globalAlpha=1;
+  }
+}
+function drawMini(m,t){
+  var ctx=m.ctx,W=560,H=250;
+  drawStage(ctx,W,H,m.key,t,RM?0.4:t*10);
+  ctx.fillStyle='rgba(255,255,255,.08)';
+  ell(ctx,104,208,25,4.5);ell(ctx,280,208,25,4.5);ell(ctx,456,208,25,4.5);
+  drawRanger(ctx,104,208,110,t,'walk');
+  drawRift(ctx,280,208,110,t+1.2,'walk');
+  drawMecha(ctx,456,208,110,t+2.4,'walk');
+}
+function drawRunner(t){
+  var ctx=runCtx,W=runner.w,H=104;
+  ctx.clearRect(0,0,W,H);
+  if(!pick){
+    ctx.fillStyle='rgba(255,255,255,.12)';
+    ctx.fillRect(0,H-10,W,2);
+    return;
+  }
+  var gy=H-12;
+  var g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,'rgba(255,213,79,.10)');g.addColorStop(1,'rgba(255,213,79,0)');
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='rgba(255,213,79,.34)';ctx.fillRect(0,gy,W,2);
+  for(var i=runner.steps.length-1;i>=0;i--){
+    var s=runner.steps[i];s.l-=0.012;
+    if(s.l<=0){runner.steps.splice(i,1);continue;}
+    ctx.globalAlpha=s.l*0.7;star(ctx,s.x,s.y-2,4+3*(1-s.l),'#ffd54f',s.l*3);
+  }
+  ctx.globalAlpha=1;
+  SKINS[pick](ctx,runner.x,gy,84,t,RM?'idle':'walk');
+}
+/* 走路推进只在一处算：按真实帧间隔推进，落地时留一颗脚步星光 */
+function stepRunner(t,dt){
+  if(!pick)return;
+  if(RM){runner.x=runnerResetX();return;}
+  runner.x+=74*dt;
+  if(runner.x>runner.w+40){runner.x=-40;runner.steps.length=0;}
+  var phase=Math.sin(rig(t,'walk').wph);
+  if(phase>0.995&&!runner._s){
+    runner._s=1;
+    runner.steps.push({x:runner.x-6,y:92,l:1});
+    if(runner.steps.length>26)runner.steps.shift();
+  }
+  if(phase<0.9)runner._s=0;
+}
+var last=performance.now();
+function frame(now){
+  var t=(now-T0)/1000, dt=Math.min(0.05,(now-last)/1000); last=now;
+  stages.forEach(function(st){drawStageCard(st,t);});
+  drawSoldier(refCtx,65,140,110,t,'idle');
+  minis.forEach(function(m){drawMini(m,t);});
+  stepRunner(t,dt);
+  drawRunner(t);
+  requestAnimationFrame(frame);
+}
+syncPicked();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

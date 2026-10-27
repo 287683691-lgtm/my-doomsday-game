@@ -1,20 +1,15 @@
-﻿﻿﻿﻿# gen-audio.ps1：预生成 APK 内置语音＋音效（voice/*.wav）
-# 台词用 Windows 自带中文语音（SAPI）合成；音效/BGM 按游戏里 tone()/noise() 的同一套参数用数学渲染，
-# 保证 APK 里听到的和桌面浏览器完全同款。改台词后重跑本脚本，再跑 build-apk.ps1 即可。
+﻿﻿# gen-audio.ps1：预生成 APK 内置语音＋音效（voice/*.wav）
+# 台词用阿里云百炼 qwen3-tts-flash 大模型配音（同目录 gen-voice-qwen.py，密钥在项目根 .env）；
+# 音效按游戏里 tone()/noise() 的同一套参数用数学渲染；BGM 用同目录 bgm_master.wav（CC0 素材叠加的氛围版）直接复制。
+# 改台词后重跑本脚本，再跑 build-apk.ps1 即可。
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $out = Join-Path $root 'voice'
 New-Item -ItemType Directory -Force -Path $out | Out-Null
 
-# ---------- 1) 台词（SAPI 中文语音 → 16kHz 单声道 WAV） ----------
-Add-Type -AssemblyName System.Speech
-$syn = New-Object System.Speech.Synthesis.SpeechSynthesizer
-$zh = $syn.GetInstalledVoices() | Where-Object { $_.VoiceInfo.Culture -and $_.VoiceInfo.Culture.Name -like 'zh*' } | Select-Object -First 1
-if (-not $zh) { throw '本机没装中文语音（SAPI），无法生成台词' }
-$syn.SelectVoice($zh.VoiceInfo.Name)
-$syn.Rate = -1; $syn.Volume = 100
-$fmt = New-Object System.Speech.AudioFormat.SpeechAudioFormatInfo(16000, [System.Speech.AudioFormat.AudioBitsPerSample]::Sixteen, [System.Speech.AudioFormat.AudioChannel]::Mono)
-
+# ---------- 1) 台词（qwen3-tts-flash 大模型配音 → 24kHz 单声道 WAV） ----------
+# 音色：全局 Ryan（甜茶）；首页 4 句（mymd/tagline/char_thin/char_fat）用 Andre（安德雷）。
+# 下面的 $lines 键表是台词唯一真源，由 gen-voice-qwen.py 解析后逐句合成；改台词只改这里。
 $lines = [ordered]@{
   'mymd'        = '我的末日'
   'tagline'     = '方块人大战方块僵尸，嵇焕宸和爸爸的第一个小游戏'
@@ -28,6 +23,14 @@ $lines = [ordered]@{
   'bg_bone'     = '白骨地'
   'bg_ice'      = '寒冰谷'
   'bg_rift'     = '合体山谷'
+  'bg_junk'     = '机甲坟场'
+  'bg_neon'     = '霓虹流水线'
+  'bg_dome'     = '峡谷旧油库'
+  'bg_core'     = '机核深渊'
+  'bg_ruin'     = '落日废墟城'
+  'bg_giant'    = '巨兽白骨地'
+  'bg_wreck'    = '机甲残骸长廊'
+  'bg_throne'   = '世界尽头的王座'
   'boss_forest' = '藤蔓僵王'
   'boss_city'   = '铁皮僵王'
   'boss_desert' = '沙暴僵王'
@@ -35,19 +38,48 @@ $lines = [ordered]@{
   'boss_hammer' = '骨锤独腿王'
   'boss_drag'   = '拖地长臂王'
   'boss_finale' = '三王合体'
+  'boss_piston' = '活塞重锤王'
+  'boss_drill'  = '钻头臂王'
+  'boss_hangar' = '机库王'
+  'boss_trio3'  = '三机王合体'
+  'boss_overlord' = '末日总王'
   'unite'       = '三只大王合在一起啦！只有头顶光环的会开枪！'
+  'unite3'      = '三台机甲王合体啦！只有头顶光环的会开枪！'
   'allok'       = '丧尸山谷全部打完！你就是末日小英雄！'
+  'allok3'      = '机核深渊全部打完！你就是末日小英雄！'
+  'allok4'      = '世界尽头全部打完！你就是真正的末日小英雄！'
   'choosewin'   = '选一个吧：回藏宝图，看看新的一块战场！'
+  'chooseend'   = '选一个吧：回藏宝图，整个末日都被你打完啦！'
   'coming'      = '来啦！它会发射子弹，看到冒烟就赶紧换路躲开！'
   'warn_furnace'= '它没有手，靠背上的炉子喷火：看到冒烟和地上发红，马上换路！'
   'warn_hammer' = '它只会一跳一跳，锤子举高高就是要砸，赶紧跑远一点！'
   'warn_drag'   = '它的手拖在地上从右边扫到左边，看到路面压暗就换到没暗的那条路！'
+  'warn_piston' = '它的活塞臂越压越长，橙光一闪就是要砸脚下那条路，提前换路！砸完杆子卡住，趁那一下打它的头！'
+  'warn_drill'  = '它的地面钻头会扫两条路，看到路面压暗就换到没暗的那条！扫完收回那一下打它背上的散热眼！'
+  'warn_hangar' = '它背上的库门开红光时，躲远子弹，趁门开着打库里的控制台！它会放浮游探针！'
+  'warn_overlord' = '总王又砸锤又扫长臂，背上的炉子还喷火烧脚底下！路面发暗发红赶紧换路，它脑门红宝石一亮就使劲打！'
   'zhugong'     = '现在是它主攻！盯住它头顶的光环！'
   'zb_fire'     = '会炸火的火焰丧尸，别站太近！'
   'zb_hole'     = '破了个洞的丧尸，走得慢，血多！'
   'zb_notch'    = '缺牙丧尸，走路扭来扭去会换路！'
   'zb_oneeye'   = '独眼丧尸，会突然加速冲过来！'
   'zb_ice'      = '冰封丧尸，血最厚，用寒冰球冻它！'
+  'zb_weld'     = '电焊兵，打死它会炸一圈焊花，别贴着它开枪！'
+  'zb_armor'    = '重甲机兵，血厚走得慢，用大火球火箭弹揍它！'
+  'zb_chain'    = '链锯突击兵，锯盘转快就会冲，血不多，冲之前解决它！'
+  'zb_drone'    = '浮游探针，悬在天上乱换路，盯子弹别盯它！'
+  'zb_kvine'    = '藤蔓大王当小兵啦，走路扭来扭去会换路！'
+  'zb_ksteel'   = '铁皮大王当小兵啦，又硬又慢，用寒冰球冻它更划算！'
+  'zb_ksand'    = '沙暴大王当小兵啦，攒一会儿劲会猛地冲过来！'
+  'zb_kfurnace' = '火柱大王当小兵啦，打死它会炸一团火，别贴着它开枪！'
+  'zb_khammer'  = '骨锤大王当小兵啦，块头大血又多，一梭子打不死它！'
+  'zb_kdrag'    = '长臂大王当小兵啦，走两步就换路，看准了再打！'
+  'zb_kpiston'  = '活塞大王当小兵啦，先慢慢走，然后猛地加速冲！'
+  'zb_kdrill'   = '钻头大王当小兵啦，血厚还会换路，趁它离得远先揍它！'
+  'zb_khangar'  = '机库大王当小兵啦，最硬最慢，用大火球火箭弹揍它！'
+  'lock_ruin'   = '落日废墟城那一关！'
+  'lock_giant'  = '巨兽白骨地那一关！'
+  'lock_wreck'  = '机甲残骸长廊那一关！'
   'rage1'       = '小心！'
   'rage2'       = '狂暴啦！'
   'unlock'      = '还没解锁，先打赢'
@@ -79,6 +111,15 @@ $lines = [ordered]@{
   'w_shield'    = '防护盾'
   'shieldup'    = '防护盾撑开啦，帮你挡三下！'
   'gift'        = '宝藏开箱啦！四十个金币，还有一面防护盾！'
+  'unlock_a'    = '山谷游侠的衣服解锁啦！去首页给焕宸换上！'
+  'unlock_b'    = '裂谷星铠的衣服解锁啦！去首页给焕宸换上！'
+  'unlock_c'    = '星核机甲的衣服解锁啦！去首页给焕宸换上！'
+  'unlock_d'    = '末日王铠的衣服解锁啦！去首页给焕宸换上！'
+  'uf_ranger'   = '山谷游侠，焕宸！'
+  'uf_rift'     = '裂谷星铠，焕宸！'
+  'uf_mecha'    = '星核机甲，焕宸！'
+  'uf_king'     = '末日王铠，焕宸！'
+  'uf_only'     = '衣服是给焕宸穿的，爸爸还是老样子！'
   'zaidian'     = '再点一下就买啦'
   'maidaola'    = '买到啦'
   'jixu'        = '买好啦，继续加油！'
@@ -89,60 +130,14 @@ $lines = [ordered]@{
   'n10' = '十'; 'n20' = '二十'; 'n30' = '三十'
   'n40' = '四十'; 'n50' = '五十'; 'n60' = '六十'; 'n70' = '七十'; 'n80' = '八十'; 'n90' = '九十'
 }
-# 裁掉台词 wav 的头尾静音：SAPI 每句自带约 0.75s 尾静音＋0.055s 头静音，
-# 台词是按 clip 连播的（playClip 靠 ended 事件接续，中间没有延时），
-# 尾静音累加起来就是「第……2……关」之间明显的停顿。
-# 只处理台词（音效/BGM 是整段数学渲染的，节奏本身就是准的，不动）。
-function Trim-WavSilence($path, $tailSec, $headSec) {
-  $bytes = [System.IO.File]::ReadAllBytes($path)
-  if ($bytes.Length -lt 44) { return }
-  # 解析 RIFF 块：拿到采样率和 data 块位置（SAPI 写的是 16kHz 单声道 16bit PCM，标准头）
-  $pos = 12; $sr = 0; $dataOff = -1; $dataLen = 0
-  while ($pos + 8 -le $bytes.Length) {
-    $id = [System.Text.Encoding]::ASCII.GetString($bytes, $pos, 4)
-    $sz = [BitConverter]::ToUInt32($bytes, $pos + 4)
-    if ($id -eq 'fmt ') { $sr = [BitConverter]::ToUInt32($bytes, $pos + 12) }
-    elseif ($id -eq 'data') { $dataOff = $pos + 8; $dataLen = [Math]::Min($sz, $bytes.Length - $dataOff); break }
-    $pos += 8 + $sz + ($sz -band 1)          # 块按 2 字节对齐，奇数长度补 1 字节
-  }
-  if ($dataOff -lt 0 -or $sr -le 0) { return }
-  $n = [int]($dataLen / 2)
-  # SAPI 的静音是真 0：从尾向前找最后一个非零样本、从头向后找第一个非零样本
-  $last = -1
-  for ($i = $n - 1; $i -ge 0; $i--) {
-    if ([BitConverter]::ToInt16($bytes, $dataOff + $i * 2) -ne 0) { $last = $i; break }
-  }
-  if ($last -lt 0) { return }                # 整段全 0（异常），不动它
-  $first = $last
-  for ($i = 0; $i -le $last; $i++) {
-    if ([BitConverter]::ToInt16($bytes, $dataOff + $i * 2) -ne 0) { $first = $i; break }
-  }
-  $keepEnd = [Math]::Min($n, $last + 1 + [int]($sr * $tailSec))       # 人声后留一点余韵
-  $keepStart = [Math]::Max(0, $first - [int]($sr * $headSec))         # 开头最多留一小截，起音不顶
-  if ($keepStart -eq 0 -and $keepEnd -ge $n) { return }               # 没得裁就不重写
-  # 按保留区间重写为标准 44 字节头的 PCM wav
-  $newLen = $keepEnd - $keepStart
-  $ms = New-Object System.IO.MemoryStream
-  $bw = New-Object System.IO.BinaryWriter($ms)
-  $enc = [System.Text.Encoding]::ASCII
-  $bw.Write($enc.GetBytes('RIFF')); $bw.Write([UInt32](36 + $newLen * 2)); $bw.Write($enc.GetBytes('WAVE'))
-  $bw.Write($enc.GetBytes('fmt ')); $bw.Write([UInt32]16); $bw.Write([UInt16]1); $bw.Write([UInt16]1)
-  $bw.Write([UInt32]$sr); $bw.Write([UInt32]($sr * 2)); $bw.Write([UInt16]2); $bw.Write([UInt16]16)
-  $bw.Write($enc.GetBytes('data')); $bw.Write([UInt32]($newLen * 2))
-  $bw.Write($bytes, $dataOff + $keepStart * 2, $newLen * 2)
-  $bw.Flush(); [System.IO.File]::WriteAllBytes($path, $ms.ToArray()); $bw.Close()
-}
-foreach ($k in $lines.Keys) {
-  $p = Join-Path $out ($k + '.wav')
-  $syn.SetOutputToWaveFile($p, $fmt)
-  $syn.Speak([string]$lines[$k])
-  $syn.SetOutputToNull()
-  Trim-WavSilence $p 0.12 0.05               # 尾静音只留 0.12s、头静音最多 0.05s，连播间隔立刻变小
-}
-$syn.Dispose()
+# 台词合成＋头尾静音裁剪统一在 gen-voice-qwen.py 里做（裁剪参数沿用旧 Trim-WavSilence：尾留 0.12s、头留 0.05s。
+# 台词按 clip 连播，playClip 靠 ended 事件接续，头尾静音累加就是「第……2……关」之间明显的停顿，必须裁）。
+# 音效是整段数学渲染的，BGM 是成品素材，节奏本身都是准的，都不裁剪、不受影响。
+& python (Join-Path $PSScriptRoot 'gen-voice-qwen.py')
+if ($LASTEXITCODE -ne 0) { throw '台词生成失败（qwen3-tts-flash）' }
 Write-Host ('台词：' + $lines.Count + ' 句已生成')
 
-# ---------- 2) 音效/BGM（按 tone()/noise() 同参数数学渲染 → 22.05kHz 单声道 WAV） ----------
+# ---------- 2) 音效（按 tone()/noise() 同参数数学渲染 → 22.05kHz 单声道 WAV） ----------
 $SR = 22050
 $rnd = New-Object System.Random 20260928
 
@@ -243,20 +238,23 @@ Gen-Sfx 'spit' 0.22 @(@{dur=0.10;f=300;f2=110;type='sine';vol=0.13;atk=0.005}, @
 Gen-Sfx 'shield' 0.42 @(@{dur=0.30;f=330;f2=880;type='sine';vol=0.16;atk=0.02}, @{dur=0.26;f=495;f2=1320;type='triangle';vol=0.10;atk=0.02;delay=0.05}, @{noise=1;dur=0.18;vol=0.05;f=3000;ftype='highpass';delay=0.04})
 Gen-Sfx 'block' 0.28 @(@{dur=0.10;f=1568;type='square';vol=0.13;atk=0.003}, @{dur=0.16;f=2093;f2=1568;type='sine';vol=0.11;atk=0.003;delay=0.03}, @{noise=1;dur=0.06;vol=0.06;f=4200;ftype='highpass'})
 
-# BGM：8 步旋律循环（与 MELO 一致）。尾巴折回头部，保证 loop 拼接无断口
-$loopLen = [int](2.4 * $SR)
-$tmpLen = $loopLen + [int](1.0 * $SR)
-$bgm = New-Object double[] $tmpLen
-$notes = @(196, 0, 262, 0, 196, 0, 294, 262)
-for ($i = 0; $i -lt 8; $i++) {
-  $f = $notes[$i]; if ($f -eq 0) { continue }
-  Add-Tone $bgm $tmpLen @{dur=0.48;f=$f;type='triangle';vol=0.10;atk=0.03;delay=($i * 0.3)}
-  Add-Noise $bgm $tmpLen @{dur=0.04;vol=0.022;f=5200;ftype='highpass';delay=($i * 0.3)}
+# BGM：末日氛围版成品素材（同目录 bgm_master.wav → voice/bgm.wav，28.9s 循环 / 22.05kHz 单声道 16bit）。
+# 素材：Freesound CC0 —— burning-mir《action music loop with dark ambient drones》打底，
+#       goulven《dark ambient loop》压低 4dB 叠在上面；接缝做过 0.12s 交叉淡化，RMS 归一到 -19 dBFS。
+# 换曲子只要把新的循环 wav 覆盖 bgm_master.wav（格式必须是 22050 / mono / 16bit PCM）。
+Copy-Item (Join-Path $PSScriptRoot 'bgm_master.wav') (Join-Path $out 'bgm.wav') -Force
+
+# ---------- 3) 同步到运行时目录 ----------
+# voice/ 是源，www/voice 与 android assets 的 public/voice 才是 APK 真正打包的副本；
+# 音效/BGM 不在 gen-voice-qwen.py 的同步范围内（它只同步台词键），必须在这里补齐，
+# 否则改了参数重跑脚本，APK 里还是旧声音。
+foreach ($d in @((Join-Path $PSScriptRoot 'www\voice'), (Join-Path $PSScriptRoot 'android\app\src\main\assets\public\voice'))) {
+  if (-not (Test-Path $d)) { continue }
+  Copy-Item (Join-Path $out 'bgm.wav') (Join-Path $d 'bgm.wav') -Force
+  foreach ($f in (Get-ChildItem $out -Filter 's_*.wav')) { Copy-Item $f.FullName (Join-Path $d $f.Name) -Force }
 }
-for ($j = $loopLen; $j -lt $tmpLen; $j++) { $bgm[$j - $loopLen] += $bgm[$j]; $bgm[$j] = 0.0 }
-Write-Wav (Join-Path $out 'bgm.wav') $bgm $loopLen
 
 $files = Get-ChildItem $out -Filter *.wav
 $mb = [math]::Round(($files | Measure-Object Length -Sum).Sum / 1MB, 2)
-Write-Host ('音效/BGM：' + (Get-ChildItem $out -Filter 's_*.wav').Count + ' 个音效 ＋ 1 个 BGM 已生成')
+Write-Host ('音效/BGM：' + (Get-ChildItem $out -Filter 's_*.wav').Count + ' 个音效 ＋ 1 个 BGM 已就绪（含 www / android 同步）')
 Write-Host ('合计 ' + $files.Count + ' 个 wav，' + $mb + ' MB → ' + $out)

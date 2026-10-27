@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>第三篇章：场景背景 · 每关挑一个</title>
+<style>
+  :root{
+    --bg:#12161f; --panel:#1b2230; --line:#2c3648;
+    --tx:#f2f6ff; --mut:#a7b6c9; --pick:#0fdc78; --pickTx:#04331c;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%}
+  body{
+    background:linear-gradient(180deg,#10141d,#161d2b 40%,#12161f);
+    color:var(--tx);
+    font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    -webkit-tap-highlight-color:transparent;
+  }
+  header{
+    display:flex; flex-wrap:wrap; align-items:center; gap:12px;
+    padding:12px 18px; border-bottom:3px solid var(--line);
+    position:sticky; top:0; background:#131824; z-index:5;
+  }
+  h1{margin:0; font-size:24px; font-weight:900; letter-spacing:1px;
+    background:linear-gradient(90deg,#5ff0ff,#ff5fd7,#ffca28,#69f0ae);
+    -webkit-background-clip:text; background-clip:text; color:transparent;}
+  .tip{margin:0; font-size:14px; font-weight:700; color:var(--mut)}
+  .sel{margin-left:auto; font-size:18px; font-weight:900; color:var(--pick)}
+  button{
+    font:inherit; font-weight:900; color:var(--tx);
+    background:#242e42; border:3px solid var(--line); border-radius:12px;
+    padding:8px 14px; cursor:pointer;
+  }
+  button:active,button:hover{border-color:var(--pick)}
+  button[aria-pressed="true"]{background:var(--pick); color:var(--pickTx); border-color:var(--pick)}
+  .sec{padding:10px 18px 0}
+  .rowttl{
+    margin:10px 0 4px; padding:8px 14px;
+    background:#1c2536; border-left:8px solid var(--mut); border-radius:10px;
+    font-size:21px; font-weight:900; letter-spacing:1px;
+  }
+  .rowttl b{float:right; font-size:16px; color:var(--pick); font-weight:900}
+  .grid{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px}
+  @media (max-width:820px){ .grid{grid-template-columns:repeat(1,minmax(0,1fr))} }
+  .card{
+    background:var(--panel); border:4px solid var(--line); border-radius:16px;
+    overflow:hidden; display:flex; flex-direction:column; cursor:pointer;
+  }
+  .card.pick{border-color:var(--pick); box-shadow:0 0 0 3px rgba(15,220,120,.25)}
+  .card canvas{width:100%; display:block}
+  .meta{display:flex; align-items:center; gap:8px; padding:6px 10px 0}
+  .no{min-width:34px; text-align:center; font-size:22px; font-weight:900; color:var(--mut)}
+  .card.pick .no{color:var(--pick)}
+  .nm{font-size:20px; font-weight:900; line-height:1.2}
+  .spk{margin-left:auto; font-size:16px; padding:4px 10px}
+  .role{padding:2px 10px 12px; font-size:13px; font-weight:700; color:var(--mut); line-height:1.45}
+  footer{padding:10px 18px 26px; font-size:14px; font-weight:600; color:var(--mut); line-height:1.7}
+  footer b{color:var(--tx)}
+</style>
+</head>
+<body>
+<header>
+  <h1>第三篇章 · 场景背景</h1>
+  <p class="tip">每一关两个场景，点一下你最喜欢的那个（绿框＝选定）</p>
+  <button id="sayRule">听规则</button>
+  <button id="slow" aria-pressed="false">慢动作</button>
+  <button id="pause" aria-pressed="false">暂停</button>
+  <button id="reset">清空重选</button>
+  <div class="sel" id="sel">还没挑</div>
+</header>
+
+<div id="wrap"></div>
+
+<footer>
+  这一页挑的是<b>每关的战场背景</b>（小兵和大王在另外两页）。场景都是<b>活的</b>：探照灯会扫、传送带会转、雨会下、风滚草会滚。<b>底部那条亮线＋虚线就是战场地面和路</b>，选定哪版，游戏里那一关就搭成那个样子。<br>
+  关 8 废铁坟场、关 9 霓虹电路厂、关 10 荒漠试验场，各挑一个，告诉爸爸——场景就跟着你选的兵和王一起进游戏。
+</footer>
+
+<script>
+/* ---------- 画布工具 ---------- */
+function hexA(h,a){
+  const n=parseInt(h.slice(1),16);
+  return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+(+a).toFixed(3)+')';
+}
+function rr(c,x,y,w,h,r){
+  const m=Math.max(0.1,Math.min(r,w/2,h/2));
+  c.beginPath();
+  c.moveTo(x+m,y);
+  c.arcTo(x+w,y,x+w,y+h,m);
+  c.arcTo(x+w,y+h,x,y+h,m);
+  c.arcTo(x,y+h,x,y,m);
+  c.arcTo(x,y,x+w,y,m);
+  c.closePath();
+}
+function rnd(i){ const x=Math.sin(i*127.1+311.7)*43758.5453; return x-Math.floor(x); }
+function sky(c,stops){
+  const g=c.createLinearGradient(0,0,0,H);
+  stops.forEach((s,i)=>g.addColorStop(i/(stops.length-1),s));
+  c.fillStyle=g; c.fillRect(0,0,W,H);
+}
+function glow(c,col,blur,x,y,r,alpha){
+  c.save();
+  if(alpha!=null) c.globalAlpha=alpha;
+  c.shadowColor=col; c.shadowBlur=blur; c.fillStyle=col;
+  c.beginPath(); c.arc(x,y,r,0,7); c.fill(); c.fill();
+  c.restore();
+}
+function ground(c,gc,acc,scroll){
+  c.fillStyle=gc; c.fillRect(0,GY,W,H-GY);
+  c.fillStyle=hexA(acc,0.55); c.fillRect(0,GY,W,3);
+  c.fillStyle=hexA(acc,0.22);
+  for(let x=-scroll;x<W;x+=26) c.fillRect(x,GY+9,14,4);
+}
+
+/* ---------- 六个场景 ---------- */
+/* 8A 夕阳废船场 */
+function scSunset(c,T,sc){
+  sky(c,['#2e2150','#b0497a','#ff9e5e']);
+  glow(c,'#ffd97a',26,305,148,22,0.9);
+  c.fillStyle='#ffd97a'; c.beginPath(); c.arc(305,148,16,0,7); c.fill();
+  /* 远山 */
+  c.fillStyle='#3a2450'; c.beginPath(); c.moveTo(0,175);
+  c.quadraticCurveTo(90,130,190,168); c.quadraticCurveTo(300,138,420,172);
+  c.lineTo(420,GY); c.lineTo(0,GY); c.fill();
+  /* 大废船 */
+  c.fillStyle='#241734';
+  c.beginPath(); c.moveTo(70,196); c.lineTo(92,126); c.lineTo(332,126);
+  c.lineTo(352,196); c.closePath(); c.fill();
+  c.fillRect(246,100,54,26); c.fillRect(284,84,13,16);
+  for(let i=0;i<6;i++){
+    const on=rnd(i)>0.45, a=on?0.45+0.5*Math.abs(Math.sin(T*2+i)) : 0.18;
+    c.fillStyle=hexA(on?'#ffd54f':'#8a7aa0',a);
+    c.beginPath(); c.arc(112+i*38,152,3.4,0,7); c.fill();
+  }
+  /* 吊塔＋晃动的吊钩 */
+  c.fillStyle='#1c1229'; c.fillRect(366,58,8,140); c.fillRect(300,58,72,6);
+  const hx=318+Math.sin(T*0.8)*12;
+  c.strokeStyle='#1c1229'; c.lineWidth=2;
+  c.beginPath(); c.moveTo(hx,64); c.lineTo(hx,96+Math.sin(T*0.8)*4); c.stroke();
+  c.fillRect(hx-4,96+Math.sin(T*0.8)*4,8,7);
+  /* 废铁堆 */
+  c.fillStyle='#1c1229';
+  c.beginPath(); c.moveTo(0,GY); c.lineTo(28,168); c.lineTo(66,GY); c.fill();
+  c.beginPath(); c.moveTo(330,GY); c.lineTo(368,172); c.lineTo(420,GY); c.fill();
+  /* 绿光油桶 */
+  for(let i=0;i<3;i++){
+    const bx=44+i*22, gp=0.25+0.2*Math.sin(T*2+i*1.7);
+    c.fillStyle='#2e7d32'; rr(c,bx,GY-20,16,20,3); c.fill();
+    c.fillStyle='#1b5e20'; c.fillRect(bx,GY-14,16,2.5);
+    glow(c,'#69f0ae',10,bx+8,GY-22,2.6,gp+0.25);
+  }
+  /* 飘尘 */
+  for(let i=0;i<8;i++){
+    const x=(T*8+i*57)%W, y=GY-30-rnd(i)*60;
+    c.fillStyle=hexA('#ffd9a0',0.14);
+    c.beginPath(); c.arc(x,y,1.6,0,7); c.fill();
+  }
+  ground(c,'#2a1b31',E8,sc);
+}
+/* 8B 机甲坟场之夜 */
+function scNight(c,T,sc){
+  sky(c,['#0b1026','#141b33']);
+  for(let i=0;i<26;i++){
+    const x=rnd(i)*W, y=rnd(i+50)*130, a=0.25+0.75*Math.abs(Math.sin(T*1.3+i));
+    c.fillStyle=hexA('#cfe8ff',a);
+    c.fillRect(x,y,1.8,1.8);
+  }
+  glow(c,'#e8f1ff',14,70,52,15,0.9);
+  c.fillStyle='#e8f1ff'; c.beginPath(); c.arc(70,52,15,0,7); c.fill();
+  c.fillStyle='#c9d6ea';
+  c.beginPath(); c.arc(65,48,3,0,7); c.fill();
+  c.beginPath(); c.arc(75,57,2.2,0,7); c.fill();
+  /* 废铁山 */
+  c.fillStyle='#0e1322';
+  c.beginPath(); c.moveTo(0,GY); c.lineTo(60,150); c.lineTo(150,178);
+  c.lineTo(250,146); c.lineTo(340,172); c.lineTo(420,150); c.lineTo(420,GY); c.fill();
+  /* 探照塔＋慢慢扫的光 */
+  c.fillStyle='#0e1322'; c.fillRect(48,92,10,110);
+  c.save(); c.translate(53,92); c.rotate(-1.15+0.55*Math.sin(T*0.3));
+  c.fillStyle=hexA('#5ff0ff',0.10);
+  c.beginPath(); c.moveTo(0,0); c.lineTo(330,-24); c.lineTo(330,24); c.closePath(); c.fill();
+  c.fillStyle=hexA('#bffcff',0.14);
+  c.beginPath(); c.moveTo(0,0); c.lineTo(330,-8); c.lineTo(330,8); c.closePath(); c.fill();
+  c.restore();
+  glow(c,'#5ff0ff',8,53,92,3.4,0.9);
+  /* 报废机器人头（眼窝还亮着） */
+  const heads=[[140,196,56,42,-0.15],[232,200,66,50,0.10],[322,192,48,38,-0.24]];
+  heads.forEach((hd,i)=>{
+    c.save(); c.translate(hd[0],hd[1]); c.rotate(hd[4]);
+    c.fillStyle='#131a2c'; c.strokeStyle='#2a3652'; c.lineWidth=2;
+    rr(c,-hd[2]/2,-hd[3],hd[2],hd[3],7); c.fill(); c.stroke();
+    const a=0.35+0.3*Math.sin(T*2.2+i*1.4);
+    glow(c,'#5ff0ff',8,-hd[2]/4,-hd[3]/2,3.4,a+0.2);
+    glow(c,'#5ff0ff',8, hd[2]/4,-hd[3]/2,3.4,a+0.2);
+    c.fillStyle='#1c2740'; c.fillRect(-hd[2]/5,-hd[3]/6,hd[2]*0.4,4);
+    c.restore();
+  });
+  /* 偶尔的火花 */
+  const q=(T%2.4)/2.4;
+  if(q<0.22){
+    const a=1-q/0.22;
+    c.strokeStyle=hexA('#ffe08a',a); c.lineWidth=1.6;
+    for(let i=0;i<5;i++){
+      const an=-Math.PI/2+(i-2)*0.5, L=5+q*34;
+      c.beginPath(); c.moveTo(250,146);
+      c.lineTo(250+Math.cos(an)*L,146+Math.sin(an)*L); c.stroke();
+    }
+  }
+  ground(c,'#0e1322',E8,sc);
+}
+/* 9A 霓虹流水线 */
+function scFactory(c,T,sc){
+  sky(c,['#141a2a','#1a2436']);
+  c.strokeStyle='#20304a'; c.lineWidth=1;
+  for(let x=30;x<W;x+=60){ c.beginPath(); c.moveTo(x,0); c.lineTo(x,150); c.stroke(); }
+  for(let y=34;y<150;y+=38){ c.beginPath(); c.moveTo(0,y); c.lineTo(W,y); c.stroke(); }
+  /* 电路走线＋跑动的光点 */
+  for(let i=0;i<4;i++){
+    const y=52+i*26;
+    c.strokeStyle=hexA('#ff5fd7',0.22); c.lineWidth=2;
+    c.beginPath(); c.moveTo(0,y); c.lineTo(W,y); c.stroke();
+    for(let j=0;j<3;j++){
+      const x=(T*46+i*90+j*150)%(W+20)-10;
+      glow(c,'#ff5fd7',8,x,y,2.2,0.9);
+    }
+  }
+  /* 顶部霓虹灯管 */
+  for(let i=0;i<3;i++){
+    const a=0.5+0.35*Math.sin(T*3+i*1.3);
+    c.save(); c.shadowColor='#ff5fd7'; c.shadowBlur=12;
+    c.fillStyle=hexA('#ff5fd7',a);
+    rr(c,26+i*132,16,96,7,3.5); c.fill(); c.restore();
+  }
+  /* 传送带＋箱子 */
+  c.fillStyle='#2c3648'; c.fillRect(0,168,W,8);
+  c.fillStyle='#1a2233';
+  for(let x=-(sc*2)%24;x<W;x+=24) c.fillRect(x,170,3,4);
+  for(let i=0;i<5;i++){
+    const x=((i*86+T*34)%(W+60))-40;
+    c.fillStyle='#c56a29'; rr(c,x,146,28,22,3); c.fill();
+    c.fillStyle='#ffb300'; rr(c,x,146,28,15,3); c.fill();
+    c.fillStyle='#8a4a1a'; c.fillRect(x+12,146,4,22);
+  }
+  /* 蒸汽管＋白汽 */
+  c.fillStyle='#39465e'; c.fillRect(386,80,10,88);
+  c.fillStyle='#4a5a78'; c.fillRect(382,80,18,6);
+  for(let i=0;i<2;i++){
+    const k=((T*0.7+i*0.5)%1);
+    glow(c,'#dfe8f5',0,384-k*8,76-k*40,3+k*6,(1-k)*0.3);
+  }
+  ground(c,'#1a2233',E9,sc);
+}
+/* 9B 全息广告街 */
+function scHolo(c,T,sc){
+  sky(c,['#0d1226','#181f3a']);
+  /* 远处厂房剪影 */
+  c.fillStyle='#10162a';
+  [[0,150,70],[90,162,50],[160,146,46],[390,154,40]].forEach(b=>{
+    c.fillRect(b[0],b[1],b[2],GY-b[1]);
+  });
+  c.fillStyle='#10162a'; c.fillRect(0,0,26,GY);
+  /* 全息大屏：忽明忽暗＋扫描线＋机器人广告 */
+  const glitch=Math.sin(T*0.9)>0.985?3:0;
+  c.save(); c.translate(glitch,0);
+  c.strokeStyle='#ff5fd7'; c.lineWidth=3;
+  c.strokeRect(235,36,150,96);
+  c.fillStyle=hexA('#ff5fd7',0.08+0.05*Math.sin(T*7));
+  c.fillRect(235,36,150,96);
+  const ia=0.45+0.3*Math.sin(T*5);
+  c.fillStyle=hexA('#ffd7f4',ia);
+  rr(c,292,52,36,26,5); c.fill();
+  c.fillRect(286,84,48,30);
+  c.strokeStyle=hexA('#ffd7f4',ia); c.lineWidth=2;
+  c.beginPath(); c.moveTo(310,52); c.lineTo(310,42); c.stroke();
+  glow(c,'#5ff0ff',6,310,40,2.4,ia+0.2);
+  c.fillStyle=hexA('#ffffff',0.16);
+  c.fillRect(235,36+((T*34)%96),150,2.5);
+  c.restore();
+  /* 竖条霓虹招牌 */
+  const f1=Math.sin(T*6)>-0.6, f2=Math.sin(T*4.4+2)>-0.4;
+  c.save(); c.shadowBlur=10;
+  c.shadowColor='#40c4ff'; c.fillStyle=hexA('#40c4ff',f1?0.85:0.2);
+  rr(c,40,50,10,72,4); c.fill();
+  c.shadowColor='#ff5fd7'; c.fillStyle=hexA('#ff5fd7',f2?0.85:0.2);
+  rr(c,66,62,10,52,4); c.fill();
+  c.restore();
+  /* 小雨 */
+  c.strokeStyle=hexA('#9fd8ff',0.28); c.lineWidth=1.2;
+  for(let i=0;i<34;i++){
+    const x=(i*137)%W, y=((T*300+i*89)%(H+20))-10;
+    c.beginPath(); c.moveTo(x,y); c.lineTo(x-3,y+9); c.stroke();
+  }
+  /* 水坑反光 */
+  for(let i=0;i<6;i++){
+    const x=20+rnd(i)*380, w=18+rnd(i+9)*30;
+    c.fillStyle=hexA('#ff5fd7',0.2+0.18*Math.sin(T*4+i*1.6));
+    c.fillRect(x,GY+12+i%3*6,w,2.5);
+  }
+  ground(c,'#101624',E9,sc);
+}
+/* 10A 金色沙丘靶场 */
+function scDunes(c,T,sc){
+  sky(c,['#6ec6ff','#ffe2a8']);
+  glow(c,'#fff3b0',24,70,54,20,0.95);
+  c.fillStyle='#fff3b0'; c.beginPath(); c.arc(70,54,14,0,7); c.fill();
+  /* 慢飘的云 */
+  for(let i=0;i<2;i++){
+    const x=((T*6+i*230)%(W+140))-70;
+    c.fillStyle=hexA('#ffffff',0.55);
+    c.beginPath();
+    c.ellipse(x,44+i*20,26,7,0,0,7); c.fill();
+    c.beginPath(); c.ellipse(x+18,48+i*20,16,6,0,0,7); c.fill();
+  }
+  /* 远沙丘 */
+  c.fillStyle='#e8c98a'; c.beginPath(); c.moveTo(0,168);
+  for(let x=0;x<=W;x+=14) c.lineTo(x,160+Math.sin(x*0.02+1+sc*0.004)*11);
+  c.lineTo(W,GY); c.lineTo(0,GY); c.fill();
+  /* 中沙丘 */
+  c.fillStyle='#d9b06a'; c.beginPath(); c.moveTo(0,190);
+  for(let x=0;x<=W;x+=14) c.lineTo(x,184+Math.sin(x*0.026+2.4+sc*0.008)*9);
+  c.lineTo(W,GY); c.lineTo(0,GY); c.fill();
+  /* 雷达罩＋慢慢转的盘 */
+  c.fillStyle='#f4f8ff';
+  c.beginPath(); c.arc(336,186,24,Math.PI,0); c.closePath(); c.fill();
+  c.fillStyle='#b0bec5'; c.fillRect(312,186,48,4);
+  c.save(); c.translate(336,178); c.rotate(Math.sin(T*0.6)*0.9);
+  c.strokeStyle='#78909c'; c.lineWidth=3;
+  c.beginPath(); c.arc(0,-6,9,Math.PI*0.15,Math.PI*0.85); c.stroke();
+  c.beginPath(); c.moveTo(0,-6); c.lineTo(0,2); c.stroke();
+  c.restore();
+  glow(c,'#ff8a3c',6,336,182,2,0.6+0.4*Math.sin(T*3));
+  /* 靶子木桩 */
+  for(let i=0;i<3;i++){
+    const x=92+i*52, sw=Math.sin(T*2+i)*0.06;
+    c.save(); c.translate(x,GY-4); c.rotate(sw);
+    c.fillStyle='#8d6e63'; c.fillRect(-2,-44,4,44);
+    c.fillStyle='#ef5350'; c.beginPath(); c.arc(0,-50,9,0,7); c.fill();
+    c.fillStyle='#ffffff'; c.beginPath(); c.arc(0,-50,5.5,0,7); c.fill();
+    c.fillStyle='#ef5350'; c.beginPath(); c.arc(0,-50,2.4,0,7); c.fill();
+    c.restore();
+  }
+  /* 被风吹成条的沙粒 */
+  c.strokeStyle=hexA('#fff2cc',0.4); c.lineWidth=1.4;
+  for(let i=0;i<8;i++){
+    const x=W-((T*70+i*61)%(W+40)), y=GY-18-rnd(i)*52;
+    c.beginPath(); c.moveTo(x,y); c.lineTo(x+9,y); c.stroke();
+  }
+  ground(c,'#c79a52',E10,sc);
+}
+/* 10B 峡谷旧油库 */
+function scCanyon(c,T,sc){
+  sky(c,['#7a3b1e','#ffb36b']);
+  /* 两侧峡谷岩壁 */
+  c.fillStyle='#3a1d14';
+  c.beginPath(); c.moveTo(0,0); c.lineTo(86,0); c.lineTo(64,54); c.lineTo(92,108);
+  c.lineTo(56,164); c.lineTo(78,GY); c.lineTo(0,GY); c.closePath(); c.fill();
+  c.beginPath(); c.moveTo(W,0); c.lineTo(348,0); c.lineTo(368,64); c.lineTo(338,122);
+  c.lineTo(372,176); c.lineTo(352,GY); c.lineTo(W,GY); c.closePath(); c.fill();
+  c.strokeStyle=hexA('#ff8a3c',0.16); c.lineWidth=2;
+  c.beginPath(); c.moveTo(86,0); c.lineTo(64,54); c.lineTo(92,108); c.lineTo(56,164); c.stroke();
+  /* 横卧大油罐 */
+  c.fillStyle='#5b616b'; rr(c,140,148,122,46,22); c.fill();
+  c.fillStyle='#7b828d'; rr(c,146,152,110,10,5); c.fill();
+  c.fillStyle='#3d424a'; c.fillRect(156,194,10,20); c.fillRect(236,194,10,20);
+  c.fillStyle='#5b616b'; rr(c,278,160,82,34,16); c.fill();
+  c.fillStyle='#3d424a'; c.fillRect(290,194,8,20); c.fillRect(340,194,8,20);
+  /* 管道 */
+  c.fillStyle='#4a4e57'; c.fillRect(118,206,206,7);
+  for(let x=130;x<320;x+=46) c.fillRect(x,213,5,9);
+  /* 闪烁警示灯 */
+  for(let i=0;i<2;i++){
+    const on=Math.sin(T*4+i*Math.PI)>0;
+    glow(c,'#ff5252',on?12:4,200+i*120,142+i*12,on?3.6:2.4,on?1:0.25);
+  }
+  /* 黄黑警示围栏 */
+  for(let i=0;i<3;i++) c.fillRect(352+i*22,196,4,GY-196);
+  const fw=76;
+  c.save(); c.beginPath(); c.rect(350,192,fw,8); c.clip();
+  c.fillStyle='#ffd54f'; c.fillRect(350,192,fw,8);
+  c.fillStyle='#23262b';
+  for(let x=350;x<350+fw+10;x+=8){
+    c.beginPath(); c.moveTo(x,192); c.lineTo(x+4,192); c.lineTo(x-4,200); c.lineTo(x-8,200);
+    c.closePath(); c.fill();
+  }
+  c.restore();
+  /* 滚过路面的风滚草 */
+  const cx=((T*70)%(W+90))-45, cy=GY-9-Math.abs(Math.sin(T*3))*12;
+  c.save(); c.translate(cx,cy); c.rotate(T*6);
+  c.strokeStyle='#a1813c'; c.lineWidth=1.8;
+  c.beginPath(); c.arc(0,0,9,0,7); c.stroke();
+  for(let i=0;i<4;i++){
+    const an=i*Math.PI/4;
+    c.beginPath(); c.moveTo(Math.cos(an)*-9,Math.sin(an)*-9);
+    c.lineTo(Math.cos(an)*9,Math.sin(an)*9); c.stroke();
+  }
+  c.restore();
+  /* 扬起的细沙 */
+  c.strokeStyle=hexA('#ffcc80',0.3); c.lineWidth=1.2;
+  for(let i=0;i<6;i++){
+    const x=(i*83+T*40)%W, y=GY-8-rnd(i)*16;
+    c.beginPath(); c.moveTo(x,y); c.lineTo(x+7,y); c.stroke();
+  }
+  ground(c,'#4a2a1a',E10,sc);
+}
+
+/* ---------- 六张卡 ---------- */
+const E8='#5ff0ff', E9='#ff5fd7', E10='#ff8a3c';
+const ITEMS=[
+  {slot:'g8', no:'8A', name:'夕阳废船场', energy:E8, fn:scSunset,
+    role:'太阳落山，大废船锈在沙里，吊钩慢慢晃，绿光油桶一闪一闪。'},
+  {slot:'g8', no:'8B', name:'机甲坟场之夜', energy:E8, fn:scNight,
+    role:'黑夜里探照灯慢慢扫，报废机器人头堆成山，眼窝里还亮着青绿色的光。'},
+  {slot:'g9', no:'9A', name:'霓虹流水线', energy:E9, fn:scFactory,
+    role:'工厂里面，墙上电路光点跑来跑去，传送带送着箱子，粉紫霓虹一闪一闪。'},
+  {slot:'g9', no:'9B', name:'全息广告街', energy:E9, fn:scHolo,
+    role:'工厂外下着小雨，全息大屏忽明忽暗，水坑里映着粉紫色的光。'},
+  {slot:'g10', no:'10A', name:'金色沙丘靶场', energy:E10, fn:scDunes,
+    role:'白天的大沙丘，远处雷达盘慢慢转，一排靶子木桩，风把沙粒吹成一条条。'},
+  {slot:'g10', no:'10B', name:'峡谷旧油库', energy:E10, fn:scCanyon,
+    role:'红岩峡谷里的旧油库，警示灯一闪一闪，风滚草咕噜噜滚过路面。'}
+];
+const SECTIONS=[
+  {ttl:'关 8 · 废铁坟场', slot:'g8', c:E8},
+  {ttl:'关 9 · 霓虹电路厂', slot:'g9', c:E9},
+  {ttl:'关 10 · 荒漠试验场', slot:'g10', c:E10}
+];
+const PICK_KEY='moday_ch3_pick_bg';
+let picks={};
+try{ picks=JSON.parse(localStorage.getItem(PICK_KEY)||'{}')||{}; }catch(_){ picks={}; }
+
+const W=420, H=250, GY=222;
+const wrap=document.getElementById('wrap');
+const items=[];
+
+SECTIONS.forEach(sec=>{
+  const box=document.createElement('div'); box.className='sec';
+  const ttl=document.createElement('div'); ttl.className='rowttl';
+  ttl.style.borderLeftColor=sec.c;
+  const lab=document.createElement('span'); lab.textContent=sec.ttl;
+  const mark=document.createElement('b'); mark.id='mark_'+sec.slot;
+  ttl.appendChild(lab); ttl.appendChild(mark);
+  box.appendChild(ttl);
+  const grid=document.createElement('div'); grid.className='grid';
+  ITEMS.filter(it=>it.slot===sec.slot).forEach(it=>grid.appendChild(makeCard(it)));
+  box.appendChild(grid);
+  wrap.appendChild(box);
+  updMark(sec.slot);
+});
+
+function makeCard(it){
+  const card=document.createElement('div'); card.className='card';
+  const cnv=document.createElement('canvas'); card.appendChild(cnv);
+  const meta=document.createElement('div'); meta.className='meta';
+  const no=document.createElement('div'); no.className='no'; no.textContent=it.no;
+  const nm=document.createElement('div'); nm.className='nm'; nm.textContent=it.name;
+  const spk=document.createElement('button'); spk.className='spk'; spk.textContent='听';
+  meta.appendChild(no); meta.appendChild(nm); meta.appendChild(spk); card.appendChild(meta);
+  const role=document.createElement('div'); role.textContent=it.role; role.className='role';
+  card.appendChild(role);
+  const dpr=Math.max(1,Math.min(3,window.devicePixelRatio||1));
+  cnv.width=Math.round(W*dpr); cnv.height=Math.round(H*dpr);
+  cnv.style.aspectRatio=W+' / '+H;
+  const c=cnv.getContext('2d');
+  const rec={it, c, dpr, card};
+  items.push(rec);
+  card.addEventListener('click',()=>select(it));
+  spk.addEventListener('click',ev=>{ ev.stopPropagation(); speak(it.name); });
+  if(picks[it.slot]===it.no) card.classList.add('pick');
+  return card;
+}
+
+function select(it){
+  picks[it.slot]=it.no;
+  try{ localStorage.setItem(PICK_KEY, JSON.stringify(picks)); }catch(_){}
+  items.forEach(r=>r.card.classList.toggle('pick', r.it.slot===it.slot && r.it.no===it.no));
+  updMark(it.slot);
+  speak(it.name+'，我喜欢这个场景');
+  const n=Object.keys(picks).length;
+  document.getElementById('sel').textContent = n>=3 ? '三个场景挑好啦！告诉爸爸' : ('已挑 '+n+' / 3');
+}
+function updMark(sl){
+  const el=document.getElementById('mark_'+sl); if(!el) return;
+  if(picks[sl]){ const it=ITEMS.find(x=>x.slot===sl&&x.no===picks[sl]); el.textContent='景·'+it.name; }
+  else el.textContent='';
+}
+document.getElementById('reset').addEventListener('click',()=>{
+  picks={}; try{ localStorage.removeItem(PICK_KEY); }catch(_){}
+  items.forEach(r=>r.card.classList.remove('pick'));
+  SECTIONS.forEach(s=>updMark(s.slot));
+  document.getElementById('sel').textContent='还没挑';
+  speak('都清空啦，重新挑吧');
+});
+
+/* ---------- 语音 ---------- */
+function speak(text){
+  try{
+    if(!('speechSynthesis' in window)) return;
+    speechSynthesis.cancel();
+    const ut=new SpeechSynthesisUtterance(text);
+    ut.lang='zh-CN'; ut.rate=0.9; ut.pitch=1.15;
+    speechSynthesis.speak(ut);
+  }catch(_){ }
+}
+document.getElementById('sayRule').addEventListener('click',()=>{
+  speak('这一页挑场景。三关里每关有两个场景，点一下你最喜欢的那个，绿框框住的就是你选的。挑完告诉爸爸，场景就跟着你选的兵和王一起进游戏。');
+});
+
+/* ---------- 控制与主循环 ---------- */
+let slow=false, paused=false;
+const slowBtn=document.getElementById('slow'), pauseBtn=document.getElementById('pause');
+slowBtn.addEventListener('click',()=>{ slow=!slow; slowBtn.setAttribute('aria-pressed',String(slow)); });
+pauseBtn.addEventListener('click',()=>{ paused=!paused; pauseBtn.setAttribute('aria-pressed',String(paused)); });
+
+let last=performance.now(), T=0, scroll=0;
+function frame(now){
+  let dt=(now-last)/1000; last=now;
+  if(dt>0.1) dt=0.1;
+  if(paused) dt=0;
+  dt*=slow?0.3:1;
+  T+=dt; scroll=(scroll+dt*26)%26;
+  items.forEach(r=>{
+    const c=r.c;
+    c.setTransform(r.dpr,0,0,r.dpr,0,0);
+    c.clearRect(0,0,W,H);
+    r.it.fn(c,T,scroll);
+  });
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+document.getElementById('sel').textContent = Object.keys(picks).length>=3 ? '三个场景挑好啦！告诉爸爸' : ('已挑 '+Object.keys(picks).length+' / 3');
+</script>
+</body>
+</html>
